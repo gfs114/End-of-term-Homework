@@ -1,10 +1,5 @@
 <template>
   <div class="login-page">
-    <svg class="glass-filter" aria-hidden="true" focusable="false">
-      <filter id="liquid-glass">
-        <feDisplacementMap in="SourceGraphic" in2="BackgroundImage" scale="10" xChannelSelector="R" yChannelSelector="G"/>
-      </filter>
-    </svg>
 
     <div class="login-card">
       <h2>登录</h2>
@@ -98,56 +93,16 @@ export default {
   box-sizing: border-box;
 }
 
-.glass-filter {
-  position: absolute;
-  width: 0;
-  height: 0;
-  overflow: hidden;
-}
-
 .login-card {
   position: relative;
   width: 100%;
   max-width: 400px;
   padding: 34px 32px 28px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.58);
-  border: 1px solid rgba(255, 255, 255, 0.72);
+  background: #fff;
+  border: 1px solid #e0e0e0;
   border-radius: 8px;
-  box-shadow:
-    0 18px 42px rgba(28, 45, 75, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  box-shadow: 0 18px 42px rgba(28, 45, 75, 0.12);
   box-sizing: border-box;
-  backdrop-filter: blur(18px) saturate(160%);
-}
-
-.login-card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.12) 46%, rgba(255, 255, 255, 0.42)),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.18), rgba(64, 158, 255, 0.08));
-  filter: url("#liquid-glass");
-  opacity: 0.9;
-}
-
-.login-card::after {
-  content: "";
-  position: absolute;
-  top: 1px;
-  left: 14px;
-  right: 14px;
-  height: 1px;
-  z-index: 0;
-  background: rgba(255, 255, 255, 0.9);
-}
-
-.login-card > * {
-  position: relative;
-  z-index: 1;
 }
 
 .login-card h2 {

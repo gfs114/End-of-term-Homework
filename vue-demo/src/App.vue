@@ -1,5 +1,6 @@
 <template>
   <div class="app-shell">
+    <LiquidGlass>
     <nav class="navbar-shell">
       <div class="glass-navbar">
         <div class="nav-content">
@@ -17,14 +18,22 @@
         </div>
       </div>
     </nav>
+    </LiquidGlass>
 
     <router-view></router-view>
   </div>
 </template>
 
 <script>
+import { LiquidGlass } from '@wxperia/liquid-glass-vue';
+
 export default {
-  // 移除动态数据，重构为静态HTML导航栏
+  components: {
+    LiquidGlass,
+  },
+  data() {
+    return {};
+  },
 }
 </script>
 
@@ -44,14 +53,19 @@ body {
   min-height: 100vh;
 }
 
-.navbar-shell {
+.app-shell > :deep(div):first-child {
   position: sticky;
   top: 0;
   z-index: 10;
+}
+
+.navbar-shell {
   width: 100%;
-  background: #fff;
-  border-bottom: 1px solid #e0e0e0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 
 .glass-navbar {

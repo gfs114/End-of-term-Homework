@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+import { LiquidGlass } from '@wxperia/liquid-glass-vue'
 
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
@@ -14,4 +15,5 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 
 app.use(router)
 app.use(ElementPlus)
+app.use(LiquidGlass)
 app.mount('#app')
