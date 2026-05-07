@@ -168,6 +168,7 @@ export default {
     )
 
     navbar.removeEventListener(
+      
       'mouseleave',
       this.handleMouseLeave
     )
