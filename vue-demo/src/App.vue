@@ -1,93 +1,351 @@
 <template>
   <div class="app-shell">
-    <nav class="navbar-shell">
+
+    <!-- Apple Liquid Glass Navbar -->
+    <nav
+      ref="navbar"
+      class="navbar-shell"
+    >
+
       <div class="glass-navbar">
+
         <div class="nav-content">
+
+          <!-- 左侧 -->
           <div class="nav-group nav-main">
-            <router-link to="/hello" class="nav-link">首页</router-link>
-            <router-link to="/phone" class="nav-link">手机专区</router-link>
-            <router-link to="/computer" class="nav-link">电脑专区</router-link>
-            <router-link to="/mine" class="nav-link">我的</router-link>
+
+            <router-link
+              to="/hello"
+              class="nav-link"
+            >
+              首页
+            </router-link>
+
+            <router-link
+              to="/phone"
+              class="nav-link"
+            >
+              手机专区
+            </router-link>
+
+            <router-link
+              to="/computer"
+              class="nav-link"
+            >
+              电脑专区
+            </router-link>
+
+            <router-link
+              to="/mine"
+              class="nav-link"
+            >
+              我的
+            </router-link>
+
           </div>
 
+          <!-- 右侧 -->
           <div class="nav-group nav-auth">
-            <router-link to="/login" class="nav-link auth-link">登录</router-link>
-            <router-link to="/register" class="nav-link auth-link">注册</router-link>
+
+            <router-link
+              to="/login"
+              class="nav-link"
+            >
+              登录
+            </router-link>
+
+            <router-link
+              to="/register"
+              class="nav-link"
+            >
+              注册
+            </router-link>
+
           </div>
+
         </div>
+
       </div>
+
     </nav>
 
+    <!-- 页面 -->
+    <main class="page-container">
+      <router-view />
+    </main>
 
-    <router-view></router-view>
   </div>
 </template>
 
 <script>
-
 export default {
-  components: {
-    
-  },
+
+  name: 'App',
+
   data() {
-    return {};
+    return {
+      handleMouseMove: null,
+      handleMouseLeave: null,
+      handleScroll: null,
+    }
   },
+
+  mounted() {
+
+    const navbar = this.$refs.navbar
+
+    // 鼠标移动液态光效
+    this.handleMouseMove = (e) => {
+
+      const rect =
+        navbar.getBoundingClientRect()
+
+      const x =
+        e.clientX - rect.left
+
+      const y =
+        e.clientY - rect.top
+
+      navbar.style.setProperty(
+        '--mouse-x',
+        `${x}px`
+      )
+
+      navbar.style.setProperty(
+        '--mouse-y',
+        `${y}px`
+      )
+
+      navbar.style.setProperty(
+        '--glow-opacity',
+        '1'
+      )
+    }
+
+    // 鼠标离开
+    this.handleMouseLeave = () => {
+
+      navbar.style.setProperty(
+        '--glow-opacity',
+        '0'
+      )
+    }
+
+    // 滚动液态漂移
+    this.handleScroll = () => {
+
+      const scrollY = window.scrollY
+
+      navbar.style.setProperty(
+        '--scroll-offset',
+        `${scrollY * 0.05}px`
+      )
+    }
+
+    navbar.addEventListener(
+      'mousemove',
+      this.handleMouseMove
+    )
+
+    navbar.addEventListener(
+      'mouseleave',
+      this.handleMouseLeave
+    )
+
+    window.addEventListener(
+      'scroll',
+      this.handleScroll
+    )
+  },
+
+  beforeUnmount() {
+
+    const navbar = this.$refs.navbar
+
+    navbar.removeEventListener(
+      'mousemove',
+      this.handleMouseMove
+    )
+
+    navbar.removeEventListener(
+      'mouseleave',
+      this.handleMouseLeave
+    )
+
+    window.removeEventListener(
+      'scroll',
+      this.handleScroll
+    )
+  }
+
 }
 </script>
 
-<style>
+<style scoped>
+
+/* =========================
+   GLOBAL
+========================= */
+
 * {
   box-sizing: border-box;
 }
 
-body {
+:global(body) {
   margin: 0;
   min-height: 100vh;
-  background: linear-gradient(180deg, #f4f8ff 0%, #f7f9fc 100%);
-  font-family: Arial, "Microsoft YaHei", sans-serif;
+
+  font-family:
+    Arial,
+    "Microsoft YaHei",
+    sans-serif;
+
+  background: #000;
+
+  overflow-x: hidden;
 }
 
 .app-shell {
   min-height: 100vh;
 }
 
-.app-shell > :deep(div):first-child {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
+/* =========================
+   APPLE LIQUID GLASS
+========================= */
 
 .navbar-shell {
+
+  --mouse-x: 50%;
+  --mouse-y: 50%;
+  --glow-opacity: 0;
+  --scroll-offset: 0px;
+
+  position: sticky;
+  top: 0;
+
+  z-index: 1000;
+
   width: 100%;
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  height: 72px;
+
+  overflow: hidden;
+
+  isolation: isolate;
+
+  backdrop-filter:
+    blur(30px)
+    saturate(180%)
+    brightness(1.08);
+
+  -webkit-backdrop-filter:
+    blur(30px)
+    saturate(180%)
+    brightness(1.08);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,0.34),
+      rgba(255,255,255,0.14)
+    );
+
+  border-bottom:
+    1px solid rgba(255,255,255,0.28);
+
+  box-shadow:
+    0 8px 32px rgba(0,0,0,0.06),
+    inset 0 1px 1px rgba(255,255,255,0.65),
+    inset 0 -1px 1px rgba(255,255,255,0.18);
+
+  transition:
+    backdrop-filter 0.25s ease,
+    background 0.25s ease;
 }
 
+/* =========================
+   鼠标液态高光
+========================= */
+
+.navbar-shell::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  background:
+
+    radial-gradient(
+      circle at var(--mouse-x) var(--mouse-y),
+
+      rgba(255,255,255,0.55) 0%,
+      rgba(255,255,255,0.22) 12%,
+      rgba(255,255,255,0.08) 20%,
+      transparent 42%
+    ),
+
+    radial-gradient(
+      circle at top left,
+      rgba(255,255,255,0.75),
+      transparent 36%
+    ),
+
+    radial-gradient(
+      circle at top right,
+      rgba(255,255,255,0.24),
+      transparent 30%
+    ),
+
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,0.18),
+      rgba(255,255,255,0.02)
+    );
+
+  opacity: var(--glow-opacity);
+
+  transform:
+    translateY(var(--scroll-offset));
+
+  transition:
+    opacity 0.35s ease,
+    transform 0.15s ease-out;
+
+  pointer-events: none;
+}
+
+/* =========================
+   NAV CONTENT
+========================= */
+
 .glass-navbar {
+  position: relative;
+  z-index: 2;
+
+  width: 100%;
+  height: 100%;
+
+  max-width: 1280px;
+
+  margin: 0 auto;
+  padding: 0 24px;
+
   display: flex;
   align-items: center;
-  width: 100%;
-  height: 64px;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
 }
 
 .nav-content {
+  width: 100%;
+  height: 100%;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
-  height: 100%;
 }
 
+/* 左右 */
 .nav-group {
   display: flex;
   align-items: center;
-  height: 100%;
   gap: 8px;
 }
 
@@ -95,63 +353,91 @@ body {
   margin-left: auto;
 }
 
+/* =========================
+   APPLE BUTTONS
+========================= */
+
 .nav-link {
+  position: relative;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 38px;
+
+  height: 40px;
   padding: 0 18px;
-  border-radius: 19px;
-  color: #2f3d4f;
+
+  border-radius: 999px;
+
+  color: #1d1d1f;
+
+  text-decoration: none;
+
   font-size: 15px;
   font-weight: 500;
-  text-decoration: none;
-  transition: color 0.2s ease, background-color 0.2s ease;
+
+  transition:
+    all 0.28s cubic-bezier(.4,0,.2,1);
+
+  overflow: hidden;
 }
 
-.nav-link:hover,
-.nav-link.router-link-active {
-  background: rgba(64, 158, 255, 0.12);
-  color: #1677d2;
+/* hover */
+.nav-link:hover {
+
+  transform:
+    translateY(-1px);
+
+  background:
+    rgba(255,255,255,0.22);
+
+  box-shadow:
+    inset 0 1px 1px rgba(255,255,255,0.35);
+
+  color: #0071e3;
 }
 
-.nav-auth .auth-link:last-child {
-  background: #409eff;
-  color: #fff;
+/* =========================
+   PAGE
+========================= */
+
+.page-container {
+  padding: 24px;
 }
 
-.nav-auth .auth-link:last-child:hover,
-.nav-auth .auth-link:last-child.router-link-active {
-  background: #1677d2;
-  color: #fff;
-}
+/* =========================
+   MOBILE
+========================= */
 
-@media (max-width: 720px) {
-  .glass-navbar {
-    flex-wrap: wrap;
+@media (max-width: 768px) {
+
+  .navbar-shell {
     height: auto;
-    min-height: 64px;
-    padding: 10px 12px;
+    min-height: 72px;
+  }
+
+  .glass-navbar {
+    padding: 12px;
   }
 
   .nav-content {
-    flex-wrap: wrap;
-    gap: 8px;
+    flex-direction: column;
+    gap: 12px;
   }
 
   .nav-group {
     flex-wrap: wrap;
-    height: auto;
+    justify-content: center;
   }
 
   .nav-auth {
-    justify-content: flex-end;
     margin-left: 0;
   }
 
   .nav-link {
-    padding: 0 12px;
     font-size: 14px;
+    padding: 0 14px;
   }
+
 }
 </style>
