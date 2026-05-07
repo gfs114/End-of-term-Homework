@@ -1,35 +1,33 @@
 <template>
   <div class="app-shell">
-    <LiquidGlass>
     <nav class="navbar-shell">
       <div class="glass-navbar">
         <div class="nav-content">
           <div class="nav-group nav-main">
-            <a href="/hello" class="nav-link">首页</a>
-            <a href="/phone" class="nav-link">手机专区</a>
-            <a href="/computer" class="nav-link">电脑专区</a>
-            <a href="/mine" class="nav-link">我的</a>
+            <router-link to="/hello" class="nav-link">首页</router-link>
+            <router-link to="/phone" class="nav-link">手机专区</router-link>
+            <router-link to="/computer" class="nav-link">电脑专区</router-link>
+            <router-link to="/mine" class="nav-link">我的</router-link>
           </div>
 
           <div class="nav-group nav-auth">
-            <a href="/login" class="nav-link auth-link">登录</a>
-            <a href="/register" class="nav-link auth-link">注册</a>
+            <router-link to="/login" class="nav-link auth-link">登录</router-link>
+            <router-link to="/register" class="nav-link auth-link">注册</router-link>
           </div>
         </div>
       </div>
     </nav>
-    </LiquidGlass>
+
 
     <router-view></router-view>
   </div>
 </template>
 
 <script>
-import { LiquidGlass } from '@wxperia/liquid-glass-vue';
 
 export default {
   components: {
-    LiquidGlass,
+    
   },
   data() {
     return {};
