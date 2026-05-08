@@ -16,6 +16,7 @@
               <div class="nav-group nav-auth">
                 <router-link  to="/login"  class="nav-link"  :style="navButtonGlassStyle"  data-refraction-mode="standard">登录</router-link>
                 <router-link to="/register" class="nav-link" :style="navButtonGlassStyle" data-refraction-mode="standard">注册</router-link>
+                <router-link to="/alogin" class="nav-link" :style="navButtonGlassStyle" data-refraction-mode="standard">管理员登录</router-link>
               </div>
             </div>
           </div>
