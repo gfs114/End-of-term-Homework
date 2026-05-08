@@ -1,4 +1,5 @@
 <template>
+
   <div class="login-page">
 
     <div class="login-card">
@@ -15,7 +16,7 @@
 
         <div class="form-options">
           <el-checkbox v-model="form.remember">记住我</el-checkbox>
-          <a href="javascript:void(0)">忘记密码</a>
+          <router-link to="#">忘记密码</router-link>
         </div>
 
         <el-button type="primary" class="submit-button" :loading="loading" @click="handleLogin">
@@ -87,9 +88,7 @@ export default {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background:
-    linear-gradient(135deg, rgba(245, 247, 251, 0.95), rgba(234, 242, 255, 0.9)),
-    linear-gradient(45deg, #f8fafc 0%, #eef6f3 45%, #f5f0ff 100%);
+  background: #fff;
   box-sizing: border-box;
 }
 

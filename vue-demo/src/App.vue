@@ -1,192 +1,64 @@
 <template>
   <div class="app-shell">
 
-    <!-- Apple Liquid Glass Navbar -->
-    <nav
-      ref="navbar"
-      class="navbar-shell"
-    >
+    <header class="navbar-host">
+      <LiquidGlass class="nav-liquid-glass" padding="0" effect="liquidGlass" mode="polar" :corner-radius="32" :displacement-scale="64" :blur-amount="0" :saturation="140" :aberration-intensity="0.5" :elasticity="0.3" :style="navGlassStyle">
+        <nav class="navbar-shell">
+          <div class="glass-navbar">
+            <div class="nav-content">
+              <div class="nav-group nav-main">
+                <router-link to="/hello" class="nav-link" :style="navButtonGlassStyle" data-refraction-mode="standard">首页</router-link>
+                <router-link to="/phone" class="nav-link" :style="navButtonGlassStyle" data-refraction-mode="standard">手机专区</router-link>
+                <router-link to="/computer" class="nav-link" :style="navButtonGlassStyle" data-refraction-mode="standard" >电脑专区</router-link>
+                <router-link to="/mine" class="nav-link" :style="navButtonGlassStyle" data-refraction-mode="standard">我的</router-link>
+              </div>
 
-      <div class="glass-navbar">
-
-        <div class="nav-content">
-
-          <!-- 左侧 -->
-          <div class="nav-group nav-main">
-
-            <router-link
-              to="/hello"
-              class="nav-link"
-            >
-              首页
-            </router-link>
-
-            <router-link
-              to="/phone"
-              class="nav-link"
-            >
-              手机专区
-            </router-link>
-
-            <router-link
-              to="/computer"
-              class="nav-link"
-            >
-              电脑专区
-            </router-link>
-
-            <router-link
-              to="/mine"
-              class="nav-link"
-            >
-              我的
-            </router-link>
-
+              <div class="nav-group nav-auth">
+                <router-link  to="/login"  class="nav-link"  :style="navButtonGlassStyle"  data-refraction-mode="standard">登录</router-link>
+                <router-link to="/register" class="nav-link" :style="navButtonGlassStyle" data-refraction-mode="standard">注册</router-link>
+              </div>
+            </div>
           </div>
-
-          <!-- 右侧 -->
-          <div class="nav-group nav-auth">
-
-            <router-link
-              to="/login"
-              class="nav-link"
-            >
-              登录
-            </router-link>
-
-            <router-link
-              to="/register"
-              class="nav-link"
-            >
-              注册
-            </router-link>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </nav>
-
-    <!-- 页面 -->
+        </nav>
+      </LiquidGlass>
+    </header>
     <main class="page-container">
       <router-view />
     </main>
-
   </div>
 </template>
 
 <script>
+import { LiquidGlass } from '@wxperia/liquid-glass-vue';
+
 export default {
-
   name: 'App',
-
+  components: {
+    LiquidGlass
+  },
   data() {
     return {
-      handleMouseMove: null,
-      handleMouseLeave: null,
-      handleScroll: null,
+      navGlassStyle: {
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        width: '100%',
+        zIndex: 1
+      },
+      navButtonGlassStyle: {
+        '--button-displacement-scale': '64px',
+        '--button-blur-amount': '0px',
+        '--button-saturation': '130%',
+        '--button-aberration-intensity': '0px',
+        '--button-elasticity': '0.35s',
+        '--button-corner-radius': '100px'
+      }
     }
-  },
-
-  mounted() {
-
-    const navbar = this.$refs.navbar
-
-    // 鼠标移动液态光效
-    this.handleMouseMove = (e) => {
-
-      const rect =
-        navbar.getBoundingClientRect()
-
-      const x =
-        e.clientX - rect.left
-
-      const y =
-        e.clientY - rect.top
-
-      navbar.style.setProperty(
-        '--mouse-x',
-        `${x}px`
-      )
-
-      navbar.style.setProperty(
-        '--mouse-y',
-        `${y}px`
-      )
-
-      navbar.style.setProperty(
-        '--glow-opacity',
-        '1'
-      )
-    }
-
-    // 鼠标离开
-    this.handleMouseLeave = () => {
-
-      navbar.style.setProperty(
-        '--glow-opacity',
-        '0'
-      )
-    }
-
-    // 滚动液态漂移
-    this.handleScroll = () => {
-
-      const scrollY = window.scrollY
-
-      navbar.style.setProperty(
-        '--scroll-offset',
-        `${scrollY * 0.05}px`
-      )
-    }
-
-    navbar.addEventListener(
-      'mousemove',
-      this.handleMouseMove
-    )
-
-    navbar.addEventListener(
-      'mouseleave',
-      this.handleMouseLeave
-    )
-
-    window.addEventListener(
-      'scroll',
-      this.handleScroll
-    )
-  },
-
-  beforeUnmount() {
-
-    const navbar = this.$refs.navbar
-
-    navbar.removeEventListener(
-      'mousemove',
-      this.handleMouseMove
-    )
-
-    navbar.removeEventListener(
-      
-      'mouseleave',
-      this.handleMouseLeave
-    )
-
-    window.removeEventListener(
-      'scroll',
-      this.handleScroll
-    )
   }
-
 }
 </script>
 
 <style scoped>
-
-/* =========================
-   GLOBAL
-========================= */
 
 * {
   box-sizing: border-box;
@@ -195,14 +67,8 @@ export default {
 :global(body) {
   margin: 0;
   min-height: 100vh;
-
-  font-family:
-    Arial,
-    "Microsoft YaHei",
-    sans-serif;
-
-  background: #000;
-
+  font-family: Arial, "Microsoft YaHei", sans-serif;
+  background: #fff;
   overflow-x: hidden;
 }
 
@@ -210,126 +76,45 @@ export default {
   min-height: 100vh;
 }
 
-/* =========================
-   APPLE LIQUID GLASS
-========================= */
-
-.navbar-shell {
-
-  --mouse-x: 50%;
-  --mouse-y: 50%;
-  --glow-opacity: 0;
-  --scroll-offset: 0px;
-
-  position: sticky;
+.navbar-host {
+  position: fixed;
   top: 0;
-
+  left: 0;
   z-index: 1000;
-
   width: 100%;
   height: 72px;
-
-  overflow: hidden;
-
-  isolation: isolate;
-
-  backdrop-filter:
-    blur(30px)
-    saturate(180%)
-    brightness(1.08);
-
-  -webkit-backdrop-filter:
-    blur(30px)
-    saturate(180%)
-    brightness(1.08);
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255,255,255,0.34),
-      rgba(255,255,255,0.14)
-    );
-
-  border-bottom:
-    1px solid rgba(255,255,255,0.28);
-
-  box-shadow:
-    0 8px 32px rgba(0,0,0,0.06),
-    inset 0 1px 1px rgba(255,255,255,0.65),
-    inset 0 -1px 1px rgba(255,255,255,0.18);
-
-  transition:
-    backdrop-filter 0.25s ease,
-    background 0.25s ease;
+  background: transparent;
+  border-bottom: none;
 }
 
-/* =========================
-   鼠标液态高光
-========================= */
-
-.navbar-shell::before {
-  content: "";
-
-  position: absolute;
-  inset: 0;
-
-  background:
-
-    radial-gradient(
-      circle at var(--mouse-x) var(--mouse-y),
-
-      rgba(255,255,255,0.55) 0%,
-      rgba(255,255,255,0.22) 12%,
-      rgba(255,255,255,0.08) 20%,
-      transparent 42%
-    ),
-
-    radial-gradient(
-      circle at top left,
-      rgba(255,255,255,0.75),
-      transparent 36%
-    ),
-
-    radial-gradient(
-      circle at top right,
-      rgba(255,255,255,0.24),
-      transparent 30%
-    ),
-
-    linear-gradient(
-      135deg,
-      rgba(255,255,255,0.18),
-      rgba(255,255,255,0.02)
-    );
-
-  opacity: var(--glow-opacity);
-
-  transform:
-    translateY(var(--scroll-offset));
-
-  transition:
-    opacity 0.35s ease,
-    transform 0.15s ease-out;
-
-  pointer-events: none;
+.navbar-host :deep(.glass) {
+  width: 100%;
+  height: 72px;
+  display: flex !important;
+  padding: 0 !important;
 }
 
-/* =========================
-   NAV CONTENT
-========================= */
+.navbar-host :deep(.glass > div:last-child) {
+  width: 100%;
+  height: 100%;
+}
+
+.navbar-shell {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 72px;
+  background: rgba(29, 29, 31, 0.36);
+}
 
 .glass-navbar {
   position: relative;
   z-index: 2;
-
   width: 100%;
   height: 100%;
-
   max-width: 1280px;
-
   margin: 0 auto;
   padding: 0 24px;
-
   display: flex;
   align-items: center;
 }
@@ -337,13 +122,11 @@ export default {
 .nav-content {
   width: 100%;
   height: 100%;
-
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-/* 左右 */
 .nav-group {
   display: flex;
   align-items: center;
@@ -354,91 +137,84 @@ export default {
   margin-left: auto;
 }
 
-/* =========================
-   APPLE BUTTONS
-========================= */
-
 .nav-link {
   position: relative;
-
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
   height: 40px;
   padding: 0 18px;
-
-  border-radius: 999px;
-
-  color: #1d1d1f;
-
+  border-radius: var(--button-corner-radius);
+  color: #f5f5f7;
   text-decoration: none;
-
   font-size: 15px;
   font-weight: 500;
-
-  transition:
-    all 0.28s cubic-bezier(.4,0,.2,1);
-
-  overflow: hidden;
-}
-
-/* hover */
-.nav-link:hover {
-
-  transform:
-    translateY(-1px);
-
   background:
-    rgba(255,255,255,0.22);
-
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.22),
+      rgba(255, 255, 255, 0.08)
+    );
+  backdrop-filter:
+    blur(var(--button-blur-amount))
+    saturate(var(--button-saturation));
+  -webkit-backdrop-filter:
+    blur(var(--button-blur-amount))
+    saturate(var(--button-saturation));
+  border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow:
-    inset 0 1px 1px rgba(255,255,255,0.35);
-
-  color: #0071e3;
+    0 8px 22px rgba(0, 0, 0, 0.18),
+    0 0 var(--button-displacement-scale) rgba(255, 255, 255, 0.06),
+    inset 0 1px 1px rgba(255, 255, 255, 0.32),
+    inset 0 calc(-1 * var(--button-aberration-intensity)) 4px rgba(41, 151, 255, 0.16);
+  transition:
+    background var(--button-elasticity) cubic-bezier(.4,0,.2,1),
+    box-shadow var(--button-elasticity) cubic-bezier(.4,0,.2,1),
+    transform var(--button-elasticity) cubic-bezier(.4,0,.2,1);
+  overflow: hidden;
+  isolation: isolate;
 }
 
-/* =========================
-   PAGE
-========================= */
+.nav-link:hover {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.28),
+      rgba(255, 255, 255, 0.12)
+    );
+}
+
+.nav-link:active {
+  transform: scale(0.96);
+}
 
 .page-container {
-  padding: 24px;
+  padding: 96px 24px 24px;
+  padding-top: 96px;
 }
 
-/* =========================
-   MOBILE
-========================= */
-
 @media (max-width: 768px) {
-
-  .navbar-shell {
-    height: auto;
-    min-height: 72px;
-  }
-
   .glass-navbar {
-    padding: 12px;
+    padding: 0 12px;
   }
 
   .nav-content {
-    flex-direction: column;
-    gap: 12px;
+    gap: 10px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .nav-content::-webkit-scrollbar {
+    display: none;
   }
 
   .nav-group {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .nav-auth {
-    margin-left: 0;
+    flex: 0 0 auto;
   }
 
   .nav-link {
     font-size: 14px;
     padding: 0 14px;
   }
-
 }
 </style>

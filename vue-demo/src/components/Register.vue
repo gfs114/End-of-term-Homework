@@ -128,7 +128,7 @@ export default {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: #f5f7fb;
+  background: #fff;
   box-sizing: border-box;
 }
 
