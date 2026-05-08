@@ -5,11 +5,11 @@
         <h1>管理员登录</h1>
       </div>
       <el-form ref="loginForm" :model="loginForm" :rules="loginRules" label-position="top" class="admin-form" @keyup.enter="handleLogin">
-        <el-form-item label="username" prop="username">
+        <el-form-item label="账号" prop="username">
           <el-input prefix-icon="UserFilled" v-model="loginForm.username" placeholder="请输入用户名" clearable/>
         </el-form-item>
 
-        <el-form-item label="password" prop="password">
+        <el-form-item label="密码" prop="password">
           <el-input prefix-icon="Lock" show-password v-model="loginForm.password" placeholder="请输入密码"/>
         </el-form-item>
         <el-button type="primary" class="login-btn" :loading="loading" @click="handleLogin">
