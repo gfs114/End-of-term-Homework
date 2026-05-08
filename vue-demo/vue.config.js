@@ -4,6 +4,7 @@ const path = require('path')
 module.exports = defineConfig({
   transpileDependencies: true,
   lintOnSave: false,
+  productionSourceMap: false,
   publicPath: '/End-of-term-Homework/',
   configureWebpack: {
     resolve: {

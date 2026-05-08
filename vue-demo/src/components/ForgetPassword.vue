@@ -9,9 +9,9 @@ export default {
 </script>
 
 <style>
-h1:{
+h1 {
     color: red;
-    font-size: 114514;
+    font-size: 114px;
     
 }
 </style>
