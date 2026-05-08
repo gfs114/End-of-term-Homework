@@ -3,6 +3,7 @@ import Hello from "@/components/Hello.vue";
 import Login from "@/components/Login.vue";
 import Register from "@/components/Register.vue";
 import AdminLogin from "@/components/AdminLogin.vue";
+import ForgetPassword from "@/components/ForgetPassword.vue";
 
 const router = createRouter({
     history: createWebHashHistory(),
@@ -22,6 +23,10 @@ const router = createRouter({
         {
             path: '/alogin',
             component: AdminLogin
+        },
+        {
+            path: '/forget',
+            component: ForgetPassword
         }
     ]
 })

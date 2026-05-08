@@ -16,7 +16,7 @@
 
         <div class="form-options">
           <el-checkbox v-model="form.remember">记住我</el-checkbox>
-          <router-link to="#">忘记密码</router-link>
+          <router-link to="/forget">忘记密码</router-link>
         </div>
 
         <el-button type="primary" class="submit-button" :loading="loading" @click="handleLogin">
@@ -33,48 +33,84 @@
 </template>
 
 <script>
+import http from '@/utils/http'
+
 export default {
   name: 'LoginPage',
   data() {
+    const validateUsername = (rule, value, callback) => {
+      const usernameRegex = /^[a-zA-Z0-9_]{3,16}$/
+
+      if (value === '') {
+        callback(new Error('请输入用户名'))
+      } else if (!usernameRegex.test(value)) {
+        callback(new Error('在3-16个字符之间，且只能包含字母，数字或下划线'))
+      } else {
+        callback()
+      }
+    }
+
+    const validatePassword = (rule, value, callback) => {
+      const passwordRegex = /^[a-zA-Z0-9_]{2,16}$/
+
+      if (value === '') {
+        callback(new Error('请输入密码'))
+      } else if (!passwordRegex.test(value)) {
+        callback(new Error('在2-16个字符之间，且只能包含字母，数字或下划线'))
+      } else {
+        callback()
+      }
+    }
+
     return {
       loading: false,
       form: {
         username: '',
         password: '',
-        remember: false
+        remember: false,
+        role: 'BUSINESS'
       },
       rules: {
         username: [
-          { required: true, 
-            message: '请输入用户名', 
-            trigger: 'blur' 
-          }
+          { required: true, validator: validateUsername, trigger: 'blur' }
         ],
         password: [
-          { required: true, 
-            message: '请输入密码', 
-            trigger: 'blur' 
-          },
-          { min: 6, 
-            message: '密码至少 6 位', 
-            trigger: 'blur' 
-          }
+          { required: true, validator: validatePassword, trigger: 'blur' }
         ]
       }
     }
   },
   methods: {
     handleLogin() {
-      this.$refs.loginForm.validate((valid) => {
-        if (!valid) {
+      this.$refs.loginForm.validate(async (valid) => {
+        if (!valid || this.loading) {
           return
         }
 
         this.loading = true
-        setTimeout(() => {
+
+        try {
+          const response = await http.post('/login', {
+            username: this.form.username,
+            password: this.form.password,
+            role: 'BUSINESS'
+          })
+          const result = response.data || response
+
+          if (result.code === '200' || result.code === 200) {
+            this.$message.success('登录成功')
+            this.$router.push('/hello')
+          } else {
+            this.$message.error(result.message || result.msg || '请检查输入的用户名和密码是否正确')
+            console.log(result)
+          }
+        } catch (error) {
+          const data = error.response && error.response.data
+          this.$message.error((data && (data.message || data.msg)) || '请检查输入的用户名和密码是否正确')
+          console.log(error)
+        } finally {
           this.loading = false
-          this.$message.success('登录成功')
-        }, 600)
+        }
       })
     }
   }
@@ -88,7 +124,6 @@ export default {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: #fff;
   box-sizing: border-box;
 }
 
@@ -97,10 +132,12 @@ export default {
   width: 100%;
   max-width: 400px;
   padding: 34px 32px 28px;
-  background: #fff;
-  border: 1px solid #e0e0e0;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.62);
   border-radius: 8px;
   box-shadow: 0 18px 42px rgba(28, 45, 75, 0.12);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
   box-sizing: border-box;
 }
 

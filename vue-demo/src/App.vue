@@ -2,7 +2,7 @@
   <div class="app-shell">
 
     <header class="navbar-host">
-      <LiquidGlass class="nav-liquid-glass" padding="0" effect="liquidGlass" mode="polar" :corner-radius="32" :displacement-scale="64" :blur-amount="0" :saturation="140" :aberration-intensity="0.5" :elasticity="0.3" :style="navGlassStyle">
+      <LiquidGlass class="nav-liquid-glass" padding="0" effect="liquidGlass" mode="polar" :corner-radius="30" :displacement-scale="64" :blur-amount="0" :saturation="150" :aberration-intensity="2" :elasticity="0.3" :style="navGlassStyle">
         <nav class="navbar-shell">
           <div class="glass-navbar">
             <div class="nav-content">
@@ -49,8 +49,7 @@ export default {
       navButtonGlassStyle: {
         '--button-displacement-scale': '64px',
         '--button-blur-amount': '0px',
-        '--button-saturation': '130%',
-        '--button-aberration-intensity': '0px',
+        '--button-saturation': '150%',
         '--button-elasticity': '0.35s',
         '--button-corner-radius': '100px'
       }
@@ -166,14 +165,29 @@ export default {
   box-shadow:
     0 8px 22px rgba(0, 0, 0, 0.18),
     0 0 var(--button-displacement-scale) rgba(255, 255, 255, 0.06),
-    inset 0 1px 1px rgba(255, 255, 255, 0.32),
-    inset 0 calc(-1 * var(--button-aberration-intensity)) 4px rgba(41, 151, 255, 0.16);
+    inset 0 1px 1px rgba(255, 255, 255, 0.32);
   transition:
     background var(--button-elasticity) cubic-bezier(.4,0,.2,1),
     box-shadow var(--button-elasticity) cubic-bezier(.4,0,.2,1),
     transform var(--button-elasticity) cubic-bezier(.4,0,.2,1);
   overflow: hidden;
   isolation: isolate;
+}
+
+.nav-link::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  background:
+    linear-gradient(
+      115deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.2) 34%,
+      rgba(255, 255, 255, 0.05) 50%,
+      transparent 68%
+    );
+  pointer-events: none;
 }
 
 .nav-link:hover {
@@ -183,6 +197,10 @@ export default {
       rgba(255, 255, 255, 0.28),
       rgba(255, 255, 255, 0.12)
     );
+  box-shadow:
+    0 10px 26px rgba(0, 0, 0, 0.2),
+    0 0 var(--button-displacement-scale) rgba(255, 255, 255, 0.08),
+    inset 0 1px 1px rgba(255, 255, 255, 0.34);
 }
 
 .nav-link:active {

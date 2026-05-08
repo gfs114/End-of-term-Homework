@@ -128,7 +128,6 @@ export default {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: #fff;
   box-sizing: border-box;
 }
 
@@ -136,10 +135,12 @@ export default {
   width: 100%;
   max-width: 420px;
   padding: 34px 32px 28px;
-  background: #ffffff;
-  border: 1px solid #e6eaf2;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.62);
   border-radius: 8px;
   box-shadow: 0 12px 32px rgba(28, 45, 75, 0.08);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
   box-sizing: border-box;
 }
 
