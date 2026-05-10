@@ -16,7 +16,10 @@
 
         <div class="form-options">
           <el-checkbox v-model="form.remember">记住我</el-checkbox>
-          <router-link to="/forget">忘记密码</router-link>
+          <div class="form-links">
+            <router-link to="/alogin">管理员登录</router-link>
+            <!-- <router-link to="/forget">忘记密码</router-link> -->
+          </div>
         </div>
 
         <el-button type="primary" class="submit-button" :loading="loading" @click="handleLogin">
@@ -159,6 +162,12 @@ export default {
   justify-content: space-between;
   margin: -4px 0 18px;
   font-size: 14px;
+}
+
+.form-links {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .form-options a,
