@@ -49,7 +49,7 @@
       <div class="nav-group nav-auth">
         <router-link to="/login" class="nav-link">登录</router-link>
         <router-link to="/register" class="nav-link">注册</router-link>
-        <router-link to="/alogin" class="nav-link">管理员登录</router-link>
+        <!-- <router-link to="/alogin" class="nav-link">管理员登录</router-link> -->
       </div>
     </nav>
   </header>
