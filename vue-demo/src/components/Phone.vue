@@ -1,3 +1,4 @@
+<!-- 注：img图片放在 src下的assets里面-->
 <template>
   <section class="phone-zone">
     <header class="page-heading">
@@ -11,20 +12,12 @@
 
       <label class="search-box">
         <span>搜索品牌</span>
-        <input
-          v-model.trim="brandKeyword"
-          type="search"
-          placeholder="例如：华为、小米、Apple、三星"
-        />
+        <input v-model.trim="brandKeyword" type="search" placeholder="例如：华为、小米、Apple、三星" />
       </label>
     </section>
 
     <section class="brand-grid" aria-label="主流手机品牌列表">
-      <article
-        v-for="brand in filteredBrands"
-        :key="brand.name"
-        class="brand-card"
-      >
+      <article v-for="brand in filteredBrands" :key="brand.name" class="brand-card">
         <div class="brand-top">
           <span class="brand-mark" :style="{ background: brand.color }">
             {{ brand.shortName }}
@@ -39,14 +32,10 @@
       </div>
     </section>
 
-    <section
-      ref="modelSection"
-      :class="[
-        'model-section',
-        { 'model-section--animating': modelSectionAnimating },
-      ]"
-      aria-label="详细手机型号"
-    >
+    <section ref="modelSection" :class="[
+      'model-section',
+      { 'model-section--animating': modelSectionAnimating },
+    ]" aria-label="详细手机型号">
       <div class="model-control-panel">
         <div class="section-head">
           <div>
@@ -55,72 +44,46 @@
 
           <label class="model-search">
             <span>搜索机型或处理器</span>
-            <input
-              v-model.trim="modelKeyword"
-              type="search"
-              placeholder="例如：小米 15、A18、骁龙"
-            />
+            <input v-model.trim="modelKeyword" type="search" placeholder="例如：小米 15、A18、骁龙" />
           </label>
         </div>
 
         <div class="model-filters" aria-label="机型筛选条件">
           <div class="filter-row">
             <span class="filter-title">品牌</span>
-            <button
-              v-for="brand in modelBrandOptions"
-              :key="brand"
-              type="button"
+            <button v-for="brand in modelBrandOptions" :key="brand" type="button"
               :class="['filter-chip', { active: modelFilters.brand === brand }]"
-              @click="setModelFilter('brand', brand)"
-            >
+              @click="setModelFilter('brand', brand)">
               {{ brand }}
             </button>
           </div>
 
           <div class="filter-row">
             <span class="filter-title">处理器</span>
-            <button
-              v-for="processor in processorOptions"
-              :key="processor"
-              type="button"
-              :class="[
-                'filter-chip',
-                { active: modelFilters.processor === processor },
-              ]"
-              @click="setModelFilter('processor', processor)"
-            >
+            <button v-for="processor in processorOptions" :key="processor" type="button" :class="[
+              'filter-chip',
+              { active: modelFilters.processor === processor },
+            ]" @click="setModelFilter('processor', processor)">
               {{ processor }}
             </button>
           </div>
 
           <div class="filter-row">
             <span class="filter-title">价格</span>
-            <button
-              v-for="price in priceOptions"
-              :key="price.label"
-              type="button"
-              :class="[
-                'filter-chip',
-                { active: modelFilters.price === price.label },
-              ]"
-              @click="setModelFilter('price', price.label)"
-            >
+            <button v-for="price in priceOptions" :key="price.label" type="button" :class="[
+              'filter-chip',
+              { active: modelFilters.price === price.label },
+            ]" @click="setModelFilter('price', price.label)">
               {{ price.label }}
             </button>
           </div>
 
           <div class="filter-row">
             <span class="filter-title">电池</span>
-            <button
-              v-for="battery in batteryOptions"
-              :key="battery.label"
-              type="button"
-              :class="[
-                'filter-chip',
-                { active: modelFilters.battery === battery.label },
-              ]"
-              @click="setModelFilter('battery', battery.label)"
-            >
+            <button v-for="battery in batteryOptions" :key="battery.label" type="button" :class="[
+              'filter-chip',
+              { active: modelFilters.battery === battery.label },
+            ]" @click="setModelFilter('battery', battery.label)">
               {{ battery.label }}
             </button>
           </div>
@@ -128,12 +91,8 @@
       </div>
 
       <div class="model-grid">
-        <article
-          v-for="(phone, index) in paginatedPhoneModels"
-          :key="phone.model"
-          class="model-card"
-          :style="modelCardAnimationStyle(index)"
-        >
+        <article v-for="(phone, index) in paginatedPhoneModels" :key="phone.model" class="model-card"
+          :style="modelCardAnimationStyle(index)">
           <div class="model-image">
             <img :src="phone.image" :alt="phone.model" />
           </div>
@@ -154,27 +113,15 @@
       </div>
 
       <div v-if="totalModelPages > 1" class="model-pagination">
-        <button
-          type="button"
-          :disabled="currentModelPage === 1"
-          @click="setModelPage(currentModelPage - 1)"
-        >
+        <button type="button" :disabled="currentModelPage === 1" @click="setModelPage(currentModelPage - 1)">
           上一页
         </button>
-        <button
-          v-for="page in totalModelPages"
-          :key="page"
-          type="button"
-          :class="{ active: currentModelPage === page }"
-          @click="setModelPage(page)"
-        >
+        <button v-for="page in totalModelPages" :key="page" type="button" :class="{ active: currentModelPage === page }"
+          @click="setModelPage(page)">
           {{ page }}
         </button>
-        <button
-          type="button"
-          :disabled="currentModelPage === totalModelPages"
-          @click="setModelPage(currentModelPage + 1)"
-        >
+        <button type="button" :disabled="currentModelPage === totalModelPages"
+          @click="setModelPage(currentModelPage + 1)">
           下一页
         </button>
       </div>
@@ -283,6 +230,7 @@ export default {
           batteryValue: 4750,
           price: "¥4999 起",
           priceValue: 4999,
+          img: ""
         },
         {
           brand: "华为",
@@ -292,6 +240,7 @@ export default {
           batteryValue: 5000,
           price: "¥5699 起",
           priceValue: 5699,
+          img: ""
         },
         {
           brand: "华为",
@@ -301,6 +250,7 @@ export default {
           batteryValue: 5000,
           price: "¥7999 起",
           priceValue: 7999,
+          img: ""
         },
         {
           brand: "华为",
@@ -310,6 +260,7 @@ export default {
           batteryValue: 5000,
           price: "¥11999 起",
           priceValue: 11999,
+          img: ""
         },
         {
           brand: "华为",
@@ -319,6 +270,7 @@ export default {
           batteryValue: 5300,
           price: "¥5499 起",
           priceValue: 5499,
+          img: ""
         },
         {
           brand: "华为",
@@ -328,6 +280,7 @@ export default {
           batteryValue: 5500,
           price: "¥6499 起",
           priceValue: 6499,
+          img: ""
         },
         {
           brand: "华为",
@@ -337,6 +290,7 @@ export default {
           batteryValue: 5700,
           price: "¥11999 起",
           priceValue: 11999,
+          img: ""
         },
         {
           brand: "华为",
@@ -346,6 +300,7 @@ export default {
           batteryValue: 5750,
           price: "¥4699 起",
           priceValue: 4699,
+          img: ""
         },
         {
           brand: "华为",
@@ -355,6 +310,7 @@ export default {
           batteryValue: 5750,
           price: "¥5999 起",
           priceValue: 5999,
+          img: ""
         },
         {
           brand: "华为",
@@ -364,6 +320,7 @@ export default {
           batteryValue: 6000,
           price: "¥6999 起",
           priceValue: 6999,
+          img: ""
         },
         {
           brand: "华为",
@@ -373,6 +330,7 @@ export default {
           batteryValue: 6000,
           price: "¥11999 起",
           priceValue: 11999,
+          img: ""
         },
 
         {
@@ -383,6 +341,7 @@ export default {
           batteryValue: 4815,
           price: "¥4488 起",
           priceValue: 4488,
+          img: ""
         },
         {
           brand: "华为",
@@ -392,6 +351,7 @@ export default {
           batteryValue: 4815,
           price: "¥6188 起",
           priceValue: 6188,
+          img: ""
         },
         {
           brand: "华为",
@@ -401,6 +361,7 @@ export default {
           batteryValue: 5060,
           price: "¥8988 起",
           priceValue: 8988,
+          img: ""
         },
 
         {
@@ -411,6 +372,7 @@ export default {
           batteryValue: 4900,
           price: "¥4999 起",
           priceValue: 4999,
+          img: ""
         },
         {
           brand: "华为",
@@ -420,6 +382,7 @@ export default {
           batteryValue: 5050,
           price: "¥5999 起",
           priceValue: 5999,
+          img: ""
         },
         {
           brand: "华为",
@@ -429,6 +392,7 @@ export default {
           batteryValue: 5050,
           price: "¥7499 起",
           priceValue: 7499,
+          img: ""
         },
         {
           brand: "华为",
@@ -438,6 +402,7 @@ export default {
           batteryValue: 5200,
           price: "¥9999 起",
           priceValue: 9999,
+          img: ""
         },
         {
           brand: "华为",
@@ -447,6 +412,7 @@ export default {
           batteryValue: 5600,
           price: "¥5299 起",
           priceValue: 5299,
+          img: ""
         },
         {
           brand: "华为",
@@ -456,6 +422,7 @@ export default {
           batteryValue: 5700,
           price: "¥6299 起",
           priceValue: 6299,
+          img: ""
         },
         {
           brand: "华为",
@@ -465,6 +432,7 @@ export default {
           batteryValue: 5700,
           price: "¥7699 起",
           priceValue: 7699,
+          img: ""
         },
         {
           brand: "华为",
@@ -474,6 +442,7 @@ export default {
           batteryValue: 5700,
           price: "¥10999 起",
           priceValue: 10999,
+          img: ""
         },
 
         // Pura 90 系列
@@ -485,6 +454,7 @@ export default {
           batteryValue: 6500,
           price: "¥5599 起",
           priceValue: 5599,
+          img: ""
         },
         {
           brand: "华为",
@@ -494,6 +464,7 @@ export default {
           batteryValue: 6000,
           price: "¥6599 起",
           priceValue: 6599,
+          img: ""
         },
         {
           brand: "华为",
@@ -503,6 +474,7 @@ export default {
           batteryValue: 6000,
           price: "¥7999 起",
           priceValue: 7999,
+          img: ""
         },
         {
           brand: "小米",
@@ -512,8 +484,7 @@ export default {
           batteryValue: 6100,
           price: "¥5,299 起",
           priceValue: 5299,
-          image:
-            "https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?auto=format&fit=crop&w=640&q=80",
+          image: "",
         },
         {
           brand: "小米",
@@ -523,8 +494,7 @@ export default {
           batteryValue: 6000,
           price: "¥3,699 起",
           priceValue: 3699,
-          image:
-            "",
+          image: "",
         },
         {
           brand: "OPPO",
@@ -534,8 +504,7 @@ export default {
           batteryValue: 5910,
           price: "¥5,299 起",
           priceValue: 5299,
-          image:
-            "",
+          image: "",
         },
         {
           brand: "OPPO",
@@ -545,8 +514,7 @@ export default {
           batteryValue: 6000,
           price: "¥4,499 起",
           priceValue: 4499,
-          image:
-            "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=640&q=80",
+          image: "",
         },
         {
           brand: "vivo",
@@ -556,8 +524,7 @@ export default {
           batteryValue: 6000,
           price: "¥5,299 起",
           priceValue: 5299,
-          image:
-            "https://images.unsplash.com/photo-1556656793-08538906a9f8?auto=format&fit=crop&w=640&q=80",
+          image: "",
         },
         {
           brand: "vivo",
@@ -567,8 +534,7 @@ export default {
           batteryValue: 6150,
           price: "¥3,999 起",
           priceValue: 3999,
-          image:
-            "https://images.unsplash.com/photo-1601972602288-3be527b4f18a?auto=format&fit=crop&w=640&q=80",
+          image: "",
         },
         {
           brand: "荣耀",
@@ -578,8 +544,7 @@ export default {
           batteryValue: 5850,
           price: "¥5,699 起",
           priceValue: 5699,
-          image:
-            "",
+          image: "",
         },
         {
           brand: "魅族",
@@ -589,8 +554,7 @@ export default {
           batteryValue: 5050,
           price: "¥4,999 起",
           priceValue: 4999,
-          image:
-            "",
+          image: "",
         },
         {
           brand: "中兴",
@@ -600,8 +564,7 @@ export default {
           batteryValue: 6000,
           price: "¥4,299 起",
           priceValue: 4299,
-          image:
-            "",
+          image: "",
         },
         {
           brand: "Apple",
@@ -611,8 +574,7 @@ export default {
           batteryValue: 3582,
           price: "¥7,999 起",
           priceValue: 7999,
-          image:
-            "",
+          image: "",
         },
         {
           brand: "三星",
@@ -622,8 +584,7 @@ export default {
           batteryValue: 5000,
           price: "¥9,699 起",
           priceValue: 9699,
-          image:
-            "",
+          image: "",
         },
       ],
     };
@@ -902,12 +863,10 @@ export default {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.42),
-    rgba(255, 255, 255, 0.08) 46%,
-    rgba(37, 99, 235, 0.06)
-  );
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.42),
+      rgba(255, 255, 255, 0.08) 46%,
+      rgba(37, 99, 235, 0.06));
 }
 
 .brand-card:hover {
@@ -977,7 +936,7 @@ export default {
   margin-bottom: 20px;
 }
 
-.section-head > div {
+.section-head>div {
   text-align: left;
 }
 
@@ -1178,6 +1137,7 @@ export default {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .model-section--animating .model-control-panel,
   .model-section--animating .model-card {
     animation: none;
@@ -1213,6 +1173,7 @@ export default {
 }
 
 @media (max-width: 640px) {
+
   .brand-hero,
   .model-control-panel {
     padding: 24px;
