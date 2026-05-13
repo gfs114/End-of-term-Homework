@@ -129,7 +129,7 @@
 
       <div class="model-grid">
         <article
-          v-for="(phone, index) in filteredPhoneModels"
+          v-for="(phone, index) in paginatedPhoneModels"
           :key="phone.model"
           class="model-card"
           :style="modelCardAnimationStyle(index)"
@@ -153,6 +153,32 @@
         </article>
       </div>
 
+      <div v-if="totalModelPages > 1" class="model-pagination">
+        <button
+          type="button"
+          :disabled="currentModelPage === 1"
+          @click="setModelPage(currentModelPage - 1)"
+        >
+          上一页
+        </button>
+        <button
+          v-for="page in totalModelPages"
+          :key="page"
+          type="button"
+          :class="{ active: currentModelPage === page }"
+          @click="setModelPage(page)"
+        >
+          {{ page }}
+        </button>
+        <button
+          type="button"
+          :disabled="currentModelPage === totalModelPages"
+          @click="setModelPage(currentModelPage + 1)"
+        >
+          下一页
+        </button>
+      </div>
+
       <div v-if="filteredPhoneModels.length === 0" class="empty-state">
         暂未找到匹配机型，请换个关键词试试。
       </div>
@@ -167,6 +193,8 @@ export default {
     return {
       brandKeyword: "",
       modelKeyword: "",
+      currentModelPage: 1,
+      modelPageSize: 21,
       modelSectionAnimating: false,
       modelSectionVisible: false,
       modelSectionObserver: null,
@@ -496,7 +524,7 @@ export default {
           price: "¥3,699 起",
           priceValue: 3699,
           image:
-            "https://images.unsplash.com/photo-1585060544812-6b45742d762f?auto=format&fit=crop&w=640&q=80",
+            "",
         },
         {
           brand: "OPPO",
@@ -507,7 +535,7 @@ export default {
           price: "¥5,299 起",
           priceValue: 5299,
           image:
-            "https://images.unsplash.com/photo-1616348436168-de43ad0db179?auto=format&fit=crop&w=640&q=80",
+            "",
         },
         {
           brand: "OPPO",
@@ -551,7 +579,7 @@ export default {
           price: "¥5,699 起",
           priceValue: 5699,
           image:
-            "https://images.unsplash.com/photo-1496346236646-50e985b31ea4?auto=format&fit=crop&w=640&q=80",
+            "",
         },
         {
           brand: "魅族",
@@ -562,7 +590,7 @@ export default {
           price: "¥4,999 起",
           priceValue: 4999,
           image:
-            "https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&w=640&q=80",
+            "",
         },
         {
           brand: "中兴",
@@ -573,7 +601,7 @@ export default {
           price: "¥4,299 起",
           priceValue: 4299,
           image:
-            "https://images.unsplash.com/photo-1567581935884-3349723552ca?auto=format&fit=crop&w=640&q=80",
+            "",
         },
         {
           brand: "Apple",
@@ -584,7 +612,7 @@ export default {
           price: "¥7,999 起",
           priceValue: 7999,
           image:
-            "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?auto=format&fit=crop&w=640&q=80",
+            "",
         },
         {
           brand: "三星",
@@ -595,7 +623,7 @@ export default {
           price: "¥9,699 起",
           priceValue: 9699,
           image:
-            "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&w=640&q=80",
+            "",
         },
       ],
     };
@@ -668,6 +696,32 @@ export default {
         );
       });
     },
+    totalModelPages() {
+      return Math.max(
+        1,
+        Math.ceil(this.filteredPhoneModels.length / this.modelPageSize)
+      );
+    },
+    paginatedPhoneModels() {
+      const start = (this.currentModelPage - 1) * this.modelPageSize;
+      return this.filteredPhoneModels.slice(start, start + this.modelPageSize);
+    },
+  },
+  watch: {
+    modelKeyword() {
+      this.resetModelPage();
+    },
+    modelFilters: {
+      deep: true,
+      handler() {
+        this.resetModelPage();
+      },
+    },
+    totalModelPages(total) {
+      if (this.currentModelPage > total) {
+        this.currentModelPage = total;
+      }
+    },
   },
   mounted() {
     this.$nextTick(() => {
@@ -677,6 +731,16 @@ export default {
   methods: {
     setModelFilter(key, value) {
       this.modelFilters[key] = value;
+    },
+    setModelPage(page) {
+      if (page < 1 || page > this.totalModelPages) {
+        return;
+      }
+
+      this.currentModelPage = page;
+    },
+    resetModelPage() {
+      this.currentModelPage = 1;
     },
     observeModelSection() {
       if (!this.$refs.modelSection) {
@@ -759,9 +823,11 @@ export default {
 
 .brand-hero,
 .brand-card {
-  border: 1px solid #dbe7f3;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 18px 50px rgba(45, 73, 112, 0.08);
+  border: 1px solid rgba(219, 231, 243, 0.72);
+  background: rgba(255, 255, 255, 0.58);
+  box-shadow: 0 18px 50px rgba(45, 73, 112, 0.1);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
 }
 
 .brand-hero {
@@ -821,6 +887,8 @@ export default {
 }
 
 .brand-card {
+  position: relative;
+  overflow: hidden;
   min-height: 178px;
   padding: 28px 20px;
   border-radius: 8px;
@@ -829,13 +897,28 @@ export default {
     border-color 0.18s ease;
 }
 
+.brand-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.42),
+    rgba(255, 255, 255, 0.08) 46%,
+    rgba(37, 99, 235, 0.06)
+  );
+}
+
 .brand-card:hover {
   border-color: #bfdbfe;
-  box-shadow: 0 18px 40px rgba(45, 73, 112, 0.12);
+  box-shadow: 0 20px 44px rgba(45, 73, 112, 0.15);
   transform: translateY(-2px);
 }
 
 .brand-top {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -856,6 +939,8 @@ export default {
 }
 
 .brand-card h2 {
+  position: relative;
+  z-index: 1;
   margin: 18px 0 0;
   font-size: 22px;
   text-align: center;
@@ -975,6 +1060,38 @@ export default {
 
 .model-section--animating .model-card {
   animation: model-card-fade-up 0.72s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.model-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.model-pagination button {
+  min-width: 38px;
+  min-height: 36px;
+  padding: 0 13px;
+  border: 1px solid #d6e1ee;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #43546b;
+  cursor: pointer;
+}
+
+.model-pagination button.active,
+.model-pagination button:hover:not(:disabled) {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #fff;
+}
+
+.model-pagination button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
 }
 
 .model-image {
