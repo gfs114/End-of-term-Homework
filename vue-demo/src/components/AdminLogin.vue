@@ -4,13 +4,14 @@
       <div class="card-header">
         <h1>管理员登录</h1>
       </div>
-      <el-form ref="loginForm" :model="loginForm" :rules="loginRules" label-position="top" class="admin-form" @keyup.enter="handleLogin">
+      <el-form ref="loginForm" :model="loginForm" :rules="loginRules" label-position="top" class="admin-form"
+        @keyup.enter="handleLogin">
         <el-form-item label="账号" prop="username">
-          <el-input prefix-icon="UserFilled" v-model="loginForm.username" placeholder="请输入用户名" clearable/>
+          <el-input prefix-icon="UserFilled" v-model="loginForm.username" placeholder="请输入用户名" clearable />
         </el-form-item>
 
         <el-form-item label="密码" prop="password">
-          <el-input prefix-icon="Lock" show-password v-model="loginForm.password" placeholder="请输入密码"/>
+          <el-input prefix-icon="Lock" show-password v-model="loginForm.password" placeholder="请输入密码" />
         </el-form-item>
         <el-button type="primary" class="login-btn" :loading="loading" @click="handleLogin">
           登录后台
@@ -90,7 +91,7 @@ export default {
 
           if (result.code === '200' || result.code === 200) {
             this.$message.success('登录成功')
-            this.$router.push('/hello')//跳转页面在这改
+            this.$router.push('/alogin/admin')//跳转页面在这改
           } else {
             this.$message.error(result.message || result.msg || '请检查输入的用户名和密码是否正确')
             console.log(result)

@@ -1,8 +1,8 @@
 <template>
   <div class="app-shell">
-    <LiquidGlassNav />
+    <LiquidGlassNav v-if="!isAdminPage" />
 
-    <main class="page-container">
+    <main :class="['page-container', { 'page-container--admin': isAdminPage }]">
       <router-view></router-view>
     </main>
   </div>
@@ -15,6 +15,11 @@ export default {
   name: 'App',
   components: {
     LiquidGlassNav
+  },
+  computed: {
+    isAdminPage() {
+      return this.$route.path === '/alogin/admin'
+    }
   }
 }
 </script>
@@ -38,5 +43,9 @@ body {
 
 .page-container {
   padding: 96px 24px 24px;
+}
+
+.page-container--admin {
+  padding-top: 24px;
 }
 </style>
