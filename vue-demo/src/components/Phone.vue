@@ -19,8 +19,8 @@
     <section class="brand-grid" aria-label="主流手机品牌列表">
       <article v-for="brand in filteredBrands" :key="brand.name" class="brand-card">
         <div class="brand-top">
-          <span class="brand-mark" :style="{ background: brand.color }">
-            {{ brand.shortName }}
+          <span class="brand-mark">
+            <img :src="brand.img" :alt="brand.name" class="brand-logo" />
           </span>
         </div>
 
@@ -168,57 +168,57 @@ export default {
       brands: [
         {
           name: "华为",
-          shortName: "H",
           subBrands: [],
           color: "linear-gradient(135deg, #ef4444, #f97316)",
+          img: require("@/assets/brand_icon/HUAWEI.png"),
         },
         {
           name: "小米",
-          shortName: "MI",
           subBrands: ["红米"],
           color: "linear-gradient(135deg, #f97316, #facc15)",
+          img: require("@/assets/brand_icon/Xiaomi.png"),
         },
         {
           name: "OPPO",
-          shortName: "O",
           subBrands: ["一加", "realme"],
           color: "linear-gradient(135deg, #16a34a, #22c55e)",
+          img: require("@/assets/brand_icon/OPPO.svg"),
         },
         {
           name: "vivo",
-          shortName: "V",
           subBrands: ["iQOO"],
           color: "linear-gradient(135deg, #2563eb, #38bdf8)",
+          img: require("@/assets/brand_icon/Vivo.png"),
         },
         {
           name: "荣耀",
-          shortName: "HON",
           subBrands: [],
           color: "linear-gradient(135deg, #0f172a, #64748b)",
+          img: require("@/assets/brand_icon/Honor.png"),
         },
         {
           name: "魅族",
-          shortName: "MZ",
           subBrands: [],
           color: "linear-gradient(135deg, #14b8a6, #0ea5e9)",
+          img: require("@/assets/brand_icon/MEIZU.png"),
         },
         {
           name: "中兴",
-          shortName: "ZTE",
           subBrands: ["努比亚", "红魔"],
           color: "linear-gradient(135deg, #1d4ed8, #4f46e5)",
+          img: require("@/assets/brand_icon/ZTE.png"),
         },
         {
           name: "Apple",
-          shortName: "A",
           subBrands: [],
           color: "linear-gradient(135deg, #111827, #6b7280)",
+          img: require("@/assets/brand_icon/Apple.png"),
         },
         {
           name: "三星",
-          shortName: "S",
           subBrands: [],
           color: "linear-gradient(135deg, #1d4ed8, #60a5fa)",
+          img: require("@/assets/brand_icon/Samsung.png"),
         },
       ],
       phoneModels: [
@@ -280,7 +280,7 @@ export default {
           batteryValue: 5500,
           price: "¥6499 起",
           priceValue: 6499,
-          img: ""
+          image: require("@/assets/phone_image/mate70pro.jpg")
         },
         {
           brand: "华为",
@@ -895,6 +895,13 @@ export default {
   color: #fff;
   font-size: 20px;
   font-weight: 800;
+}
+
+.brand-logo {
+  display: block;
+  max-width: 56px;
+  max-height: 56px;
+  object-fit: contain;
 }
 
 .brand-card h2 {
