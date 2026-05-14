@@ -232,7 +232,7 @@ export default {
           batteryValue: 4750,
           price: "¥4999 起",
           priceValue: 4999,
-          img: ""
+          image: require("@/assets/phone_image/Mate60.jpg"),
         },
         {
           brand: "华为",
@@ -242,7 +242,7 @@ export default {
           batteryValue: 5000,
           price: "¥5699 起",
           priceValue: 5699,
-          img: ""
+          image: require("@/assets/phone_image/Mate60 Pro.jpg"),
         },
         {
           brand: "华为",
@@ -252,7 +252,7 @@ export default {
           batteryValue: 5000,
           price: "¥7999 起",
           priceValue: 7999,
-          img: ""
+          image: require("@/assets/phone_image/Mate60Pro+.jpg")
         },
         {
           brand: "华为",
@@ -262,7 +262,7 @@ export default {
           batteryValue: 5000,
           price: "¥11999 起",
           priceValue: 11999,
-          img: ""
+          image: require("@/assets/phone_image/Mate60RS.jpg")
         },
         {
           brand: "华为",
@@ -272,7 +272,7 @@ export default {
           batteryValue: 5300,
           price: "¥5499 起",
           priceValue: 5499,
-          img: ""
+          image: require("@/assets/phone_image/Mate 70.jpg")
         },
         {
           brand: "华为",
@@ -292,7 +292,7 @@ export default {
           batteryValue: 5700,
           price: "¥11999 起",
           priceValue: 11999,
-          img: ""
+          image: require("@/assets/phone_image/Mate70RS.png")
         },
         {
           brand: "华为",
@@ -302,7 +302,7 @@ export default {
           batteryValue: 5750,
           price: "¥4699 起",
           priceValue: 4699,
-          img: ""
+          image: require("@/assets/phone_image/Mate 80.png")
         },
         {
           brand: "华为",
@@ -312,7 +312,7 @@ export default {
           batteryValue: 5750,
           price: "¥5999 起",
           priceValue: 5999,
-          img: ""
+          image: require("@/assets/phone_image/Mate 80 Pro.png")
         },
         {
           brand: "华为",
@@ -322,7 +322,7 @@ export default {
           batteryValue: 6000,
           price: "¥6999 起",
           priceValue: 6999,
-          img: ""
+          image: require("@/assets/phone_image/Mate 80 Pro Max.png")
         },
         {
           brand: "华为",
@@ -332,7 +332,7 @@ export default {
           batteryValue: 6000,
           price: "¥11999 起",
           priceValue: 11999,
-          img: ""
+          image: require("@/assets/phone_image/Mate80RS.png")
         },
 
         {
@@ -343,7 +343,7 @@ export default {
           batteryValue: 4815,
           price: "¥4488 起",
           priceValue: 4488,
-          img: ""
+          image: require("@/assets/phone_image/P60.jpg")
         },
         {
           brand: "华为",
@@ -353,7 +353,7 @@ export default {
           batteryValue: 4815,
           price: "¥6188 起",
           priceValue: 6188,
-          img: ""
+          image: require("@/assets/phone_image/P60Pro.jpg")
         },
         {
           brand: "华为",
@@ -363,7 +363,7 @@ export default {
           batteryValue: 5060,
           price: "¥8988 起",
           priceValue: 8988,
-          img: ""
+          image: require("@/assets/phone_image/P60Art.jpg")
         },
 
         {
@@ -374,7 +374,7 @@ export default {
           batteryValue: 4900,
           price: "¥4999 起",
           priceValue: 4999,
-          img: ""
+          image: require("@/assets/phone_image/Pura70.jpg")
         },
         {
           brand: "华为",
@@ -384,7 +384,7 @@ export default {
           batteryValue: 5050,
           price: "¥5999 起",
           priceValue: 5999,
-          img: ""
+          image: require("@/assets/phone_image/Pura70Pro.jpg")
         },
         {
           brand: "华为",
@@ -394,7 +394,7 @@ export default {
           batteryValue: 5050,
           price: "¥7499 起",
           priceValue: 7499,
-          img: ""
+          image: require("@/assets/phone_image/Pura70Pro+.jpg")
         },
         {
           brand: "华为",
@@ -404,7 +404,7 @@ export default {
           batteryValue: 5200,
           price: "¥9999 起",
           priceValue: 9999,
-          img: ""
+          image: require("@/assets/phone_image/Pura70Ultra.jpg")
         },
         {
           brand: "华为",
@@ -414,37 +414,37 @@ export default {
           batteryValue: 5600,
           price: "¥5299 起",
           priceValue: 5299,
-          img: ""
+          image: require("@/assets/phone_image/Pura80.jpg")
         },
         {
           brand: "华为",
           model: "HUAWEI Pura 80 Pro",
-          processor: "官网未标注",
+          processor: "麒麟9020",
           battery: "5700mAh",
           batteryValue: 5700,
           price: "¥6299 起",
           priceValue: 6299,
-          img: ""
+          image: require("@/assets/phone_image/Pura80Pro.jpg")
         },
         {
           brand: "华为",
           model: "HUAWEI Pura 80 Pro+",
-          processor: "官网未标注",
+          processor: "麒麟9020",
           battery: "5700mAh",
           batteryValue: 5700,
           price: "¥7699 起",
           priceValue: 7699,
-          img: ""
+          image: require("@/assets/phone_image/Pura80Pro+.jpg")
         },
         {
           brand: "华为",
           model: "HUAWEI Pura 80 Ultra",
-          processor: "官网未标注",
+          processor: "麒麟9020",
           battery: "5700mAh",
           batteryValue: 5700,
           price: "¥10999 起",
           priceValue: 10999,
-          img: ""
+          image: require("@/assets/phone_image/Pura80Ultra.jpg")
         },
 
         // Pura 90 系列
@@ -456,7 +456,7 @@ export default {
           batteryValue: 6500,
           price: "¥5599 起",
           priceValue: 5599,
-          img: ""
+          image: require("@/assets/phone_image/Pura90.jpg")
         },
         {
           brand: "华为",
@@ -466,7 +466,7 @@ export default {
           batteryValue: 6000,
           price: "¥6599 起",
           priceValue: 6599,
-          img: ""
+          image: require("@/assets/phone_image/Pura90Pro.jpg")
         },
         {
           brand: "华为",
@@ -476,7 +476,78 @@ export default {
           batteryValue: 6000,
           price: "¥7999 起",
           priceValue: 7999,
-          img: ""
+          image: require("@/assets/phone_image/Pura90ProMax.jpg")
+        },
+        //小米
+        {
+          brand: "小米",
+          model: "小米  17",
+          processor: "骁龙 8Elite Gen5",
+          battery: "7100mAh",
+          batteryValue: 6100,
+          price: "¥4,499 起",
+          priceValue: 4499,
+          image: require("@/assets/phone_image/xm17.jpg"),
+        },
+        {
+          brand: "小米",
+          model: "小米 17 Pro",
+          processor: "骁龙 8Elite Gen5",
+          battery: "6300mAh",
+          batteryValue: 6300,
+          price: "¥5,299 起",
+          priceValue: 5299,
+          image: require("@/assets/phone_image/xm17Pro.jpg"),
+        },
+        {
+          brand: "小米",
+          model: "小米 17 Pro Max",
+          processor: "骁龙 8Elite Gen5",
+          battery: "7500mAh",
+          batteryValue: 7500,
+          price: "¥5,999 起",
+          priceValue: 5999,
+          image: require("@/assets/phone_image/xm17ProMax.jpg"),
+        },
+        {
+          brand: "小米",
+          model: "小米 17 Max",
+          processor: "骁龙 8Elite Gen5",
+          battery: "8000mAh",
+          batteryValue: 8000,
+          price: "暂未开售",
+          priceValue: null,
+          image: require("@/assets/phone_image/xm17Max.jpg"),
+        },
+        {
+          brand: "小米",
+          model: "小米 17 Ultra",
+          processor: "骁龙 8Elite Gen5",
+          battery: "6800mAh",
+          batteryValue: 6800,
+          price: "¥6,999 起",
+          priceValue: 6999,
+          image: require("@/assets/phone_image/xm17Ultra.jpg"),
+        },
+        {
+          brand: "小米",
+          model: "小米 17 Ultra徕卡版",
+          processor: "骁龙 8Elite Gen5",
+          battery: "6800mAh",
+          batteryValue: 6800,
+          price: "¥7,499 起",
+          priceValue: 7499,
+          image: require("@/assets/phone_image/xm17Ultra For LEICA.png"),
+        },
+        {
+          brand: "小米",
+          model: "小米 15s Pro",
+          processor: "Xring O1",
+          battery: "6100mAh",
+          batteryValue: 6100,
+          price: "¥5,299 起",
+          priceValue: 5299,
+          image: require("@/assets/phone_image/xm15sPro.jpg"),
         },
         {
           brand: "小米",
@@ -486,7 +557,17 @@ export default {
           batteryValue: 6100,
           price: "¥5,299 起",
           priceValue: 5299,
-          image: "",
+          image: require("@/assets/phone_image/xm15Pro.jpg"),
+        },
+        {
+          brand: "小米",
+          model: "小米 15",
+          processor: "骁龙 8 至尊版",
+          battery: "5400mAh",
+          batteryValue: 5400,
+          price: "¥4,499 起",
+          priceValue: 4499,
+          image: require("@/assets/phone_image/xm15.jpg"),
         },
         {
           brand: "小米",
