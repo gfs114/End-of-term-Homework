@@ -82,7 +82,7 @@ export default {
         this.loading = true
 
         try {
-          const response = await http.post('/login', {
+          const response = await http.post('/admin/login', {
             username: this.loginForm.username,
             password: this.loginForm.password,
             role: 'ADMIN'
