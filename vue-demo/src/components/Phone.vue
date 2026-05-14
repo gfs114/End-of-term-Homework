@@ -1,4 +1,6 @@
-<!-- 注：img图片放在 src下的assets里面-->
+<!-- 注：img图片放在 src下的assets里面
+例子： image: require("@/assets/phone_image/mate70pro.jpg") 
+-->
 <template>
   <section class="phone-zone">
     <header class="page-heading">
