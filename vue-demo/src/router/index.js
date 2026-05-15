@@ -37,6 +37,12 @@ const router = createRouter({
         {
             path:'/alogin/admin',
             component:Admin
+        },
+        {
+            name:'404',
+            path:'/:catchAll(.*)',
+            component: () => import('@/components/NotFound.vue')
+
         }
     ]
 })
