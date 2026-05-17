@@ -3,55 +3,24 @@
     <div class="register-card">
       <h2>用户注册</h2>
 
-      <el-form
-        ref="registerForm"
-        :model="form"
-        :rules="rules"
-        label-position="top"
-        class="register-form"
-      >
+      <el-form ref="registerForm" :model="form" :rules="rules" label-position="top" class="register-form">
         <el-form-item label="用户名" prop="username">
-          <el-input
-            prefix-icon="UserFilled"
-            v-model="form.username"
-            placeholder="请输入用户名"
-          />
+          <el-input prefix-icon="UserFilled" v-model="form.username" placeholder="请输入用户名" />
         </el-form-item>
 
         <el-form-item label="邮箱" prop="email">
-          <el-input
-            v-model="form.email"
-            placeholder="请输入邮箱"
-            clearable
-            prefix-icon="Message"
-          />
+          <el-input v-model="form.email" placeholder="请输入邮箱" clearable prefix-icon="Message" />
         </el-form-item>
 
         <el-form-item label="密码" prop="password">
-          <el-input
-            v-model="form.password"
-            type="password"
-            placeholder="请输入密码"
-            show-password
-            prefix-icon="Key"
-          />
+          <el-input v-model="form.password" type="password" placeholder="请输入密码" show-password prefix-icon="Key" />
         </el-form-item>
 
         <el-form-item label="确认密码" prop="confirmPassword">
-          <el-input
-            v-model="form.confirmPassword"
-            type="password"
-            placeholder="请再次输入密码"
-            show-password
-          />
+          <el-input v-model="form.confirmPassword" type="password" placeholder="请再次输入密码" show-password />
         </el-form-item>
 
-        <el-button
-          type="primary"
-          class="submit-button"
-          :loading="loading"
-          @click="handleRegister"
-        >
+        <el-button type="primary" class="submit-button" :loading="loading" @click="handleRegister">
           注册
         </el-button>
       </el-form>
@@ -65,6 +34,8 @@
 </template>
 
 <script>
+import http from '@/utils/http'
+
 export default {
   name: 'RegisterPage',
   data() {
@@ -97,6 +68,7 @@ export default {
     }
   },
   methods: {
+
     validateConfirmPassword(rule, value, callback) {
       if (value !== this.form.password) {
         callback(new Error('两次输入的密码不一致'))
@@ -105,16 +77,35 @@ export default {
       callback()
     },
     handleRegister() {
-      this.$refs.registerForm.validate((valid) => {
-        if (!valid) {
+      this.$refs.registerForm.validate(async (valid) => {
+        if (!valid || this.loading) {
           return
         }
 
         this.loading = true
-        setTimeout(() => {
+
+        try {
+          const response = await http.post('/register', {
+            username: this.form.username,
+            email: this.form.email,
+            password: this.form.password
+          })
+          const result = response.data || response
+
+          if (result.code === '200' || result.code === 200) {
+            this.$message.success(result.message || result.msg || '注册成功')
+            this.$router.push('/login')
+          } else {
+            this.$message.error(result.message || result.msg || '注册失败')
+            console.log(result)
+          }
+        } catch (error) {
+          const data = error.response && error.response.data
+          this.$message.error((data && (data.message || data.msg)) || '注册失败')
+          console.log(error)
+        } finally {
           this.loading = false
-          this.$message.success('注册成功')
-        }, 600)
+        }
       })
     }
   }

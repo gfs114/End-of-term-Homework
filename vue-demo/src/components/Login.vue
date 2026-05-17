@@ -7,11 +7,11 @@
 
       <el-form ref="loginForm" :model="form" :rules="rules" label-position="top" class="login-form">
         <el-form-item label="用户名" prop="username">
-          <el-input v-model="form.username" prefix-icon="UserFilled" placeholder="请输入用户名" clearable/>
+          <el-input v-model="form.username" prefix-icon="UserFilled" placeholder="请输入用户名或者邮箱" clearable />
         </el-form-item>
 
         <el-form-item label="密码" prop="password">
-          <el-input v-model="form.password" type="password" prefix-icon="Lock" placeholder="请输入密码" show-password/>
+          <el-input v-model="form.password" type="password" prefix-icon="Lock" placeholder="请输入密码" show-password />
         </el-form-item>
 
         <div class="form-options">
@@ -43,11 +43,12 @@ export default {
   data() {
     const validateUsername = (rule, value, callback) => {
       const usernameRegex = /^[a-zA-Z0-9_]{3,16}$/
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
       if (value === '') {
-        callback(new Error('请输入用户名'))
-      } else if (!usernameRegex.test(value)) {
-        callback(new Error('在3-16个字符之间，且只能包含字母，数字或下划线'))
+        callback(new Error('请输入用户名或邮箱'))
+      } else if (!usernameRegex.test(value) && !emailRegex.test(value)) {
+        callback(new Error('请输入正确的用户名或邮箱'))
       } else {
         callback()
       }

@@ -14,9 +14,16 @@
                 </el-button>
             </div>
 
-            <el-menu class="admin-menu" :collapse="isCollapsed" :default-active="activeMenuKey"
-                background-color="#111827" text-color="#cbd5e1" active-text-color="#ffffff" unique-opened
-                @select="handleMenuSelect">
+            <el-menu
+                class="admin-menu"
+                :collapse="isCollapsed"
+                :default-active="activeMenuKey"
+                background-color="#111827"
+                text-color="#cbd5e1"
+                active-text-color="#ffffff"
+                unique-opened
+                @select="handleMenuSelect"
+            >
                 <template v-for="menu in menus" :key="menu.key">
                     <el-sub-menu v-if="menu.children && menu.children.length" :index="menu.key">
                         <template #title>
@@ -55,11 +62,13 @@
 
         <main class="admin-main">
             <section class="admin-content">
-                <el-card shadow="never" class="overview-card">
+                <AdminInfo v-if="activeMenuKey === 'admin-info'" />
+                <UserInfo v-else-if="activeMenuKey === 'user-info'" />
+
+                <el-card v-else shadow="never" class="overview-card">
                     <template #header>
                         <div class="card-header">
                             <span>{{ currentPage.title }}</span>
-                            <p>{{ currentPage.breadcrumb }}</p>
                         </div>
                     </template>
 
@@ -75,12 +84,19 @@
 </template>
 
 <script>
+import AdminInfo from '@/components/AdminInfo.vue'
+import UserInfo from '@/components/UserInfo.vue'
+
 export default {
-    name: 'Admin',
+    name: 'AdminPage',
+    components: {
+        AdminInfo,
+        UserInfo
+    },
     data() {
         return {
             isCollapsed: false,
-            activeMenuKey: 'system-log',
+            activeMenuKey: 'admin-info',
             menus: [
                 {
                     key: 'system-log',
@@ -234,7 +250,7 @@ export default {
     min-height: 100vh;
     margin: -24px;
     overflow: hidden;
-    background: #f7f8fa;
+    background: #f3f4f6;
 }
 
 .admin-sidebar {
@@ -333,14 +349,16 @@ export default {
 
 .admin-content {
     flex: 1;
+    width: 100%;
+    min-width: 0;
     padding: 18px;
+    box-sizing: border-box;
 }
 
 .overview-card {
     min-height: calc(100vh - 36px);
-    border: 0;
-    border-radius: 0;
-    box-shadow: none;
+    border: 1px solid #ebeef5;
+    border-radius: 8px;
     background: #fff;
 }
 
@@ -359,12 +377,6 @@ export default {
 .card-header span {
     font-size: 16px;
     font-weight: 700;
-}
-
-.card-header p {
-    margin: 6px 0 0;
-    color: #6b7280;
-    font-size: 13px;
 }
 
 .placeholder-body {
