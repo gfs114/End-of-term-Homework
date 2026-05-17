@@ -19,7 +19,10 @@
     </section>
 
     <section class="brand-grid" aria-label="主流手机品牌列表">
-      <article v-for="brand in filteredBrands" :key="brand.name" class="brand-card">
+      <article v-for="brand in filteredBrands" :key="brand.name"
+        :class="['brand-card', { active: selectedBrand && selectedBrand.name === brand.name }]" tabindex="0"
+        role="button" @click="selectBrand(brand)" @keyup.enter="selectBrand(brand)"
+        @keyup.space.prevent="selectBrand(brand)">
         <div class="brand-top">
           <span class="brand-mark">
             <img :src="brand.img" :alt="brand.name" class="brand-logo" />
@@ -94,7 +97,8 @@
 
       <div class="model-grid">
         <article v-for="(phone, index) in paginatedPhoneModels" :key="phone.model" class="model-card"
-          :style="modelCardAnimationStyle(index)">
+          :style="modelCardAnimationStyle(index)" tabindex="0" role="button" @click="openPhoneDetail(phone, $event)"
+          @keyup.enter="openPhoneDetail(phone, $event)" @keyup.space.prevent="openPhoneDetail(phone, $event)">
           <div class="model-image">
             <img :src="phone.image" :alt="phone.model" />
           </div>
@@ -132,6 +136,75 @@
         暂未找到匹配机型，请换个关键词试试。
       </div>
     </section>
+
+    <transition name="phone-detail">
+      <div v-if="selectedPhone" class="phone-detail-overlay" :style="phoneDetailVars" @click.self="closePhoneDetail">
+        <section class="phone-detail-panel" aria-label="手机详情">
+          <button type="button" class="phone-detail-close" aria-label="关闭详情" @click="closePhoneDetail">
+            ×
+          </button>
+
+          <div class="phone-detail-image">
+            <img v-if="selectedPhone.image" :src="selectedPhone.image" :alt="selectedPhone.model" />
+            <span v-else>{{ selectedPhone.model }}</span>
+          </div>
+
+          <div class="phone-detail-content">
+            <p class="phone-detail-brand">{{ selectedPhone.brand }}</p>
+            <h2>{{ selectedPhone.model }}</h2>
+
+            <dl class="phone-detail-list">
+              <div>
+                <dt>处理器</dt>
+                <dd>{{ selectedPhone.processor }}</dd>
+              </div>
+              <div>
+                <dt>电池容量</dt>
+                <dd>{{ selectedPhone.battery }}</dd>
+              </div>
+              <div>
+                <dt>价格</dt>
+                <dd>{{ selectedPhone.price }}</dd>
+              </div>
+            </dl>
+          </div>
+        </section>
+      </div>
+    </transition>
+
+    <transition name="brand-modal">
+      <div v-if="selectedBrand" class="brand-modal-overlay" @click.self="clearSelectedBrand">
+        <section class="brand-modal-panel" aria-label="品牌手机弹窗">
+          <div class="brand-showcase-head">
+            <div>
+              <p>品牌手机</p>
+              <h2>{{ selectedBrand.name }}</h2>
+            </div>
+            <button type="button" class="brand-showcase-close" @click="clearSelectedBrand">关闭</button>
+          </div>
+
+          <div v-if="selectedBrandPhones.length" class="brand-phone-grid">
+            <article v-for="phone in selectedBrandPhones" :key="phone.model" class="brand-phone-card" tabindex="0"
+              role="button" @click="openPhoneDetail(phone, $event)" @keyup.enter="openPhoneDetail(phone, $event)"
+              @keyup.space.prevent="openPhoneDetail(phone, $event)">
+              <div class="brand-phone-image">
+                <img v-if="phone.image" :src="phone.image" :alt="phone.model" />
+                <span v-else>{{ phone.model }}</span>
+              </div>
+              <div class="brand-phone-body">
+                <h3>{{ phone.model }}</h3>
+                <p>{{ phone.processor }}</p>
+                <strong>{{ phone.price }}</strong>
+              </div>
+            </article>
+          </div>
+
+          <div v-else class="empty-state">
+            该品牌暂未收录手机型号。
+          </div>
+        </section>
+      </div>
+    </transition>
   </section>
 </template>
 
@@ -148,6 +221,12 @@ export default {
       modelSectionVisible: false,
       modelSectionObserver: null,
       modelSectionTimer: null,
+      selectedBrand: null,
+      selectedPhone: null,
+      detailOrigin: {
+        x: 50,
+        y: 50,
+      },
       modelFilters: {
         brand: "全部",
         processor: "全部",
@@ -948,6 +1027,15 @@ export default {
         return !keyword || searchable.includes(keyword);
       });
     },
+    selectedBrandPhones() {
+      if (!this.selectedBrand) {
+        return [];
+      }
+
+      return this.phoneModels.filter(
+        (phone) => phone.brand === this.selectedBrand.name
+      );
+    },
     filteredPhoneModels() {
       const keyword = this.modelKeyword.toLowerCase();
       const priceRange = this.priceOptions.find(
@@ -1000,6 +1088,12 @@ export default {
       const start = (this.currentModelPage - 1) * this.modelPageSize;
       return this.filteredPhoneModels.slice(start, start + this.modelPageSize);
     },
+    phoneDetailVars() {
+      return {
+        "--detail-origin-x": `${this.detailOrigin.x}%`,
+        "--detail-origin-y": `${this.detailOrigin.y}%`,
+      };
+    },
   },
   watch: {
     modelKeyword() {
@@ -1023,6 +1117,12 @@ export default {
     });
   },
   methods: {
+    selectBrand(brand) {
+      this.selectedBrand = brand;
+    },
+    clearSelectedBrand() {
+      this.selectedBrand = null;
+    },
     setModelFilter(key, value) {
       this.modelFilters[key] = value;
     },
@@ -1083,6 +1183,19 @@ export default {
       return {
         animationDelay: `${Math.min(index * 110, 660)}ms`,
       };
+    },
+    openPhoneDetail(phone, event) {
+      if (event && event.currentTarget) {
+        const rect = event.currentTarget.getBoundingClientRect();
+        this.detailOrigin = {
+          x: ((rect.left + rect.width / 2) / window.innerWidth) * 100,
+          y: ((rect.top + rect.height / 2) / window.innerHeight) * 100,
+        };
+      }
+      this.selectedPhone = phone;
+    },
+    closePhoneDetail() {
+      this.selectedPhone = null;
     },
   },
   beforeUnmount() {
@@ -1187,6 +1300,7 @@ export default {
   padding: 28px 20px;
   border-radius: 8px;
   box-sizing: border-box;
+  cursor: pointer;
   transition: transform 0.18s ease, box-shadow 0.18s ease,
     border-color 0.18s ease;
 }
@@ -1202,10 +1316,17 @@ export default {
       rgba(37, 99, 235, 0.06));
 }
 
-.brand-card:hover {
+.brand-card:hover,
+.brand-card:focus,
+.brand-card.active {
   border-color: #bfdbfe;
   box-shadow: 0 20px 44px rgba(45, 73, 112, 0.15);
+  outline: none;
   transform: translateY(-2px);
+}
+
+.brand-card.active {
+  border-color: #2563eb;
 }
 
 .brand-top {
@@ -1243,6 +1364,160 @@ export default {
   margin: 18px 0 0;
   font-size: 22px;
   text-align: center;
+}
+
+.brand-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1450;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.52);
+}
+
+.brand-modal-panel {
+  width: min(980px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  padding: 24px;
+  border: 1px solid #dbe7f3;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.24);
+}
+
+.brand-modal-enter-active,
+.brand-modal-leave-active {
+  transition: opacity 0.28s ease;
+}
+
+.brand-modal-enter-active .brand-modal-panel {
+  animation: brand-modal-open 0.34s cubic-bezier(0.2, 1, 0.22, 1) both;
+}
+
+.brand-modal-leave-active .brand-modal-panel {
+  animation: brand-modal-close 0.2s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.brand-modal-enter-from,
+.brand-modal-leave-to {
+  opacity: 0;
+}
+
+.brand-showcase-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.brand-showcase-head p {
+  margin: 0 0 6px;
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.brand-showcase-head h2 {
+  margin: 0;
+  color: #101827;
+  font-size: 24px;
+}
+
+.brand-showcase-close {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid #d6e1ee;
+  border-radius: 8px;
+  background: #fff;
+  color: #43546b;
+  cursor: pointer;
+}
+
+.brand-showcase-close:hover {
+  border-color: #2563eb;
+  color: #2563eb;
+}
+
+.brand-phone-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.brand-phone-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #dbe7f3;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(45, 73, 112, 0.06);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.brand-phone-card:hover,
+.brand-phone-card:focus {
+  border-color: #2563eb;
+  box-shadow: 0 16px 32px rgba(45, 73, 112, 0.14);
+  outline: none;
+  transform: translateY(-2px);
+}
+
+.brand-phone-card:active {
+  transform: scale(0.97);
+}
+
+.brand-phone-image {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #eef3f8;
+}
+
+.brand-phone-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.brand-phone-image span {
+  padding: 16px;
+  color: #5f6f86;
+  font-weight: 700;
+  text-align: center;
+}
+
+.brand-phone-body {
+  padding: 12px;
+}
+
+.brand-phone-body h3 {
+  min-height: 44px;
+  margin: 0 0 8px;
+  color: #152033;
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.brand-phone-body p {
+  min-height: 38px;
+  margin: 0 0 8px;
+  color: #8090a6;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.brand-phone-body strong {
+  color: #253247;
+  font-size: 14px;
 }
 
 .model-section {
@@ -1355,6 +1630,21 @@ export default {
   background: #ffffff;
   box-shadow: 0 12px 28px rgba(45, 73, 112, 0.06);
   box-sizing: border-box;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.model-card:hover,
+.model-card:focus {
+  border-color: #2563eb;
+  box-shadow: 0 18px 38px rgba(45, 73, 112, 0.14);
+  outline: none;
+  transform: translateY(-2px);
+}
+
+.model-card:active {
+  transform: translateY(0) scale(0.96);
+  transition-duration: 0.08s;
 }
 
 .model-section--animating .model-card {
@@ -1452,6 +1742,139 @@ export default {
   margin-top: 16px;
 }
 
+.phone-detail-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.52);
+}
+
+.phone-detail-enter-active,
+.phone-detail-leave-active {
+  transition: background 0.32s ease, opacity 0.32s ease;
+}
+
+.phone-detail-enter-active .phone-detail-panel {
+  animation: phone-detail-open 0.44s cubic-bezier(0.2, 1, 0.22, 1) both;
+}
+
+.phone-detail-leave-active .phone-detail-panel {
+  animation: phone-detail-close 0.24s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.phone-detail-enter-from,
+.phone-detail-leave-to {
+  opacity: 0;
+  background: rgba(15, 23, 42, 0);
+}
+
+.phone-detail-panel {
+  position: relative;
+  width: min(820px, 100%);
+  max-height: calc(100vh - 48px);
+  display: grid;
+  grid-template-columns: minmax(260px, 0.9fr) minmax(0, 1fr);
+  gap: 28px;
+  overflow: auto;
+  padding: 28px;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.24);
+  transform-origin: var(--detail-origin-x) var(--detail-origin-y);
+  will-change: transform, opacity;
+}
+
+.phone-detail-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 34px;
+  height: 34px;
+  border: 1px solid #dbe7f3;
+  border-radius: 8px;
+  background: #fff;
+  color: #43546b;
+  cursor: pointer;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.phone-detail-close:hover {
+  border-color: #2563eb;
+  color: #2563eb;
+}
+
+.phone-detail-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #eef3f8;
+}
+
+.phone-detail-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.phone-detail-image span {
+  padding: 24px;
+  color: #5f6f86;
+  font-weight: 700;
+  text-align: center;
+}
+
+.phone-detail-content {
+  min-width: 0;
+  padding: 16px 10px 10px 0;
+}
+
+.phone-detail-brand {
+  margin: 0 0 8px;
+  color: #2563eb;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.phone-detail-content h2 {
+  margin: 0 36px 24px 0;
+  color: #101827;
+  font-size: 28px;
+  line-height: 1.25;
+}
+
+.phone-detail-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+
+.phone-detail-list div {
+  padding: 14px 0;
+  border-top: 1px solid #eef3f8;
+}
+
+.phone-detail-list dt {
+  margin-bottom: 6px;
+  color: #8090a6;
+  font-size: 13px;
+}
+
+.phone-detail-list dd {
+  margin: 0;
+  color: #253247;
+  font-size: 16px;
+  font-weight: 700;
+}
+
 @keyframes model-section-rise {
   0% {
     opacity: 0;
@@ -1476,10 +1899,67 @@ export default {
   }
 }
 
+@keyframes phone-detail-open {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0) scale(0.78);
+  }
+
+  58% {
+    opacity: 1;
+    transform: translate3d(0, -4px, 0) scale(1.018);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes phone-detail-close {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0) scale(0.9);
+  }
+}
+
+@keyframes brand-modal-open {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0) scale(0.94);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes brand-modal-close {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0) scale(0.96);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
 
   .model-section--animating .model-control-panel,
-  .model-section--animating .model-card {
+  .model-section--animating .model-card,
+  .phone-detail-enter-active .phone-detail-panel,
+  .phone-detail-leave-active .phone-detail-panel,
+  .brand-modal-enter-active .brand-modal-panel,
+  .brand-modal-leave-active .brand-modal-panel {
     animation: none;
   }
 }
@@ -1507,6 +1987,10 @@ export default {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .brand-phone-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .model-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1531,12 +2015,56 @@ export default {
     grid-template-columns: 1fr;
   }
 
+  .brand-phone-grid {
+    grid-template-columns: 1fr;
+  }
+
   .model-grid {
     grid-template-columns: 1fr;
   }
 
   .filter-title {
     flex-basis: 100%;
+  }
+
+  .brand-modal-overlay {
+    align-items: flex-end;
+    padding: 14px;
+  }
+
+  .brand-modal-panel {
+    max-height: calc(100vh - 28px);
+    padding: 20px;
+  }
+
+  .brand-showcase-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .phone-detail-overlay {
+    align-items: flex-end;
+    padding: 14px;
+  }
+
+  .phone-detail-panel {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    max-height: calc(100vh - 28px);
+    padding: 20px;
+  }
+
+  .phone-detail-image {
+    min-height: 240px;
+  }
+
+  .phone-detail-content {
+    padding: 0;
+  }
+
+  .phone-detail-content h2 {
+    margin-right: 42px;
+    font-size: 22px;
   }
 }
 </style>

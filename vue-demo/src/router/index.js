@@ -5,7 +5,9 @@ import Register from "@/components/Register.vue";
 import AdminLogin from "@/components/AdminLogin.vue";
 import ForgetPassword from "@/components/ForgetPassword.vue";
 import Phone from "@/components/Phone.vue";
+import Computer from "@/components/Computer.vue";
 import Admin from "@/components/Admin.vue";
+import Mine from "@/components/Mine.vue";
 
 const router = createRouter({
     history: createWebHashHistory(),
@@ -35,6 +37,14 @@ const router = createRouter({
             component: Phone
         },
         {
+            path: '/computer',
+            component: Computer
+        },
+        {
+            path: '/mine',
+            component: Mine
+        },
+        {
             path:'/alogin/admin',
             component:Admin
         },
@@ -42,7 +52,10 @@ const router = createRouter({
             name:'404',
             path:'/:catchAll(.*)',
             component: () => import('@/components/NotFound.vue')
-
+        },
+        {
+            path:'/',
+            redirect:'/hello'
         }
     ]
 })
