@@ -84,8 +84,8 @@
 </template>
 
 <script>
-import AdminInfo from '@/components/AdminInfo.vue'
-import UserInfo from '@/components/UserInfo.vue'
+import AdminInfo from '@/components/manager/AdminInfo.vue'
+import UserInfo from '@/components/manager/UserInfo.vue'
 
 export default {
     name: 'AdminPage',
