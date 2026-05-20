@@ -93,6 +93,7 @@ export default {
           const result = response.data || response
 
           if (result.code === '200' || result.code === 200) {
+            localStorage.setItem('loginEmail', this.form.email)
             this.$message.success(result.message || result.msg || '注册成功')
             this.$router.push('/login')
           } else {

@@ -18,7 +18,7 @@
           <el-checkbox v-model="form.remember">记住我</el-checkbox>
           <div class="form-links">
             <router-link to="/alogin">管理员登录</router-link>
-            <!-- <router-link to="/forget">忘记密码</router-link> -->
+            <router-link to="/forget">忘记密码</router-link>
           </div>
         </div>
 
@@ -102,6 +102,10 @@ export default {
           const result = response.data || response
 
           if (result.code === '200' || result.code === 200) {
+            localStorage.setItem('loginUsername', this.form.username)
+            if (this.form.username.includes('@')) {
+              localStorage.setItem('loginEmail', this.form.username)
+            }
             this.$message.success('登录成功')
             this.$router.push('/hello')
           } else {

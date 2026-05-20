@@ -47,8 +47,14 @@
       </div>
 
       <div class="nav-group nav-auth">
-        <router-link to="/login" class="nav-link">登录</router-link>
-        <router-link to="/register" class="nav-link">注册</router-link>
+        <template v-if="loginUsername">
+          <span class="nav-greeting">你好，{{ loginUsername }}</span>
+          <button type="button" class="nav-link nav-button" @click="handleLogout">登出</button>
+        </template>
+        <template v-else>
+          <router-link to="/login" class="nav-link">登录</router-link>
+          <router-link to="/register" class="nav-link">注册</router-link>
+        </template>
         <!-- <router-link to="/alogin" class="nav-link">管理员登录</router-link> -->
       </div>
     </nav>
@@ -85,7 +91,8 @@ export default {
       displacementMap: '',
       displacementScale: 24,
       resizeObserver: null,
-      resizeFrame: null
+      resizeFrame: null,
+      loginUsername: ''
     }
   },
   computed: {
@@ -95,7 +102,13 @@ export default {
       }
     }
   },
+  watch: {
+    '$route.fullPath'() {
+      this.loadLoginUsername()
+    }
+  },
   mounted() {
+    this.loadLoginUsername()
     this.updateFilterSize()
     this.resizeObserver = new ResizeObserver(() => this.scheduleFilterUpdate())
     this.resizeObserver.observe(this.$refs.navbar)
@@ -109,6 +122,14 @@ export default {
     }
   },
   methods: {
+    loadLoginUsername() {
+      this.loginUsername = localStorage.getItem('loginUsername') || ''
+    },
+    handleLogout() {
+      localStorage.removeItem('loginUsername')
+      this.loginUsername = ''
+      this.$router.push('/login')
+    },
     scheduleFilterUpdate() {
       if (this.resizeFrame) {
         cancelAnimationFrame(this.resizeFrame)
@@ -304,6 +325,23 @@ export default {
   transform: scale(0.96);
 }
 
+.nav-button {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.nav-greeting {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 18px;
+  color: #f5f5f7;
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 @media (max-width: 768px) {
   .nav-content {
     gap: 10px;
@@ -323,6 +361,11 @@ export default {
   .nav-link {
     min-width: auto;
     padding: 0 14px;
+    font-size: 14px;
+  }
+
+  .nav-greeting {
+    padding: 0 12px;
     font-size: 14px;
   }
 }

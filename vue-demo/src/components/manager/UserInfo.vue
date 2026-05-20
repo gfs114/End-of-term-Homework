@@ -12,14 +12,7 @@
                 </div>
             </template>
 
-            <el-table
-                v-loading="tableLoading"
-                :data="userList"
-                border
-                stripe
-                class="user-table"
-                empty-text="暂无用户数据"
-            >
+            <el-table v-loading="tableLoading" :data="userList" border stripe class="user-table" empty-text="暂无用户数据">
                 <el-table-column prop="username" label="用户账号" min-width="150" />
                 <el-table-column prop="email" label="邮箱" min-width="200">
                     <template #default="{ row }">
@@ -36,12 +29,7 @@
                         <el-button type="primary" link @click="openEditDialog(row)">
                             编辑
                         </el-button>
-                        <el-button
-                            type="danger"
-                            link
-                            :loading="deleteLoadingId === row.id"
-                            @click="handleDelete(row)"
-                        >
+                        <el-button type="danger" link :loading="deleteLoadingId === row.id" @click="handleDelete(row)">
                             删除
                         </el-button>
                     </template>
@@ -49,31 +37,15 @@
             </el-table>
         </el-card>
 
-        <el-dialog
-            v-model="dialogVisible"
-            :title="dialogMode === 'create' ? '新增用户' : '编辑用户'"
-            width="520px"
-            :close-on-click-modal="false"
-            :before-close="handleDialogBeforeClose"
-        >
-            <el-form
-                ref="userForm"
-                :model="form"
-                :rules="rules"
-                label-width="90px"
-                class="user-form"
-            >
+        <el-dialog v-model="dialogVisible" :title="dialogMode === 'create' ? '新增用户' : '编辑用户'" width="520px"
+            :close-on-click-modal="false" :before-close="handleDialogBeforeClose">
+            <el-form ref="userForm" :model="form" :rules="rules" label-width="90px" class="user-form">
                 <el-form-item label="用户账号" prop="username">
                     <el-input v-model.trim="form.username" placeholder="请输入用户账号" maxlength="16" />
                 </el-form-item>
                 <el-form-item label="用户密码" prop="password">
-                    <el-input
-                        v-model.trim="form.password"
-                        type="password"
-                        show-password
-                        :placeholder="dialogMode === 'create' ? '请输入用户密码' : '留空表示不修改密码'"
-                        maxlength="32"
-                    />
+                    <el-input v-model.trim="form.password" type="password" show-password
+                        :placeholder="dialogMode === 'create' ? '请输入用户密码' : '留空表示不修改密码'" maxlength="32" />
                 </el-form-item>
                 <el-form-item label="邮箱" prop="email">
                     <el-input v-model.trim="form.email" placeholder="请输入用户邮箱，可为空" maxlength="80" />
