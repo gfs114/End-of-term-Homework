@@ -23,6 +23,16 @@
 
         <div class="detail-content" v-html="article.content"></div>
       </article>
+
+      <button
+        v-if="article && !loading && !errorMessage"
+        type="button"
+        :class="['favorite-button', { active: isFavorite }]"
+        @click="toggleFavorite"
+      >
+        <el-icon><StarFilled /></el-icon>
+        <span>{{ isFavorite ? '已收藏' : '收藏' }} {{ favoriteCount }}</span>
+      </button>
     </main>
   </section>
 </template>
@@ -51,10 +61,20 @@ export default {
     return {
       article: null,
       loading: false,
-      errorMessage: ''
+      favoriteLoading: false,
+      errorMessage: '',
+      favoriteIds: [],
+      favoriteCount: 0
     }
   },
   computed: {
+    favoriteStorageKey() {
+      const username = localStorage.getItem('loginUsername') || ''
+      return username ? `favoriteArticles:${username}` : ''
+    },
+    isFavorite() {
+      return this.article && this.favoriteIds.includes(String(this.article.id))
+    },
     articleTime() {
       const value = this.article?.created_at || this.article?.updated_at
       if (!value) return ''
@@ -64,9 +84,76 @@ export default {
     }
   },
   created() {
+    this.loadFavorites()
     this.fetchArticle()
   },
   methods: {
+    loadFavorites() {
+      if (!this.favoriteStorageKey) {
+        this.favoriteIds = []
+        return
+      }
+
+      try {
+        const ids = JSON.parse(localStorage.getItem(this.favoriteStorageKey) || '[]')
+        this.favoriteIds = Array.isArray(ids) ? ids.map(String) : []
+      } catch (error) {
+        this.favoriteIds = []
+      }
+    },
+    toggleFavorite() {
+      if (!localStorage.getItem('loginUsername')) {
+        this.$message.warning('请先登录后再收藏')
+        this.$router.push({
+          path: '/login',
+          query: { redirect: this.$route.fullPath }
+        })
+        return
+      }
+
+      if (this.favoriteLoading) return
+
+      const articleId = String(this.article.id)
+      const wasFavorite = this.isFavorite
+      const favoriteUrl = wasFavorite
+        ? `/articles/${articleId}/unfavorite`
+        : `/articles/${articleId}/favorite`
+
+      if (this.isFavorite) {
+        this.favoriteIds = this.favoriteIds.filter((id) => id !== articleId)
+        this.favoriteCount = Math.max(this.favoriteCount - 1, 0)
+      } else {
+        this.favoriteIds = [...this.favoriteIds, articleId]
+        this.favoriteCount += 1
+      }
+
+      localStorage.setItem(this.favoriteStorageKey, JSON.stringify(this.favoriteIds))
+
+      this.favoriteLoading = true
+      http.put(favoriteUrl)
+        .then(({ data }) => {
+          const result = data?.data || data
+          if (typeof result?.favorites !== 'undefined') {
+            this.favoriteCount = Number(result.favorites) || 0
+          }
+          this.$message.success(wasFavorite ? '已取消收藏' : '收藏成功')
+        })
+        .catch((error) => {
+          if (wasFavorite) {
+            this.favoriteIds = [...this.favoriteIds, articleId]
+            this.favoriteCount += 1
+          } else {
+            this.favoriteIds = this.favoriteIds.filter((id) => id !== articleId)
+            this.favoriteCount = Math.max(this.favoriteCount - 1, 0)
+          }
+          localStorage.setItem(this.favoriteStorageKey, JSON.stringify(this.favoriteIds))
+          const data = error.response && error.response.data
+          this.$message.error((data && (data.message || data.msg)) || '收藏数同步失败')
+        })
+        .finally(() => {
+          this.favoriteLoading = false
+        })
+    },
     async fetchArticle() {
       this.loading = true
       this.errorMessage = ''
@@ -74,6 +161,7 @@ export default {
       try {
         const article = await this.fetchDetailById()
         this.article = article
+        this.favoriteCount = Number(article.favorites) || 0
       } catch (error) {
         this.errorMessage = '文章不存在或加载失败'
       } finally {
@@ -183,6 +271,44 @@ export default {
   font-weight: 800;
 }
 
+.favorite-button {
+  position: fixed;
+  top: 50%;
+  right: clamp(16px, 3vw, 42px);
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 104px;
+  height: 42px;
+  justify-content: center;
+  border: 1px solid rgba(245, 245, 247, 0.18);
+  border-radius: 8px;
+  color: rgba(245, 245, 247, 0.84);
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.08);
+  font: inherit;
+  font-weight: 800;
+  transform: translateY(-50%);
+  box-shadow: 0 16px 46px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.favorite-button:hover {
+  color: #fff;
+  border-color: rgba(255, 204, 0, 0.56);
+  transform: translateY(calc(-50% - 2px));
+  box-shadow: 0 20px 54px rgba(0, 0, 0, 0.34);
+}
+
+.favorite-button.active {
+  color: #111113;
+  border-color: #ffd60a;
+  background: #ffd60a;
+}
+
 .detail-article h1 {
   margin: 0;
   color: #fff;
@@ -219,6 +345,19 @@ export default {
   .detail-wrap {
     width: min(100% - 24px, 480px);
     padding-top: 104px;
+  }
+
+  .favorite-button {
+    right: 14px;
+    min-width: 48px;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    border-radius: 50%;
+  }
+
+  .favorite-button span {
+    display: none;
   }
 }
 </style>

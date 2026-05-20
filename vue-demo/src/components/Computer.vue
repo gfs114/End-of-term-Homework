@@ -159,6 +159,15 @@
             <p class="detail-brand">{{ selectedComputer.brand }} / {{ selectedComputer.type }}</p>
             <h2>{{ selectedComputer.model }}</h2>
 
+            <button
+              type="button"
+              :class="['device-favorite-button', { active: selectedComputerFavorite }]"
+              :disabled="favoriteDeviceLoading"
+              @click="toggleFavoriteComputer"
+            >
+              {{ selectedComputerFavorite ? '已喜欢' : '喜欢设备' }}
+            </button>
+
             <dl class="detail-list">
               <div v-for="item in selectedComputerSpecs" :key="item.label">
                 <dt>{{ item.label }}</dt>
@@ -173,6 +182,8 @@
 </template>
 
 <script>
+import http from '@/utils/http'
+
 export default {
   name: "Computer",
   data() {
@@ -181,6 +192,8 @@ export default {
       modelKeyword: "",
       selectedBrand: null,
       selectedComputer: null,
+      favoriteDevices: [],
+      favoriteDeviceLoading: false,
       detailOrigin: {
         x: 50,
         y: 50,
@@ -1185,6 +1198,12 @@ export default {
         "--detail-origin-y": `${this.detailOrigin.y}%`,
       };
     },
+    selectedComputerFavorite() {
+      return this.isFavoriteDevice("computer", this.selectedComputer && this.selectedComputer.model);
+    },
+  },
+  mounted() {
+    this.fetchFavoriteDevices();
   },
   methods: {
     uniqueValues(values) {
@@ -1251,6 +1270,90 @@ export default {
       }
 
       return graphicsName;
+    },
+    getUsername() {
+      return localStorage.getItem("loginUsername") || "";
+    },
+    getFavoriteDeviceKey(device) {
+      return `${device.device_type || device.deviceType}:${device.device_model || device.deviceModel}`;
+    },
+    isFavoriteDevice(type, model) {
+      if (!model) {
+        return false;
+      }
+
+      return this.favoriteDevices.some((device) => (
+        (device.device_type || device.deviceType) === type &&
+        String(device.device_model || device.deviceModel) === String(model)
+      ));
+    },
+    normalizeComputerDevice(computer) {
+      return {
+        username: this.getUsername(),
+        device_type: "computer",
+        device_brand: computer.brand,
+        device_model: computer.model,
+        device_price: computer.price,
+        device_specs: `处理器：${computer.processor || "暂无"}；显卡：${computer.graphics || "暂无"}；内存：${computer.memory || "暂无"}；硬盘：${computer.storage || "暂无"}`
+      };
+    },
+    async fetchFavoriteDevices() {
+      const username = this.getUsername();
+      if (!username) {
+        this.favoriteDevices = [];
+        return;
+      }
+
+      try {
+        const { data } = await http.get("/user-favorite-devices", {
+          params: { username }
+        });
+        const list = Array.isArray(data) ? data : data?.data || data?.devices || [];
+        this.favoriteDevices = Array.isArray(list) ? list : [];
+      } catch (error) {
+        this.favoriteDevices = [];
+      }
+    },
+    async toggleFavoriteComputer() {
+      if (!this.selectedComputer || this.favoriteDeviceLoading) {
+        return;
+      }
+
+      if (!this.getUsername()) {
+        this.$message.warning("请先登录后再喜欢设备");
+        this.$router.push({
+          path: "/login",
+          query: { redirect: this.$route.fullPath }
+        });
+        return;
+      }
+
+      const payload = this.normalizeComputerDevice(this.selectedComputer);
+      const wasFavorite = this.selectedComputerFavorite;
+
+      this.favoriteDeviceLoading = true;
+      try {
+        if (wasFavorite) {
+          await http.delete("/user-favorite-devices", { data: payload });
+          this.favoriteDevices = this.favoriteDevices.filter(
+            (device) => this.getFavoriteDeviceKey(device) !== this.getFavoriteDeviceKey(payload)
+          );
+          this.$message.success("已取消喜欢");
+        } else {
+          await http.post("/user-favorite-devices", payload);
+          this.favoriteDevices = [
+            ...this.favoriteDevices.filter(
+              (device) => this.getFavoriteDeviceKey(device) !== this.getFavoriteDeviceKey(payload)
+            ),
+            payload
+          ];
+          this.$message.success("已加入我喜欢的设备");
+        }
+      } catch (error) {
+        this.$message.error(wasFavorite ? "取消喜欢失败" : "喜欢设备失败");
+      } finally {
+        this.favoriteDeviceLoading = false;
+      }
     },
     openComputerDetail(computer, event) {
       if (event && event.currentTarget) {
@@ -1673,6 +1776,40 @@ export default {
   margin: 0 40px 24px 0;
   font-size: 28px;
   line-height: 1.25;
+}
+
+.device-favorite-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 112px;
+  height: 38px;
+  margin-bottom: 18px;
+  padding: 0 16px;
+  border: 1px solid #d6e1ee;
+  border-radius: 8px;
+  color: #2563eb;
+  background: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.device-favorite-button:hover:not(:disabled) {
+  border-color: #2563eb;
+  transform: translateY(-1px);
+}
+
+.device-favorite-button.active {
+  color: #111827;
+  border-color: #ffd60a;
+  background: #ffd60a;
+}
+
+.device-favorite-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
 }
 
 .detail-list {
