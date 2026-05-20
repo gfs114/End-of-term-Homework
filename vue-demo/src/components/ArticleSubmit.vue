@@ -27,10 +27,6 @@
             <el-form-item label="文章标题" prop="title">
               <el-input v-model.trim="form.title" maxlength="80" show-word-limit placeholder="请输入文章标题" />
             </el-form-item>
-
-            <el-form-item label="作者" prop="author">
-              <el-input v-model.trim="form.author" maxlength="24" disabled placeholder="登录后自动关联作者" />
-            </el-form-item>
           </div>
 
           <div class="form-grid">
@@ -38,10 +34,6 @@
               <el-select v-model="form.category" placeholder="请选择分类">
                 <el-option v-for="item in categories" :key="item" :label="item" :value="item" />
               </el-select>
-            </el-form-item>
-
-            <el-form-item label="发布状态" prop="status">
-              <el-segmented v-model="form.status" :options="statusOptions" />
             </el-form-item>
           </div>
 
@@ -57,10 +49,15 @@
           </el-form-item>
 
           <div class="form-actions">
-            <el-button @click="resetForm">重置</el-button>
-            <el-button type="primary" :loading="loading" @click="submitArticle">
-              提交投稿
-            </el-button>
+            <el-form-item class="status-action" label="发布状态" prop="status">
+              <el-segmented v-model="form.status" :options="statusOptions" />
+            </el-form-item>
+            <div class="submit-buttons">
+              <el-button @click="resetForm">重置</el-button>
+              <el-button type="primary" :loading="loading" @click="submitArticle">
+                提交投稿
+              </el-button>
+            </div>
           </div>
         </el-form>
       </section>
@@ -84,23 +81,19 @@ export default {
       loading: false,
       categories: ['业界', '手机', '电脑', '测评', '视频', 'AI', '苹果', '软件'],
       statusOptions: [
-        { label: '发布', value: 'published' },
         { label: '草稿', value: 'draft' }
       ],
       form: {
         title: '',
         author: loginUsername,
         category: '业界',
-        status: 'published',
+        status: 'draft',
         content: ''
       },
       rules: {
         title: [
           { required: true, message: '请输入文章标题', trigger: 'blur' },
           { min: 2, max: 80, message: '标题长度为 2-80 个字符', trigger: 'blur' }
-        ],
-        author: [
-          { required: true, message: '请输入作者名', trigger: 'blur' }
         ],
         category: [
           { required: true, message: '请选择分类', trigger: 'change' }
@@ -165,7 +158,6 @@ export default {
   }
 }
 </script>
-
 <style scoped>
 * {
   box-sizing: border-box;
@@ -292,11 +284,30 @@ export default {
   gap: 20px;
 }
 
+.form-grid > :only-child {
+  grid-column: 1 / -1;
+}
+
 .form-actions {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.status-action {
+  margin-bottom: 0;
+}
+
+.status-action :deep(.el-segmented) {
+  min-width: 96px;
+}
+
+.submit-buttons {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  margin-top: 8px;
 }
 
 @media (max-width: 720px) {
@@ -308,6 +319,15 @@ export default {
   .form-grid {
     grid-template-columns: 1fr;
     gap: 0;
+  }
+
+  .form-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .submit-buttons {
+    justify-content: flex-end;
   }
 }
 </style>

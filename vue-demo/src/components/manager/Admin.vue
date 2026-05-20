@@ -64,6 +64,7 @@
             <section class="admin-content">
                 <AdminInfo v-if="activeMenuKey === 'admin-info'" />
                 <UserInfo v-else-if="activeMenuKey === 'user-info'" />
+                <ArticleFavoriteInfo v-else-if="activeMenuKey === 'article-favorite'" />
 
                 <el-card v-else shadow="never" class="overview-card">
                     <template #header>
@@ -86,12 +87,14 @@
 <script>
 import AdminInfo from '@/components/manager/AdminInfo.vue'
 import UserInfo from '@/components/manager/UserInfo.vue'
+import ArticleFavoriteInfo from '@/components/manager/ArticleFavoriteInfo.vue'
 
 export default {
     name: 'AdminPage',
     components: {
         AdminInfo,
-        UserInfo
+        UserInfo,
+        ArticleFavoriteInfo
     },
     data() {
         return {
@@ -146,11 +149,6 @@ export default {
                             key: 'article-favorite',
                             title: '文章收藏信息',
                             icon: 'Star'
-                        },
-                        {
-                            key: 'article-comment',
-                            title: '文章评论信息',
-                            icon: 'ChatDotRound'
                         },
                         {
                             key: 'article-history',

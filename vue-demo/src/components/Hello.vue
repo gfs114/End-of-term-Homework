@@ -6,23 +6,13 @@
       <header class="category-bar" aria-label="资讯分类">
         <div class="category-lines">
           <nav class="category-row" aria-label="主分类">
-            <a
-              v-for="item in primaryLinks"
-              :key="item"
-              href="#"
-              class="category-link"
-            >
+            <a v-for="item in primaryLinks" :key="item" href="#" class="category-link">
               {{ item }}
             </a>
           </nav>
 
           <nav class="category-row" aria-label="扩展分类">
-            <a
-              v-for="item in secondaryLinks"
-              :key="item"
-              href="#"
-              class="category-link"
-            >
+            <a v-for="item in secondaryLinks" :key="item" href="#" class="category-link">
               {{ item }}
             </a>
           </nav>
@@ -30,7 +20,9 @@
 
         <div class="search-stack">
           <label class="search-box">
-            <el-icon class="search-icon"><Search /></el-icon>
+            <el-icon class="search-icon">
+              <Search />
+            </el-icon>
             <input v-model.trim="keyword" type="search" placeholder="请输入关键词" />
             <button type="button">搜索</button>
           </label>
@@ -43,12 +35,8 @@
       </header>
 
       <section v-if="headlines.length" class="headline-strip" aria-label="今日头条">
-        <router-link
-          v-for="headline in headlines"
-          :key="headline.id"
-          :to="`/article/${headline.id}`"
-          class="headline-item"
-        >
+        <router-link v-for="headline in headlines" :key="headline.id" :to="`/article/${headline.id}`"
+          class="headline-item">
           <span class="headline-number">{{ headline.id }}</span>
           <strong>{{ headline.title }}</strong>
         </router-link>
@@ -82,7 +70,8 @@
           <div v-else-if="!filteredArticles.length" class="article-state">暂无相关文章</div>
 
           <article v-for="article in filteredArticles" :key="article.id" class="article-card">
-            <router-link :to="`/article/${article.id}`" class="article-media" :class="article.imageClass" :aria-label="article.title">
+            <router-link :to="`/article/${article.id}`" class="article-media" :class="article.imageClass"
+              :aria-label="article.title">
               <span class="media-shine"></span>
               <span class="media-device"></span>
               <span class="media-label">{{ article.mediaLabel }}</span>
@@ -124,7 +113,9 @@
             <a v-for="resource in resources" :key="resource.name" href="#" class="resource-row">
               <span :class="['resource-badge', resource.tone]">{{ resource.badge }}</span>
               <strong>{{ resource.name }}</strong>
-              <el-icon><ArrowRight /></el-icon>
+              <el-icon>
+                <ArrowRight />
+              </el-icon>
             </a>
           </section>
         </aside>
@@ -132,16 +123,20 @@
     </div>
 
     <div class="floating-tools" aria-label="快捷入口">
-      <button type="button" aria-label="打开 App">
+      <!-- <button type="button" aria-label="打开 App">
         <el-icon><Grid /></el-icon>
         <span>App</span>
-      </button>
-      <button type="button" aria-label="公众号">
-        <el-icon><Promotion /></el-icon>
+      </button> -->
+      <!-- <button type="button" aria-label="公众号">
+        <el-icon>
+          <Promotion />
+        </el-icon>
         <span>公众号</span>
-      </button>
+      </button> -->
       <button type="button" aria-label="投稿" @click="goSubmit">
-        <el-icon><EditPen /></el-icon>
+        <el-icon>
+          <EditPen />
+        </el-icon>
         <span>投稿</span>
       </button>
     </div>
@@ -1035,6 +1030,7 @@ input {
 }
 
 @media (max-width: 1180px) {
+
   .category-bar,
   .content-grid {
     grid-template-columns: 1fr;
