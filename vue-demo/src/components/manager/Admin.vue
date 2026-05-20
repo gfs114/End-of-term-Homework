@@ -65,6 +65,7 @@
                 <AdminInfo v-if="activeMenuKey === 'admin-info'" />
                 <UserInfo v-else-if="activeMenuKey === 'user-info'" />
                 <ArticleFavoriteInfo v-else-if="activeMenuKey === 'article-favorite'" />
+                <DeviceInfo v-else-if="activeMenuKey === 'device-info'" />
 
                 <el-card v-else shadow="never" class="overview-card">
                     <template #header>
@@ -88,13 +89,15 @@
 import AdminInfo from '@/components/manager/AdminInfo.vue'
 import UserInfo from '@/components/manager/UserInfo.vue'
 import ArticleFavoriteInfo from '@/components/manager/ArticleFavoriteInfo.vue'
+import DeviceInfo from '@/components/manager/DeviceInfo.vue'
 
 export default {
     name: 'AdminPage',
     components: {
         AdminInfo,
         UserInfo,
-        ArticleFavoriteInfo
+        ArticleFavoriteInfo,
+        DeviceInfo
     },
     data() {
         return {
