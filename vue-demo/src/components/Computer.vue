@@ -178,14 +178,28 @@
         </section>
       </div>
     </transition>
+
+    <AiAssistant
+      page-type="computer"
+      title="电脑 AI 选购助手"
+      eyebrow="电脑推荐"
+      welcome="你好，我可以按预算、用途、处理器、显卡和便携需求帮你推荐电脑。"
+      placeholder="例如：预算 7000，想买游戏本"
+      :suggestions="computerAiSuggestions"
+      :context="computerAiContext"
+    />
   </section>
 </template>
 
 <script>
 import http from '@/utils/http'
+import AiAssistant from '@/components/AiAssistant.vue'
 
 export default {
   name: "Computer",
+  components: {
+    AiAssistant
+  },
   data() {
     return {
       brandKeyword: "",
@@ -1196,6 +1210,28 @@ export default {
       return {
         "--detail-origin-x": `${this.detailOrigin.x}%`,
         "--detail-origin-y": `${this.detailOrigin.y}%`,
+      };
+    },
+    computerAiSuggestions() {
+      return [
+        "预算 6000 推荐办公本",
+        "帮我选一台游戏本",
+        "轻薄本和全能本怎么选？"
+      ];
+    },
+    computerAiContext() {
+      return {
+        page: "computer",
+        total: this.computers.length,
+        filters: this.modelFilters,
+        visibleModels: this.filteredComputers.slice(0, 12).map((computer) => ({
+          brand: computer.brand,
+          model: computer.model,
+          type: computer.type,
+          processor: computer.processor,
+          graphics: computer.graphics,
+          price: computer.price
+        }))
       };
     },
     selectedComputerFavorite() {

@@ -214,14 +214,28 @@
         </section>
       </div>
     </transition>
+
+    <AiAssistant
+      page-type="phone"
+      title="手机 AI 选购助手"
+      eyebrow="手机推荐"
+      welcome="你好，我可以按预算、品牌、处理器、电池和使用场景帮你推荐手机。"
+      placeholder="例如：预算 5000，想买拍照好的手机"
+      :suggestions="phoneAiSuggestions"
+      :context="phoneAiContext"
+    />
   </section>
 </template>
 
 <script>
 import http from '@/utils/http'
+import AiAssistant from '@/components/AiAssistant.vue'
 
 export default {
   name: "Phone",
+  components: {
+    AiAssistant
+  },
   data() {
     return {
       brandKeyword: "",
@@ -1235,6 +1249,27 @@ export default {
       return {
         "--detail-origin-x": `${this.detailOrigin.x}%`,
         "--detail-origin-y": `${this.detailOrigin.y}%`,
+      };
+    },
+    phoneAiSuggestions() {
+      return [
+        "预算 3000 左右推荐哪几款？",
+        "帮我选一台拍照好的手机",
+        "游戏手机应该看哪些配置？"
+      ];
+    },
+    phoneAiContext() {
+      return {
+        page: "phone",
+        total: this.phoneModels.length,
+        filters: this.modelFilters,
+        visibleModels: this.filteredPhoneModels.slice(0, 12).map((phone) => ({
+          brand: phone.brand,
+          model: phone.model,
+          processor: phone.processor,
+          battery: phone.battery,
+          price: phone.price
+        }))
       };
     },
     selectedPhoneFavorite() {
