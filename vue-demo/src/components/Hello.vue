@@ -161,7 +161,7 @@ export default {
           imageClass: 'thumb-keyboard'
         },
         {
-          title: 'Ploopy 推出开源指点杆鼠标 Bean，支持 QMK / VIA',
+          title: 'Ploopy 推出开源指点杆鼠标 Bean,支持 QMK / VIA',
           summary: '其具备 1 个无腐蚀性硅胶“小红点”和 4 个按键，其中指点杆拥有 11mm 的轴向运动空间，支持快速滚动模式。',
           tags: 'Ploopy，指点杆',
           time: '今日 18:05',

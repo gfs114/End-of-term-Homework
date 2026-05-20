@@ -1,4 +1,4 @@
-<!-- 注：img图片放在 src下的assets里面
+<!-- 
 例子： image: require("@/assets/phone_image/mate70pro.jpg") 
 -->
 <template>
@@ -1116,7 +1116,7 @@ export default {
           batteryValue: 4300,
           price: "¥5,999 起",
           priceValue: 5999,
-          image:require("@/assets/phone_image/S26.jpg"),
+          image: require("@/assets/phone_image/S26.jpg"),
         },
         {
           brand: "三星",
