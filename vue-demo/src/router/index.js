@@ -8,6 +8,8 @@ import Phone from "@/components/Phone.vue";
 import Computer from "@/components/Computer.vue";
 import Admin from "@/components/manager/Admin.vue";
 import Mine from "@/components/Mine.vue";
+import ArticleDetail from "@/components/ArticleDetail.vue";
+import ArticleSubmit from "@/components/ArticleSubmit.vue";
 
 const router = createRouter({
     history: createWebHashHistory(),
@@ -43,6 +45,14 @@ const router = createRouter({
         {
             path: '/mine',
             component: Mine
+        },
+        {
+            path: '/article/:id',
+            component: ArticleDetail
+        },
+        {
+            path: '/submit',
+            component: ArticleSubmit
         },
         {
             path:'/alogin/admin',

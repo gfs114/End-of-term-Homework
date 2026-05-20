@@ -107,7 +107,7 @@ export default {
               localStorage.setItem('loginEmail', this.form.username)
             }
             this.$message.success('登录成功')
-            this.$router.push('/hello')
+            this.$router.push(this.$route.query.redirect || '/hello')
           } else {
             this.$message.error(result.message || result.msg || '请检查输入的用户名和密码是否正确')
             console.log(result)
