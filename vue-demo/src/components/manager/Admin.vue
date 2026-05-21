@@ -255,10 +255,14 @@ export default {
 }
 
 .admin-sidebar {
+    position: sticky;
+    top: 0;
     flex: 0 0 232px;
     width: 232px;
+    height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow-y: auto;
     background: #111827;
     transition: width 0.2s ease, flex-basis 0.2s ease;
 }
@@ -344,8 +348,10 @@ export default {
 .admin-main {
     flex: 1;
     min-width: 0;
+    height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow: auto;
 }
 
 .admin-content {
