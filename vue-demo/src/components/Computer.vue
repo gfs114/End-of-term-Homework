@@ -540,7 +540,7 @@ export default {
           price: "¥8999 起",
           priceValue: 8999,
           accent: "#111827",
-          img: require("@/assets/computer_image/MacBook Air.png"),
+          img: require("@/assets/computer_image/MacBook Air M3.png"),
         },
         {
           brand: "Apple",
