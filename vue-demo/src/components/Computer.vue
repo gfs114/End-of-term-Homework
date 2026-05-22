@@ -532,7 +532,7 @@ export default {
         //-----------------------Apple-------------------------
         {
           brand: "Apple",
-          model: "MacBook Air 13inch M3",
+          model: "MacBook Air 13 (M3)",
           type: "轻薄本",
           processor: "Apple M3",
           graphics: "至高 8 核 GPU",
@@ -545,7 +545,7 @@ export default {
         },
         {
           brand: "Apple",
-          model: "MacBook Pro 14 (M4Pro)",
+          model: "MacBook Pro 14 (M4 Pro)",
           type: "创作本",
           processor: "Apple M4 Pro",
           graphics: "至高 16 核 GPU",
@@ -571,7 +571,7 @@ export default {
         },
         {
           brand: "Apple",
-          model: "MacBook Pro 13 M2",
+          model: "MacBook Pro 13 (M2)",
           type: "轻薄本",
           processor: "Apple M2",
           graphics: "10核图形处理器",
@@ -837,15 +837,16 @@ export default {
         },
         {
           brand: "华硕",
-          model: "ROG 魔霸新锐",
+          model: "ROG 魔霸新锐 2025", 
           type: "游戏本",
-          processor: "锐龙 9",
-          graphics: "RTX 4070",
+          processor: "锐龙 9 8940HX",
+          graphics: "RTX 5070",
           memory: "32GB",
           storage: "1TB SSD",
           price: "¥12999 起",
           priceValue: 12999,
           accent: "#0f172a",
+          img: require("@/assets/computer_image/ROG 魔霸新锐2025.png"),
         },
         {
           brand: "华硕",
