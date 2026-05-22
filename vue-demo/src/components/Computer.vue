@@ -1323,6 +1323,90 @@ export default {
 
       return graphicsName;
     },
+    getUsername() {
+      return localStorage.getItem("loginUsername") || "";
+    },
+    getFavoriteDeviceKey(device) {
+      return `${device.device_type || device.deviceType}:${device.device_model || device.deviceModel}`;
+    },
+    isFavoriteDevice(type, model) {
+      if (!model) {
+        return false;
+      }
+
+      return this.favoriteDevices.some((device) => (
+        (device.device_type || device.deviceType) === type &&
+        String(device.device_model || device.deviceModel) === String(model)
+      ));
+    },
+    normalizeComputerDevice(computer) {
+      return {
+        username: this.getUsername(),
+        device_type: "computer",
+        device_brand: computer.brand,
+        device_model: computer.model,
+        device_price: computer.price,
+        device_specs: `处理器：${computer.processor || "暂无"}；显卡：${computer.graphics || "暂无"}；内存：${computer.memory || "暂无"}；硬盘：${computer.storage || "暂无"}`
+      };
+    },
+    async fetchFavoriteDevices() {
+      const username = this.getUsername();
+      if (!username) {
+        this.favoriteDevices = [];
+        return;
+      }
+
+      try {
+        const { data } = await http.get("/user-favorite-devices", {
+          params: { username }
+        });
+        const list = Array.isArray(data) ? data : data?.data || data?.devices || [];
+        this.favoriteDevices = Array.isArray(list) ? list : [];
+      } catch (error) {
+        this.favoriteDevices = [];
+      }
+    },
+    async toggleFavoriteComputer() {
+      if (!this.selectedComputer || this.favoriteDeviceLoading) {
+        return;
+      }
+
+      if (!this.getUsername()) {
+        this.$message.warning("请先登录后再喜欢设备");
+        this.$router.push({
+          path: "/login",
+          query: { redirect: this.$route.fullPath }
+        });
+        return;
+      }
+
+      const payload = this.normalizeComputerDevice(this.selectedComputer);
+      const wasFavorite = this.selectedComputerFavorite;
+
+      this.favoriteDeviceLoading = true;
+      try {
+        if (wasFavorite) {
+          await http.delete("/user-favorite-devices", { data: payload });
+          this.favoriteDevices = this.favoriteDevices.filter(
+            (device) => this.getFavoriteDeviceKey(device) !== this.getFavoriteDeviceKey(payload)
+          );
+          this.$message.success("已取消喜欢");
+        } else {
+          await http.post("/user-favorite-devices", payload);
+          this.favoriteDevices = [
+            ...this.favoriteDevices.filter(
+              (device) => this.getFavoriteDeviceKey(device) !== this.getFavoriteDeviceKey(payload)
+            ),
+            payload
+          ];
+          this.$message.success("已加入我喜欢的设备");
+        }
+      } catch (error) {
+        this.$message.error(wasFavorite ? "取消喜欢失败" : "喜欢设备失败");
+      } finally {
+        this.favoriteDeviceLoading = false;
+      }
+    },
     hasComputerImage(computer) {
       return computer && computer.img && !computer.imageLoadFailed;
     },
