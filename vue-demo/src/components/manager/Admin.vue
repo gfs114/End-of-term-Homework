@@ -64,6 +64,8 @@
             <section class="admin-content">
                 <AdminInfo v-if="activeMenuKey === 'admin-info'" />
                 <UserInfo v-else-if="activeMenuKey === 'user-info'" />
+                <ArticleFavoriteInfo v-else-if="activeMenuKey === 'article-favorite'" />
+                <DeviceInfo v-else-if="activeMenuKey === 'device-info'" />
 
                 <el-card v-else shadow="never" class="overview-card">
                     <template #header>
@@ -86,12 +88,16 @@
 <script>
 import AdminInfo from '@/components/manager/AdminInfo.vue'
 import UserInfo from '@/components/manager/UserInfo.vue'
+import ArticleFavoriteInfo from '@/components/manager/ArticleFavoriteInfo.vue'
+import DeviceInfo from '@/components/manager/DeviceInfo.vue'
 
 export default {
     name: 'AdminPage',
     components: {
         AdminInfo,
-        UserInfo
+        UserInfo,
+        ArticleFavoriteInfo,
+        DeviceInfo
     },
     data() {
         return {
@@ -146,11 +152,6 @@ export default {
                             key: 'article-favorite',
                             title: '文章收藏信息',
                             icon: 'Star'
-                        },
-                        {
-                            key: 'article-comment',
-                            title: '文章评论信息',
-                            icon: 'ChatDotRound'
                         },
                         {
                             key: 'article-history',
@@ -254,10 +255,14 @@ export default {
 }
 
 .admin-sidebar {
+    position: sticky;
+    top: 0;
     flex: 0 0 232px;
     width: 232px;
+    height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow-y: auto;
     background: #111827;
     transition: width 0.2s ease, flex-basis 0.2s ease;
 }
@@ -343,8 +348,10 @@ export default {
 .admin-main {
     flex: 1;
     min-width: 0;
+    height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow: auto;
 }
 
 .admin-content {

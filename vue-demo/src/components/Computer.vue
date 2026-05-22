@@ -171,6 +171,15 @@
             <p class="detail-brand">{{ selectedComputer.brand }} / {{ selectedComputer.type }}</p>
             <h2>{{ selectedComputer.model }}</h2>
 
+            <button
+              type="button"
+              :class="['device-favorite-button', { active: selectedComputerFavorite }]"
+              :disabled="favoriteDeviceLoading"
+              @click="toggleFavoriteComputer"
+            >
+              {{ selectedComputerFavorite ? '已喜欢' : '喜欢设备' }}
+            </button>
+
             <dl class="detail-list">
               <div v-for="item in selectedComputerSpecs" :key="item.label">
                 <dt>{{ item.label }}</dt>
@@ -181,18 +190,36 @@
         </section>
       </div>
     </transition>
+
+    <AiAssistant
+      page-type="computer"
+      title="电脑 AI 选购助手"
+      eyebrow="电脑推荐"
+      welcome="你好，我可以按预算、用途、处理器、显卡和便携需求帮你推荐电脑。"
+      placeholder="例如：预算 7000，想买游戏本"
+      :suggestions="computerAiSuggestions"
+      :context="computerAiContext"
+    />
   </section>
 </template>
 
 <script>
+import http from '@/utils/http'
+import AiAssistant from '@/components/AiAssistant.vue'
+
 export default {
   name: "Computer",
+  components: {
+    AiAssistant
+  },
   data() {
     return {
       brandKeyword: "",
       modelKeyword: "",
       selectedBrand: null,
       selectedComputer: null,
+      favoriteDevices: [],
+      favoriteDeviceLoading: false,
       detailOrigin: {
         x: 50,
         y: 50,
@@ -1201,6 +1228,34 @@ export default {
         "--detail-origin-y": `${this.detailOrigin.y}%`,
       };
     },
+    computerAiSuggestions() {
+      return [
+        "预算 6000 推荐办公本",
+        "帮我选一台游戏本",
+        "轻薄本和全能本怎么选？"
+      ];
+    },
+    computerAiContext() {
+      return {
+        page: "computer",
+        total: this.computers.length,
+        filters: this.modelFilters,
+        visibleModels: this.filteredComputers.slice(0, 12).map((computer) => ({
+          brand: computer.brand,
+          model: computer.model,
+          type: computer.type,
+          processor: computer.processor,
+          graphics: computer.graphics,
+          price: computer.price
+        }))
+      };
+    },
+    selectedComputerFavorite() {
+      return this.isFavoriteDevice("computer", this.selectedComputer && this.selectedComputer.model);
+    },
+  },
+  mounted() {
+    this.fetchFavoriteDevices();
   },
   methods: {
     uniqueValues(values) {
@@ -1723,6 +1778,40 @@ export default {
   margin: 0 40px 24px 0;
   font-size: 28px;
   line-height: 1.25;
+}
+
+.device-favorite-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 112px;
+  height: 38px;
+  margin-bottom: 18px;
+  padding: 0 16px;
+  border: 1px solid #d6e1ee;
+  border-radius: 8px;
+  color: #2563eb;
+  background: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.device-favorite-button:hover:not(:disabled) {
+  border-color: #2563eb;
+  transform: translateY(-1px);
+}
+
+.device-favorite-button.active {
+  color: #111827;
+  border-color: #ffd60a;
+  background: #ffd60a;
+}
+
+.device-favorite-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
 }
 
 .detail-list {

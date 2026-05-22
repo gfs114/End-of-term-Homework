@@ -153,6 +153,15 @@
             <p class="phone-detail-brand">{{ selectedPhone.brand }}</p>
             <h2>{{ selectedPhone.model }}</h2>
 
+            <button
+              type="button"
+              :class="['device-favorite-button', { active: selectedPhoneFavorite }]"
+              :disabled="favoriteDeviceLoading"
+              @click="toggleFavoritePhone"
+            >
+              {{ selectedPhoneFavorite ? '已喜欢' : '喜欢设备' }}
+            </button>
+
             <dl class="phone-detail-list">
               <div>
                 <dt>处理器</dt>
@@ -205,12 +214,28 @@
         </section>
       </div>
     </transition>
+
+    <AiAssistant
+      page-type="phone"
+      title="手机 AI 选购助手"
+      eyebrow="手机推荐"
+      welcome="你好，我可以按预算、品牌、处理器、电池和使用场景帮你推荐手机。"
+      placeholder="例如：预算 5000，想买拍照好的手机"
+      :suggestions="phoneAiSuggestions"
+      :context="phoneAiContext"
+    />
   </section>
 </template>
 
 <script>
+import http from '@/utils/http'
+import AiAssistant from '@/components/AiAssistant.vue'
+
 export default {
   name: "Phone",
+  components: {
+    AiAssistant
+  },
   data() {
     return {
       brandKeyword: "",
@@ -223,6 +248,8 @@ export default {
       modelSectionTimer: null,
       selectedBrand: null,
       selectedPhone: null,
+      favoriteDevices: [],
+      favoriteDeviceLoading: false,
       detailOrigin: {
         x: 50,
         y: 50,
@@ -1224,6 +1251,30 @@ export default {
         "--detail-origin-y": `${this.detailOrigin.y}%`,
       };
     },
+    phoneAiSuggestions() {
+      return [
+        "预算 3000 左右推荐哪几款？",
+        "帮我选一台拍照好的手机",
+        "游戏手机应该看哪些配置？"
+      ];
+    },
+    phoneAiContext() {
+      return {
+        page: "phone",
+        total: this.phoneModels.length,
+        filters: this.modelFilters,
+        visibleModels: this.filteredPhoneModels.slice(0, 12).map((phone) => ({
+          brand: phone.brand,
+          model: phone.model,
+          processor: phone.processor,
+          battery: phone.battery,
+          price: phone.price
+        }))
+      };
+    },
+    selectedPhoneFavorite() {
+      return this.isFavoriteDevice("phone", this.selectedPhone && this.selectedPhone.model);
+    },
   },
   watch: {
     modelKeyword() {
@@ -1245,6 +1296,7 @@ export default {
     this.$nextTick(() => {
       this.observeModelSection();
     });
+    this.fetchFavoriteDevices();
   },
   methods: {
     selectBrand(brand) {
@@ -1313,6 +1365,90 @@ export default {
       return {
         animationDelay: `${Math.min(index * 110, 660)}ms`,
       };
+    },
+    getUsername() {
+      return localStorage.getItem("loginUsername") || "";
+    },
+    getFavoriteDeviceKey(device) {
+      return `${device.device_type || device.deviceType}:${device.device_model || device.deviceModel}`;
+    },
+    isFavoriteDevice(type, model) {
+      if (!model) {
+        return false;
+      }
+
+      return this.favoriteDevices.some((device) => (
+        (device.device_type || device.deviceType) === type &&
+        String(device.device_model || device.deviceModel) === String(model)
+      ));
+    },
+    normalizePhoneDevice(phone) {
+      return {
+        username: this.getUsername(),
+        device_type: "phone",
+        device_brand: phone.brand,
+        device_model: phone.model,
+        device_price: phone.price,
+        device_specs: `处理器：${phone.processor || "暂无"}；电池：${phone.battery || "暂无"}`
+      };
+    },
+    async fetchFavoriteDevices() {
+      const username = this.getUsername();
+      if (!username) {
+        this.favoriteDevices = [];
+        return;
+      }
+
+      try {
+        const { data } = await http.get("/user-favorite-devices", {
+          params: { username }
+        });
+        const list = Array.isArray(data) ? data : data?.data || data?.devices || [];
+        this.favoriteDevices = Array.isArray(list) ? list : [];
+      } catch (error) {
+        this.favoriteDevices = [];
+      }
+    },
+    async toggleFavoritePhone() {
+      if (!this.selectedPhone || this.favoriteDeviceLoading) {
+        return;
+      }
+
+      if (!this.getUsername()) {
+        this.$message.warning("请先登录后再喜欢设备");
+        this.$router.push({
+          path: "/login",
+          query: { redirect: this.$route.fullPath }
+        });
+        return;
+      }
+
+      const payload = this.normalizePhoneDevice(this.selectedPhone);
+      const wasFavorite = this.selectedPhoneFavorite;
+
+      this.favoriteDeviceLoading = true;
+      try {
+        if (wasFavorite) {
+          await http.delete("/user-favorite-devices", { data: payload });
+          this.favoriteDevices = this.favoriteDevices.filter(
+            (device) => this.getFavoriteDeviceKey(device) !== this.getFavoriteDeviceKey(payload)
+          );
+          this.$message.success("已取消喜欢");
+        } else {
+          await http.post("/user-favorite-devices", payload);
+          this.favoriteDevices = [
+            ...this.favoriteDevices.filter(
+              (device) => this.getFavoriteDeviceKey(device) !== this.getFavoriteDeviceKey(payload)
+            ),
+            payload
+          ];
+          this.$message.success("已加入我喜欢的设备");
+        }
+      } catch (error) {
+        this.$message.error(wasFavorite ? "取消喜欢失败" : "喜欢设备失败");
+      } finally {
+        this.favoriteDeviceLoading = false;
+      }
     },
     openPhoneDetail(phone, event) {
       if (event && event.currentTarget) {
@@ -1979,6 +2115,40 @@ export default {
   color: #101827;
   font-size: 28px;
   line-height: 1.25;
+}
+
+.device-favorite-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 112px;
+  height: 38px;
+  margin-bottom: 18px;
+  padding: 0 16px;
+  border: 1px solid #d6e1ee;
+  border-radius: 8px;
+  color: #2563eb;
+  background: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.device-favorite-button:hover:not(:disabled) {
+  border-color: #2563eb;
+  transform: translateY(-1px);
+}
+
+.device-favorite-button.active {
+  color: #111827;
+  border-color: #ffd60a;
+  background: #ffd60a;
+}
+
+.device-favorite-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
 }
 
 .phone-detail-list {

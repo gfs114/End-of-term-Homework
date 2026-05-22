@@ -6,23 +6,13 @@
       <header class="category-bar" aria-label="资讯分类">
         <div class="category-lines">
           <nav class="category-row" aria-label="主分类">
-            <a
-              v-for="item in primaryLinks"
-              :key="item"
-              href="#"
-              class="category-link"
-            >
+            <a v-for="item in primaryLinks" :key="item" href="#" class="category-link">
               {{ item }}
             </a>
           </nav>
 
           <nav class="category-row" aria-label="扩展分类">
-            <a
-              v-for="item in secondaryLinks"
-              :key="item"
-              href="#"
-              class="category-link"
-            >
+            <a v-for="item in secondaryLinks" :key="item" href="#" class="category-link">
               {{ item }}
             </a>
           </nav>
@@ -30,8 +20,10 @@
 
         <div class="search-stack">
           <label class="search-box">
-            <el-icon class="search-icon"><Search /></el-icon>
-            <input type="search" placeholder="请输入关键词" />
+            <el-icon class="search-icon">
+              <Search />
+            </el-icon>
+            <input v-model.trim="keyword" type="search" placeholder="请输入关键词" />
             <button type="button">搜索</button>
           </label>
 
@@ -42,11 +34,12 @@
         </div>
       </header>
 
-      <section class="headline-strip" aria-label="今日头条">
-        <a v-for="headline in headlines" :key="headline.id" href="#" class="headline-item">
+      <section v-if="headlines.length" class="headline-strip" aria-label="今日头条">
+        <router-link v-for="headline in headlines" :key="headline.id" :to="`/article/${headline.id}`"
+          class="headline-item">
           <span class="headline-number">{{ headline.id }}</span>
           <strong>{{ headline.title }}</strong>
-        </a>
+        </router-link>
       </section>
 
       <section class="hero-band">
@@ -72,15 +65,20 @@
             <span></span>
           </div>
 
-          <article v-for="article in articles" :key="article.title" class="article-card">
-            <a href="#" class="article-media" :class="article.imageClass" :aria-label="article.title">
+          <div v-if="loading" class="article-state">文章加载中...</div>
+          <div v-else-if="errorMessage" class="article-state article-state--error">{{ errorMessage }}</div>
+          <div v-else-if="!filteredArticles.length" class="article-state">暂无相关文章</div>
+
+          <article v-for="article in filteredArticles" :key="article.id" class="article-card">
+            <router-link :to="`/article/${article.id}`" class="article-media" :class="article.imageClass"
+              :aria-label="article.title">
               <span class="media-shine"></span>
               <span class="media-device"></span>
               <span class="media-label">{{ article.mediaLabel }}</span>
-            </a>
+            </router-link>
 
             <div class="article-body">
-              <a href="#" class="article-title">{{ article.title }}</a>
+              <router-link :to="`/article/${article.id}`" class="article-title">{{ article.title }}</router-link>
               <p>{{ article.summary }}</p>
               <div class="article-meta">
                 <span><strong>Tags:</strong> {{ article.tags }}</span>
@@ -99,9 +97,9 @@
             </div>
 
             <ol class="ranking-list">
-              <li v-for="(rank, index) in rankings" :key="rank">
+              <li v-for="(rank, index) in rankings" :key="rank.id">
                 <span :class="{ hot: index < 3 }">{{ index + 1 }}</span>
-                <a href="#">{{ rank }}</a>
+                <router-link :to="`/article/${rank.id}`">{{ rank.title }}</router-link>
               </li>
             </ol>
           </section>
@@ -115,7 +113,9 @@
             <a v-for="resource in resources" :key="resource.name" href="#" class="resource-row">
               <span :class="['resource-badge', resource.tone]">{{ resource.badge }}</span>
               <strong>{{ resource.name }}</strong>
-              <el-icon><ArrowRight /></el-icon>
+              <el-icon>
+                <ArrowRight />
+              </el-icon>
             </a>
           </section>
         </aside>
@@ -123,16 +123,20 @@
     </div>
 
     <div class="floating-tools" aria-label="快捷入口">
-      <button type="button" aria-label="打开 App">
+      <!-- <button type="button" aria-label="打开 App">
         <el-icon><Grid /></el-icon>
         <span>App</span>
-      </button>
-      <button type="button" aria-label="公众号">
-        <el-icon><Promotion /></el-icon>
+      </button> -->
+      <!-- <button type="button" aria-label="公众号">
+        <el-icon>
+          <Promotion />
+        </el-icon>
         <span>公众号</span>
-      </button>
-      <button type="button" aria-label="投稿">
-        <el-icon><EditPen /></el-icon>
+      </button> -->
+      <button type="button" aria-label="投稿" @click="goSubmit">
+        <el-icon>
+          <EditPen />
+        </el-icon>
         <span>投稿</span>
       </button>
     </div>
@@ -140,70 +144,121 @@
 </template>
 
 <script>
+import http from '@/utils/http'
+
+const imageClasses = ['thumb-keyboard', 'thumb-mouse', 'thumb-display', 'thumb-laptop']
+
+function pickList(payload) {
+  if (Array.isArray(payload)) return payload
+  if (Array.isArray(payload?.data)) return payload.data
+  if (Array.isArray(payload?.articles)) return payload.articles
+  if (Array.isArray(payload?.data?.data)) return payload.data.data
+  return []
+}
+
+function plainText(value) {
+  return String(value || '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function formatTime(value) {
+  if (!value) return '刚刚'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return String(value)
+  return date.toLocaleString('zh-CN', {
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
 export default {
   name: 'HelloPage',
   data() {
     return {
+      keyword: '',
+      loading: false,
+      errorMessage: '',
       primaryLinks: ['业界', '手机', '电脑', '测评', '视频', 'AI', '苹果', 'iPhone', '鸿蒙', '软件'],
       secondaryLinks: ['智车', '数码', '学院', '游戏', '直播', '5G', '微软', 'Win10', 'Win11', '专题'],
       hotWords: ['三星', '微信', '小米', '华为', '大疆'],
-      headlines: [
-        { id: 1, title: '歼-35 外贸版首曝？“0001 编号”战机亮相' },
-        { id: 2, title: '工信部批复 6G 技术试验频率' }
-      ],
-      articles: [
-        {
-          title: '全球首款“双 8kHz”三模矮磁轴键盘狼蛛 HERO 68 MINI Air 发售，299 元起',
-          summary: '这款键盘号称全球首款在有线和无线模式下均支持 8kHz 轮询率的三模矮磁轴键盘，配列轻巧，内置电池，首发价 299 元起。',
-          tags: 'HERO 68 MINI Air，狼蛛',
-          time: '今日 18:19',
-          mediaLabel: 'HERO 68',
-          imageClass: 'thumb-keyboard'
-        },
-        {
-          title: 'Ploopy 推出开源指点杆鼠标 Bean,支持 QMK / VIA',
-          summary: '其具备 1 个无腐蚀性硅胶“小红点”和 4 个按键，其中指点杆拥有 11mm 的轴向运动空间，支持快速滚动模式。',
-          tags: 'Ploopy，指点杆',
-          time: '今日 18:05',
-          mediaLabel: 'Bean',
-          imageClass: 'thumb-mouse'
-        },
-        {
-          title: '最低 100 秒 / 帧：TCL 华星展出 0.01~120Hz 广刷新率范围笔电面板',
-          summary: '该屏幕搭载全球首款 50 cm2/Vs 超高迁移率氧化物技术，支持自适应分区精确刷新率调控。',
-          tags: 'TCL华星，SID 2026',
-          time: '今日 17:11',
-          mediaLabel: 'TCL 华星',
-          imageClass: 'thumb-display'
-        },
-        {
-          title: '狼蛛 F99Max 系列三模机械键盘发售：配副屏 + 旋钮，299 元起',
-          summary: '新品采用紧凑配列、三模连接与高回报率方案，面向桌面玩家与移动办公场景。',
-          tags: '机械键盘，桌面设备',
-          time: '今日 16:44',
-          mediaLabel: 'F99Max',
-          imageClass: 'thumb-laptop'
-        }
-      ],
-      rankings: [
-        '比亚迪大唐 EV 预售订单突破 10 万台，预计本月交付',
-        '歼-35 外贸版首曝？“0001 编号”战机亮相',
-        '微信未读语音消息由红变灰被吐槽，腾讯回应',
-        '8 家新能源车企 OTA 锁电被约谈，工信部通报',
-        '理想设计团队负责人那嘉吾谈 MEGA 车型设计',
-        '消息称腾讯实习生大涨薪，百度“全员晋升”',
-        '5 月 11 日起巴西对中国公民免签，单次停留 30 天',
-        '钱江摩托：从未以任何形式针对某机车及品牌',
-        '工信部批复 6GHz 频段 6G 试验频率使用许可',
-        '鸿蒙智行智界 V9 将于 5 月 15 日正式上市',
-        '消息称苹果考虑砍掉 256GB 基础版 MacBook',
-        '2023 年被罢免后，OpenAI CEO 奥尔特曼首次回应'
-      ],
+      articles: [],
       resources: [
         { badge: '最会买', name: '最会买App（返利+神券）', tone: 'yellow' },
         { badge: '要知', name: '要知（多平台）', tone: 'black' },
         { badge: '软媒', name: '软媒魔方工具箱', tone: 'blue' }
       ]
+    }
+  },
+  computed: {
+    filteredArticles() {
+      if (!this.keyword) return this.articles
+      const keyword = this.keyword.toLowerCase()
+      return this.articles.filter((article) => {
+        return [article.title, article.summary, article.tags]
+          .join(' ')
+          .toLowerCase()
+          .includes(keyword)
+      })
+    },
+    headlines() {
+      return this.articles.slice(0, 2)
+    },
+    rankings() {
+      return [...this.articles]
+        .sort((a, b) => b.views - a.views)
+        .slice(0, 12)
+    }
+  },
+  created() {
+    this.fetchArticles()
+  },
+  methods: {
+    goSubmit() {
+      if (!localStorage.getItem('loginUsername')) {
+        this.$message.warning('请先登录后再投稿')
+        this.$router.push({
+          path: '/login',
+          query: { redirect: '/submit' }
+        })
+        return
+      }
+
+      this.$router.push('/submit')
+    },
+    async fetchArticles() {
+      this.loading = true
+      this.errorMessage = ''
+
+      try {
+        const { data } = await http.get('/articles')
+        this.articles = pickList(data)
+          .filter((item) => !item.status || item.status === 'published')
+          .map((item, index) => this.normalizeArticle(item, index))
+      } catch (error) {
+        this.errorMessage = '文章加载失败，请稍后再试'
+      } finally {
+        this.loading = false
+      }
+    },
+    normalizeArticle(item, index) {
+      const title = item.title || '未命名文章'
+      const summary = plainText(item.summary || item.description || item.content).slice(0, 110)
+      const label = title.replace(/[^\u4e00-\u9fa5A-Za-z0-9]/g, '').slice(0, 8) || 'Article'
+
+      return {
+        id: item.id,
+        title,
+        summary: summary || '这篇文章暂时没有摘要，点击查看完整内容。',
+        tags: item.category || item.author || '文章',
+        time: formatTime(item.created_at || item.updated_at),
+        views: Number(item.views) || 0,
+        mediaLabel: label,
+        imageClass: imageClasses[index % imageClasses.length]
+      }
     }
   }
 }
@@ -576,6 +631,21 @@ input {
 
 .feed-panel {
   min-width: 0;
+}
+
+.article-state {
+  display: grid;
+  place-items: center;
+  min-height: 160px;
+  color: rgba(245, 245, 247, 0.68);
+  border: 1px solid rgba(245, 245, 247, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 16px;
+}
+
+.article-state--error {
+  color: #ff9f0a;
 }
 
 .article-card {
@@ -960,6 +1030,7 @@ input {
 }
 
 @media (max-width: 1180px) {
+
   .category-bar,
   .content-grid {
     grid-template-columns: 1fr;

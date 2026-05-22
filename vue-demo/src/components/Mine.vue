@@ -17,6 +17,93 @@
             </el-button>
         </div>
 
+        <section class="my-articles-card">
+            <div class="articles-head">
+                <div>
+                    <p>我的内容</p>
+                    <h2>我的文章</h2>
+                </div>
+                <el-button type="primary" plain @click="goSubmit">去投稿</el-button>
+            </div>
+
+            <div v-if="articlesLoading" class="article-state">文章加载中...</div>
+            <div v-else-if="articlesError" class="article-state article-state--error">{{ articlesError }}</div>
+            <div v-else-if="!myArticles.length" class="article-state">你还没有投稿文章</div>
+
+            <div v-else class="article-list">
+                <router-link
+                    v-for="article in myArticles"
+                    :key="article.id"
+                    :to="`/article/${article.id}`"
+                    class="article-row"
+                >
+                    <div>
+                        <h3>{{ article.title }}</h3>
+                        <p>{{ article.summary }}</p>
+                    </div>
+                    <div class="article-meta">
+                        <span>{{ article.category || '文章' }}</span>
+                        <time>{{ article.time }}</time>
+                    </div>
+                </router-link>
+            </div>
+        </section>
+
+        <section class="my-articles-card">
+            <div class="articles-head">
+                <div>
+                    <p>我的收藏</p>
+                    <h2>收藏文章</h2>
+                </div>
+            </div>
+
+            <div v-if="articlesLoading" class="article-state">收藏加载中...</div>
+            <div v-else-if="articlesError" class="article-state article-state--error">{{ articlesError }}</div>
+            <div v-else-if="!favoriteArticles.length" class="article-state">你还没有收藏文章</div>
+
+            <div v-else class="article-list">
+                <router-link
+                    v-for="article in favoriteArticles"
+                    :key="article.id"
+                    :to="`/article/${article.id}`"
+                    class="article-row"
+                >
+                    <div>
+                        <h3>{{ article.title }}</h3>
+                        <p>{{ article.summary }}</p>
+                    </div>
+                    <div class="article-meta">
+                        <span>{{ article.category || '文章' }}</span>
+                        <time>{{ article.time }}</time>
+                    </div>
+                </router-link>
+            </div>
+        </section>
+
+        <section class="my-articles-card">
+            <div class="articles-head">
+                <div>
+                    <p>我的设备</p>
+                    <h2>我喜欢的设备</h2>
+                </div>
+            </div>
+
+            <div v-if="devicesLoading" class="article-state">设备加载中...</div>
+            <div v-else-if="devicesError" class="article-state article-state--error">{{ devicesError }}</div>
+            <div v-else-if="!favoriteDevices.length" class="article-state">你还没有喜欢的设备</div>
+
+            <div v-else class="device-list">
+                <article v-for="device in favoriteDevices" :key="device.key" class="device-row">
+                    <div>
+                        <span class="device-type">{{ device.typeLabel }}</span>
+                        <h3>{{ device.brand }} {{ device.model }}</h3>
+                        <p>{{ device.specs }}</p>
+                    </div>
+                    <strong>{{ device.price }}</strong>
+                </article>
+            </div>
+        </section>
+
         <transition name="password-modal">
             <div v-if="passwordDialogVisible" class="password-overlay" @click.self="closePasswordDialog">
                 <div class="password-dialog">
@@ -56,14 +143,50 @@
 <script>
 import http from '@/utils/http'
 
+function pickList(payload) {
+    if (Array.isArray(payload)) return payload
+    if (Array.isArray(payload?.data)) return payload.data
+    if (Array.isArray(payload?.articles)) return payload.articles
+    if (Array.isArray(payload?.devices)) return payload.devices
+    if (Array.isArray(payload?.data?.data)) return payload.data.data
+    return []
+}
+
+function plainText(value) {
+    return String(value || '')
+        .replace(/<[^>]+>/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+}
+
+function formatTime(value) {
+    if (!value) return '刚刚'
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) return String(value)
+    return date.toLocaleString('zh-CN', {
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    })
+}
+
 export default {
     name: 'MinePage',
     data() {
         return {
             loading: false,
+            articlesLoading: false,
+            devicesLoading: false,
+            articlesError: '',
+            devicesError: '',
             passwordDialogVisible: false,
             username: localStorage.getItem('loginUsername') || '未登录用户',
             email: localStorage.getItem('loginEmail') || '暂未绑定邮箱',
+            allArticles: [],
+            myArticles: [],
+            favoriteArticles: [],
+            favoriteDevices: [],
             passwordForm: {
                 oldPassword: '',
                 newPassword: '',
@@ -102,10 +225,84 @@ export default {
     mounted() {
         if (!localStorage.getItem('loginUsername')) {
             this.$message.warning('请先登录')
-            this.$router.push('/login')
+            this.$router.push({
+                path: '/login',
+                query: { redirect: '/mine' }
+            })
+            return
         }
+
+        this.fetchMyArticles()
+        this.fetchFavoriteDevices()
     },
     methods: {
+        goSubmit() {
+            this.$router.push('/submit')
+        },
+        getFavoriteIds() {
+            try {
+                const ids = JSON.parse(localStorage.getItem(`favoriteArticles:${this.username}`) || '[]')
+                return Array.isArray(ids) ? ids.map(String) : []
+            } catch (error) {
+                return []
+            }
+        },
+        normalizeArticle(item) {
+            return {
+                id: item.id,
+                title: item.title || '未命名文章',
+                author: item.author,
+                summary: plainText(item.summary || item.description || item.content).slice(0, 96) || '暂无摘要',
+                category: item.category,
+                time: formatTime(item.created_at || item.updated_at)
+            }
+        },
+        normalizeDevice(item) {
+            const type = item.device_type || item.deviceType || ''
+            const model = item.device_model || item.deviceModel || '未知设备'
+
+            return {
+                key: `${type}:${model}`,
+                type,
+                typeLabel: type === 'phone' ? '手机' : type === 'computer' ? '电脑' : '设备',
+                brand: item.device_brand || item.deviceBrand || '',
+                model,
+                price: item.device_price || item.devicePrice || '暂无价格',
+                specs: item.device_specs || item.deviceSpecs || '暂无配置'
+            }
+        },
+        async fetchMyArticles() {
+            this.articlesLoading = true
+            this.articlesError = ''
+
+            try {
+                const { data } = await http.get('/articles')
+                const favoriteIds = this.getFavoriteIds()
+
+                this.allArticles = pickList(data).map((item) => this.normalizeArticle(item))
+                this.myArticles = this.allArticles.filter((item) => String(item.author || '') === this.username)
+                this.favoriteArticles = this.allArticles.filter((item) => favoriteIds.includes(String(item.id)))
+            } catch (error) {
+                this.articlesError = '我的文章加载失败，请稍后再试'
+            } finally {
+                this.articlesLoading = false
+            }
+        },
+        async fetchFavoriteDevices() {
+            this.devicesLoading = true
+            this.devicesError = ''
+
+            try {
+                const { data } = await http.get('/user-favorite-devices', {
+                    params: { username: this.username }
+                })
+                this.favoriteDevices = pickList(data).map((item) => this.normalizeDevice(item))
+            } catch (error) {
+                this.devicesError = '我喜欢的设备加载失败，请稍后再试'
+            } finally {
+                this.devicesLoading = false
+            }
+        },
         openPasswordDialog() {
             this.passwordDialogVisible = true
         },
@@ -171,17 +368,22 @@ export default {
 
 <style scoped>
 .mine-page {
-    width: min(560px, 100%);
+    width: min(860px, 100%);
     margin: 0 auto;
     color: #152033;
 }
 
-.profile-card {
+.profile-card,
+.my-articles-card {
     padding: 24px;
     border: 1px solid #dbe7f3;
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.92);
     box-shadow: 0 18px 50px rgba(45, 73, 112, 0.08);
+}
+
+.my-articles-card {
+    margin-top: 22px;
 }
 
 .profile-header {
@@ -232,6 +434,147 @@ export default {
     width: 100%;
     height: 40px;
     margin-top: 18px;
+}
+
+.articles-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 18px;
+}
+
+.articles-head p {
+    margin: 0 0 6px;
+    color: #2563eb;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.articles-head h2 {
+    margin: 0;
+    color: #101827;
+    font-size: 26px;
+}
+
+.article-state {
+    display: grid;
+    min-height: 120px;
+    place-items: center;
+    color: #64748b;
+    border: 1px dashed #cbd5e1;
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.article-state--error {
+    color: #dc2626;
+}
+
+.article-list {
+    display: grid;
+    gap: 12px;
+}
+
+.article-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 150px;
+    gap: 18px;
+    align-items: center;
+    padding: 16px;
+    color: inherit;
+    text-decoration: none;
+    border: 1px solid #eef3f8;
+    border-radius: 8px;
+    background: #fff;
+    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.article-row:hover {
+    border-color: #93c5fd;
+    transform: translateY(-2px);
+    box-shadow: 0 14px 34px rgba(37, 99, 235, 0.1);
+}
+
+.article-row h3 {
+    margin: 0 0 8px;
+    overflow: hidden;
+    color: #172033;
+    font-size: 18px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.article-row p {
+    display: -webkit-box;
+    margin: 0;
+    overflow: hidden;
+    color: #64748b;
+    font-size: 14px;
+    line-height: 1.6;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.article-meta {
+    display: grid;
+    justify-items: end;
+    gap: 8px;
+    color: #64748b;
+    font-size: 13px;
+}
+
+.article-meta span {
+    padding: 4px 10px;
+    color: #2563eb;
+    border-radius: 999px;
+    background: #eff6ff;
+    font-weight: 700;
+}
+
+.device-list {
+    display: grid;
+    gap: 12px;
+}
+
+.device-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 18px;
+    align-items: center;
+    padding: 16px;
+    border: 1px solid #eef3f8;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.device-type {
+    display: inline-flex;
+    margin-bottom: 8px;
+    padding: 4px 10px;
+    color: #2563eb;
+    border-radius: 999px;
+    background: #eff6ff;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.device-row h3 {
+    margin: 0 0 8px;
+    color: #172033;
+    font-size: 18px;
+}
+
+.device-row p {
+    margin: 0;
+    color: #64748b;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.device-row strong {
+    color: #253247;
+    white-space: nowrap;
 }
 
 .password-overlay {
@@ -344,6 +687,21 @@ export default {
 
     .profile-info {
         grid-template-columns: 1fr;
+    }
+
+    .articles-head,
+    .article-row,
+    .device-row {
+        grid-template-columns: 1fr;
+    }
+
+    .articles-head {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .article-meta {
+        justify-items: start;
     }
 
     .password-overlay {
