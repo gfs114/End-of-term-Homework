@@ -85,7 +85,10 @@
           role="button" @click="openComputerDetail(computer, $event)"
           @keyup.enter="openComputerDetail(computer, $event)"
           @keyup.space.prevent="openComputerDetail(computer, $event)">
-          <div class="computer-visual" :style="{ '--accent-color': computer.accent }">
+          <div v-if="hasComputerImage(computer)" class="computer-image">
+            <img :src="computer.img" :alt="computer.model" @error="markComputerImageFailed(computer)" />
+          </div>
+          <div v-else class="computer-visual" :style="{ '--accent-color': computer.accent || '#2563eb' }">
             <div class="screen"></div>
             <div class="base"></div>
           </div>
@@ -126,7 +129,11 @@
               tabindex="0" role="button" @click="openComputerDetail(computer, $event)"
               @keyup.enter="openComputerDetail(computer, $event)"
               @keyup.space.prevent="openComputerDetail(computer, $event)">
-              <div class="computer-visual computer-visual--compact" :style="{ '--accent-color': computer.accent }">
+              <div v-if="hasComputerImage(computer)" class="computer-image computer-image--compact">
+                <img :src="computer.img" :alt="computer.model" @error="markComputerImageFailed(computer)" />
+              </div>
+              <div v-else class="computer-visual computer-visual--compact"
+                :style="{ '--accent-color': computer.accent || '#2563eb' }">
                 <div class="screen"></div>
                 <div class="base"></div>
               </div>
@@ -150,7 +157,12 @@
         <section class="detail-panel" aria-label="电脑详情">
           <button type="button" class="detail-close" aria-label="关闭详情" @click="closeComputerDetail">×</button>
 
-          <div class="computer-visual detail-visual" :style="{ '--accent-color': selectedComputer.img }">
+          <div v-if="hasComputerImage(selectedComputer)" class="computer-image detail-visual">
+            <img :src="selectedComputer.img" :alt="selectedComputer.model"
+              @error="markComputerImageFailed(selectedComputer)" />
+          </div>
+          <div v-else class="computer-visual detail-visual"
+            :style="{ '--accent-color': selectedComputer.accent || '#2563eb' }">
             <div class="screen"></div>
             <div class="base"></div>
           </div>
@@ -501,6 +513,7 @@ export default {
           price: "¥8999 起",
           priceValue: 8999,
           accent: "#111827",
+          img: require("@/assets/computer_image/MacBook Air.png"),
         },
         {
           brand: "Apple",
@@ -513,6 +526,7 @@ export default {
           price: "¥16999 起",
           priceValue: 16999,
           accent: "#374151",
+          img: require("@/assets/computer_image/MacBook Pro.jpg"),
         },
         {
           brand: "联想",
@@ -777,6 +791,7 @@ export default {
           price: "¥9999 起",
           priceValue: 9999,
           accent: "#4b5563",
+          img: require("@/assets/computer_image/MacBook Pro.jpg"),
         },
         {
           brand: "联想",
@@ -956,6 +971,7 @@ export default {
           storage: "1TB SSD",
           price: "¥13499 起",
           priceValue: 13499,
+          accent: "#64748b",
           img: "https://www.asus.com/media/ROG/ROG-Zephyrus-G14-GA401UQ/image/ROG-Zephyrus-G14-GA401UQ-1.png",
         },
         {
@@ -1252,6 +1268,14 @@ export default {
 
       return graphicsName;
     },
+    hasComputerImage(computer) {
+      return computer && computer.img && !computer.imageLoadFailed;
+    },
+    markComputerImageFailed(computer) {
+      if (computer) {
+        computer.imageLoadFailed = true;
+      }
+    },
     openComputerDetail(computer, event) {
       if (event && event.currentTarget) {
         const rect = event.currentTarget.getBoundingClientRect();
@@ -1475,6 +1499,27 @@ export default {
   transform: scale(0.97);
 }
 
+.computer-image {
+  position: relative;
+  width: 100%;
+  min-height: 170px;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #eef3f8;
+}
+
+.computer-image img {
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 12px;
+  object-fit: contain;
+  box-sizing: border-box;
+}
+
 .computer-visual {
   --accent-color: #2563eb;
   display: grid;
@@ -1501,8 +1546,13 @@ export default {
   background: #94a3b8;
 }
 
+.computer-image--compact,
 .computer-visual--compact {
   min-height: 128px;
+}
+
+.computer-image--compact img {
+  padding: 8px;
 }
 
 .model-card h3 {
