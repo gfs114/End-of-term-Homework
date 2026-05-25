@@ -47,11 +47,16 @@
       </div>
 
       <div class="nav-group nav-auth">
+        <template v-if="adminUsername">
+          <span class="nav-greeting">{{ adminUsername }}</span>
+          <router-link to="/alogin/admin" class="nav-link nav-admin-back">返回后台</router-link>
+          <button type="button" class="nav-link nav-button" @click="handleLogout">登出</button>
+        </template>
         <template v-if="loginUsername">
           <span class="nav-greeting">你好，{{ loginUsername }}</span>
           <button type="button" class="nav-link nav-button" @click="handleLogout">登出</button>
         </template>
-        <template v-else>
+        <template v-if="!loginUsername && !adminUsername">
           <router-link to="/login" class="nav-link">登录</router-link>
           <router-link to="/register" class="nav-link">注册</router-link>
         </template>
@@ -90,9 +95,10 @@ export default {
       filterHeight: 72,
       displacementMap: '',
       displacementScale: 24,
-      resizeObserver: null,
+      resizeHandler: null,
       resizeFrame: null,
-      loginUsername: ''
+      loginUsername: '',
+      adminUsername: ''
     }
   },
   computed: {
@@ -110,12 +116,12 @@ export default {
   mounted() {
     this.loadLoginUsername()
     this.updateFilterSize()
-    this.resizeObserver = new ResizeObserver(() => this.scheduleFilterUpdate())
-    this.resizeObserver.observe(this.$refs.navbar)
+    this.resizeHandler = () => this.scheduleFilterUpdate()
+    window.addEventListener('resize', this.resizeHandler)
   },
   beforeUnmount() {
-    if (this.resizeObserver) {
-      this.resizeObserver.disconnect()
+    if (this.resizeHandler) {
+      window.removeEventListener('resize', this.resizeHandler)
     }
     if (this.resizeFrame) {
       cancelAnimationFrame(this.resizeFrame)
@@ -124,10 +130,16 @@ export default {
   methods: {
     loadLoginUsername() {
       this.loginUsername = localStorage.getItem('loginUsername') || ''
+      this.adminUsername = localStorage.getItem('adminUsername') || ''
+      this.$nextTick(() => this.scheduleFilterUpdate())
     },
     handleLogout() {
       localStorage.removeItem('loginUsername')
+      localStorage.removeItem('loginEmail')
+      localStorage.removeItem('adminUsername')
+      localStorage.removeItem('adminRole')
       this.loginUsername = ''
+      this.adminUsername = ''
       this.$router.push('/login')
     },
     scheduleFilterUpdate() {
@@ -137,9 +149,20 @@ export default {
       this.resizeFrame = requestAnimationFrame(() => this.updateFilterSize())
     },
     updateFilterSize() {
+      if (!this.$refs.navbar) {
+        return
+      }
+
       const rect = this.$refs.navbar.getBoundingClientRect()
-      this.filterWidth = Math.max(320, Math.round(rect.width))
-      this.filterHeight = Math.max(72, Math.round(rect.height))
+      const nextWidth = Math.max(320, Math.round(rect.width))
+      const nextHeight = Math.max(72, Math.round(rect.height))
+
+      if (nextWidth === this.filterWidth && nextHeight === this.filterHeight && this.displacementMap) {
+        return
+      }
+
+      this.filterWidth = nextWidth
+      this.filterHeight = nextHeight
       this.generateDisplacementMap()
     },
     generateDisplacementMap() {

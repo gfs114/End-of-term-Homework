@@ -75,8 +75,11 @@
         <main class="admin-main">
             <section class="admin-content">
                 <AdminInfo v-if="activeMenuKey === 'admin-info'" />
+                <SystemLog v-else-if="activeMenuKey === 'system-log'" />
                 <UserInfo v-else-if="activeMenuKey === 'user-info'" />
+                <AuthorInfo v-else-if="activeMenuKey === 'author-info'" />
                 <ArticleFavoriteInfo v-else-if="activeMenuKey === 'article-favorite'" />
+                <DeviceCategoryInfo v-else-if="activeMenuKey === 'device-category'" />
                 <DeviceInfo v-else-if="activeMenuKey === 'device-phone'" />
 
                 <el-card v-else shadow="never" class="overview-card">
@@ -102,6 +105,9 @@ import AdminInfo from '@/components/manager/AdminInfo.vue'
 import UserInfo from '@/components/manager/UserInfo.vue'
 import ArticleFavoriteInfo from '@/components/manager/ArticleFavoriteInfo.vue'
 import DeviceInfo from '@/components/manager/DeviceInfo.vue'
+import SystemLog from '@/components/manager/SystemLog.vue'
+import AuthorInfo from '@/components/manager/AuthorInfo.vue'
+import DeviceCategoryInfo from '@/components/manager/DeviceCategoryInfo.vue'
 
 export default {
     name: 'AdminPage',
@@ -109,7 +115,10 @@ export default {
         AdminInfo,
         UserInfo,
         ArticleFavoriteInfo,
-        DeviceInfo
+        DeviceInfo,
+        SystemLog,
+        AuthorInfo,
+        DeviceCategoryInfo
     },
     data() {
         return {

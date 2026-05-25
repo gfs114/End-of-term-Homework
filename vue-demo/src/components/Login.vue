@@ -102,6 +102,8 @@ export default {
           const result = response.data || response
 
           if (result.code === '200' || result.code === 200) {
+            localStorage.removeItem('adminUsername')
+            localStorage.removeItem('adminRole')
             localStorage.setItem('loginUsername', this.form.username)
             if (this.form.username.includes('@')) {
               localStorage.setItem('loginEmail', this.form.username)
