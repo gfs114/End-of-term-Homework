@@ -132,8 +132,62 @@
         </button>
       </div>
 
-      <div v-if="filteredPhoneModels.length === 0" class="empty-state">
+      <div v-if="phoneModelsLoading && !phoneModels.length" class="empty-state">
+        手机数据加载中...
+      </div>
+
+      <div v-else-if="filteredPhoneModels.length === 0" class="empty-state">
         暂未找到匹配机型，请换个关键词试试。
+      </div>
+    </section>
+
+    <section class="phone-compare-section" aria-label="手机配置 PK">
+      <div class="compare-head">
+        <div>
+          <p>手机配置 PK</p>
+          <h2>选择手机查看配置对比</h2>
+        </div>
+
+        <div class="compare-actions">
+          <button type="button" class="compare-add-button" :disabled="!canAddCompareSlot" @click="addComparePhoneSlot">
+            +
+          </button>
+          <button type="button" :disabled="!hasCompareSelection" @click="clearComparePhones">
+            清空
+          </button>
+        </div>
+      </div>
+
+      <div class="compare-selectors">
+        <label v-for="(model, index) in compareModels" :key="index" class="compare-select">
+          <span>{{ getComparePhoneLabel(index) }}</span>
+          <select :value="model" @change="setCompareModel(index, $event.target.value)">
+            <option value="">请选择手机</option>
+            <option v-for="phone in getCompareOptions(index)" :key="phone.model" :value="phone.model">
+              {{ phone.model }}
+            </option>
+          </select>
+        </label>
+      </div>
+
+      <div v-if="hasCompareSelection" class="compare-output">
+        <div class="compare-phone-titles" :style="compareGridStyle">
+          <div v-for="(phone, index) in comparePhones" :key="index">
+            <span>{{ getComparePhoneLabel(index) }}</span>
+            <strong>{{ phone ? phone.model : '未选择' }}</strong>
+          </div>
+        </div>
+
+        <div class="compare-table">
+          <div v-for="row in phoneCompareRows" :key="row.label" class="compare-row" :style="compareGridStyle">
+            <div class="compare-cell compare-cell--label">{{ row.label }}</div>
+            <div v-for="(value, index) in row.values" :key="index" class="compare-cell">{{ value }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div v-else class="compare-empty">
+        请选择手机进行配置 PK。
       </div>
     </section>
 
@@ -231,8 +285,107 @@
 import http from '@/utils/http'
 import AiAssistant from '@/components/AiAssistant.vue'
 
+const COMPARE_FIELDS = [
+  { label: '品牌', key: 'brand' },
+  { label: '型号', key: 'model' },
+  { label: '处理器', key: 'processor' },
+  { label: '电池容量', key: 'battery' },
+  { label: '价格', key: 'price' }
+]
+const MAX_COMPARE_SLOTS = 5
+
+function getPhoneResponseList(data) {
+  if (Array.isArray(data)) {
+    return data
+  }
+
+  if (!data || typeof data !== 'object') {
+    return []
+  }
+
+  return data.data || data.list || data.phones || data.phoneModels || []
+}
+
+function toNumber(value) {
+  const numberValue = Number(value || 0)
+
+  return Number.isFinite(numberValue) ? numberValue : 0
+}
+
+function resolvePhoneImage(imageName, resolveImage) {
+  if (!imageName) {
+    return ''
+  }
+
+  if (typeof imageName !== 'string') {
+    return imageName
+  }
+
+  if (/^(https?:)?\/\//.test(imageName) || imageName.startsWith('data:')) {
+    return imageName
+  }
+
+  if (typeof resolveImage !== 'function') {
+    return imageName
+  }
+
+  return resolveImage(imageName) || imageName
+}
+
+function normalizePhoneModel(phone, resolveImage) {
+  const imageName = phone.image || phone.img || phone.imageUrl || phone.image_url || ''
+
+  return {
+    ...phone,
+    brand: phone.brand || '',
+    model: phone.model || '',
+    processor: phone.processor || '',
+    battery: phone.battery || '',
+    batteryValue: toNumber(phone.batteryValue || phone.battery_value),
+    price: phone.price || '',
+    priceValue: toNumber(phone.priceValue || phone.price_value),
+    imageName,
+    image: resolvePhoneImage(imageName, resolveImage)
+  }
+}
+
+function normalizePhoneModelList(list, resolveImage) {
+  if (!Array.isArray(list)) {
+    return []
+  }
+
+  return list.map((phone) => normalizePhoneModel(phone || {}, resolveImage))
+}
+
+function formatCompareValue(phone, key) {
+  if (!phone || !phone[key]) {
+    return '暂无数据'
+  }
+
+  return phone[key]
+}
+
+function buildPhoneCompareRows(phones) {
+  const comparePhones = Array.isArray(phones) ? phones : []
+
+  return COMPARE_FIELDS.map((field) => ({
+    label: field.label,
+    values: comparePhones.map((phone) => formatCompareValue(phone, field.key))
+  }))
+}
+
+function addCompareSlot(slots) {
+  const currentSlots = Array.isArray(slots) ? slots : []
+
+  if (currentSlots.length >= MAX_COMPARE_SLOTS) {
+    return currentSlots.slice(0, MAX_COMPARE_SLOTS)
+  }
+
+  return currentSlots.concat('')
+}
+
 export default {
-  name: "Phone",
+  name: "PhonePage",
   components: {
     AiAssistant
   },
@@ -248,6 +401,10 @@ export default {
       modelSectionTimer: null,
       selectedBrand: null,
       selectedPhone: null,
+      compareModels: ["", ""],
+      phoneModels: [],
+      phoneModelsLoading: false,
+      phoneModelsLoadFailed: false,
       favoriteDevices: [],
       favoriteDeviceLoading: false,
       detailOrigin: {
@@ -329,7 +486,7 @@ export default {
           img: require("@/assets/brand_icon/Samsung.png"),
         },
       ],
-      phoneModels: [
+      phoneModelFallback: [
         {
           brand: "华为",
           model: "HUAWEI Mate 60",
@@ -1245,6 +1402,23 @@ export default {
       const start = (this.currentModelPage - 1) * this.modelPageSize;
       return this.filteredPhoneModels.slice(start, start + this.modelPageSize);
     },
+    comparePhones() {
+      return this.compareModels.map((model) => this.findPhoneByModel(model));
+    },
+    hasCompareSelection() {
+      return this.comparePhones.some(Boolean);
+    },
+    canAddCompareSlot() {
+      return this.compareModels.length < MAX_COMPARE_SLOTS;
+    },
+    compareGridStyle() {
+      return {
+        "--compare-count": this.compareModels.length,
+      };
+    },
+    phoneCompareRows() {
+      return buildPhoneCompareRows(this.comparePhones);
+    },
     phoneDetailVars() {
       return {
         "--detail-origin-x": `${this.detailOrigin.x}%`,
@@ -1291,6 +1465,9 @@ export default {
         this.currentModelPage = total;
       }
     },
+  },
+  created() {
+    this.fetchPhoneModels();
   },
   mounted() {
     this.$nextTick(() => {
@@ -1365,6 +1542,66 @@ export default {
       return {
         animationDelay: `${Math.min(index * 110, 660)}ms`,
       };
+    },
+    findPhoneByModel(model) {
+      if (!model) {
+        return null;
+      }
+
+      return this.phoneModels.find((phone) => phone.model === model) || null;
+    },
+    getComparePhoneLabel(index) {
+      return `手机 ${String.fromCharCode(65 + index)}`;
+    },
+    getCompareOptions(index) {
+      const selectedModels = this.compareModels.filter((model, modelIndex) => (
+        model && modelIndex !== index
+      ));
+
+      return this.phoneModels.filter((phone) => !selectedModels.includes(phone.model));
+    },
+    setCompareModel(index, model) {
+      const nextModels = this.compareModels.slice();
+      nextModels[index] = model;
+      this.compareModels = nextModels;
+    },
+    addComparePhoneSlot() {
+      this.compareModels = addCompareSlot(this.compareModels);
+    },
+    clearComparePhones() {
+      this.compareModels = ["", ""];
+    },
+    getPhoneImage(imageName) {
+      if (!imageName) {
+        return "";
+      }
+
+      if (typeof imageName !== "string") {
+        return imageName;
+      }
+
+      try {
+        return require(`@/assets/phone_image/${imageName}`);
+      } catch (error) {
+        return "";
+      }
+    },
+    async fetchPhoneModels() {
+      this.phoneModelsLoading = true;
+      this.phoneModelsLoadFailed = false;
+
+      try {
+        const { data } = await http.get("/phone-models");
+        const list = getPhoneResponseList(data);
+        this.phoneModels = normalizePhoneModelList(list, this.getPhoneImage);
+        this.currentModelPage = 1;
+      } catch (error) {
+        this.phoneModelsLoadFailed = true;
+        this.phoneModels = normalizePhoneModelList(this.phoneModelFallback, this.getPhoneImage);
+        this.$message.error("获取后端手机数据失败，已显示本地备用数据");
+      } finally {
+        this.phoneModelsLoading = false;
+      }
     },
     getUsername() {
       return localStorage.getItem("loginUsername") || "";
@@ -2008,6 +2245,197 @@ export default {
   margin-top: 16px;
 }
 
+.phone-compare-section {
+  margin-top: 22px;
+  padding: 24px;
+  border: 1px solid #dbe7f3;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 18px 50px rgba(45, 73, 112, 0.08);
+}
+
+.compare-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.compare-head p {
+  margin: 0 0 6px;
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.compare-head h2 {
+  margin: 0;
+  color: #101827;
+  font-size: 24px;
+  line-height: 1.25;
+}
+
+.compare-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.compare-actions button {
+  min-width: 62px;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid #d6e1ee;
+  border-radius: 8px;
+  background: #fff;
+  color: #43546b;
+  cursor: pointer;
+}
+
+.compare-actions .compare-add-button {
+  min-width: 36px;
+  width: 36px;
+  padding: 0;
+  color: #fff;
+  background: #2563eb;
+  border-color: #2563eb;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.compare-actions button:hover:not(:disabled) {
+  border-color: #2563eb;
+  color: #2563eb;
+}
+
+.compare-actions .compare-add-button:hover:not(:disabled) {
+  color: #fff;
+  background: #1d4ed8;
+}
+
+.compare-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.compare-selectors {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 16px;
+}
+
+.compare-select {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  color: #5f6f86;
+  font-size: 13px;
+}
+
+.compare-select select {
+  width: 100%;
+  min-width: 0;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid #cbd8e6;
+  border-radius: 8px;
+  background: #fff;
+  color: #152033;
+  font-size: 14px;
+  outline: none;
+}
+
+.compare-select select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.compare-output {
+  margin-top: 18px;
+  overflow-x: auto;
+  border: 1px solid #dbe7f3;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.compare-phone-titles {
+  display: grid;
+  grid-template-columns: repeat(var(--compare-count, 2), minmax(140px, 1fr));
+  margin-left: 112px;
+  border-left: 1px solid #eef3f8;
+}
+
+.compare-phone-titles div {
+  min-width: 0;
+  padding: 14px 16px;
+  border-left: 1px solid #eef3f8;
+}
+
+.compare-phone-titles div:first-child {
+  border-left: 0;
+}
+
+.compare-phone-titles span {
+  display: block;
+  margin-bottom: 4px;
+  color: #8090a6;
+  font-size: 12px;
+}
+
+.compare-phone-titles strong {
+  display: block;
+  overflow-wrap: anywhere;
+  color: #152033;
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+.compare-table {
+  border-top: 1px solid #eef3f8;
+}
+
+.compare-row {
+  display: grid;
+  grid-template-columns: 112px repeat(var(--compare-count, 2), minmax(140px, 1fr));
+  min-height: 48px;
+  border-top: 1px solid #eef3f8;
+}
+
+.compare-row:first-child {
+  border-top: 0;
+}
+
+.compare-cell {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 12px 16px;
+  border-left: 1px solid #eef3f8;
+  color: #253247;
+  font-size: 14px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.compare-cell--label {
+  border-left: 0;
+  background: #f8fbff;
+  color: #5f6f86;
+  font-weight: 800;
+}
+
+.compare-empty {
+  margin-top: 18px;
+  padding: 28px;
+  border: 1px dashed #b9c8da;
+  border-radius: 8px;
+  background: #f8fbff;
+  color: #6b7a90;
+  text-align: center;
+}
+
 .phone-detail-overlay {
   position: fixed;
   inset: 0;
@@ -2275,6 +2703,11 @@ export default {
     flex-direction: column;
   }
 
+  .compare-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
   .search-box {
     flex: none;
   }
@@ -2294,12 +2727,17 @@ export default {
   .model-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .compare-selectors {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 640px) {
 
   .brand-hero,
-  .model-control-panel {
+  .model-control-panel,
+  .phone-compare-section {
     padding: 24px;
   }
 
@@ -2321,6 +2759,21 @@ export default {
 
   .model-grid {
     grid-template-columns: 1fr;
+  }
+
+  .compare-phone-titles {
+    grid-template-columns: repeat(var(--compare-count, 2), minmax(120px, 1fr));
+    margin-left: 84px;
+  }
+
+  .compare-row {
+    grid-template-columns: 84px repeat(var(--compare-count, 2), minmax(120px, 1fr));
+  }
+
+  .compare-cell,
+  .compare-phone-titles div {
+    padding: 10px;
+    font-size: 13px;
   }
 
   .filter-title {

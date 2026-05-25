@@ -14,16 +14,9 @@
                 </el-button>
             </div>
 
-            <el-menu
-                class="admin-menu"
-                :collapse="isCollapsed"
-                :default-active="activeMenuKey"
-                background-color="#111827"
-                text-color="#cbd5e1"
-                active-text-color="#ffffff"
-                unique-opened
-                @select="handleMenuSelect"
-            >
+            <el-menu class="admin-menu" :collapse="isCollapsed" :default-active="activeMenuKey"
+                background-color="#111827" text-color="#cbd5e1" active-text-color="#ffffff" unique-opened
+                @select="handleMenuSelect">
                 <template v-for="menu in menus" :key="menu.key">
                     <el-sub-menu v-if="menu.children && menu.children.length" :index="menu.key">
                         <template #title>
@@ -33,12 +26,31 @@
                             <span>{{ menu.title }}</span>
                         </template>
 
-                        <el-menu-item v-for="child in menu.children" :key="child.key" :index="child.key">
-                            <el-icon>
-                                <component :is="child.icon" />
-                            </el-icon>
-                            <span>{{ child.title }}</span>
-                        </el-menu-item>
+                        <template v-for="child in menu.children" :key="child.key">
+                            <el-sub-menu v-if="child.children && child.children.length" :index="child.key">
+                                <template #title>
+                                    <el-icon>
+                                        <component :is="child.icon" />
+                                    </el-icon>
+                                    <span>{{ child.title }}</span>
+                                </template>
+
+                                <el-menu-item v-for="grandchild in child.children" :key="grandchild.key"
+                                    :index="grandchild.key">
+                                    <el-icon>
+                                        <component :is="grandchild.icon" />
+                                    </el-icon>
+                                    <span>{{ grandchild.title }}</span>
+                                </el-menu-item>
+                            </el-sub-menu>
+
+                            <el-menu-item v-else :index="child.key">
+                                <el-icon>
+                                    <component :is="child.icon" />
+                                </el-icon>
+                                <span>{{ child.title }}</span>
+                            </el-menu-item>
+                        </template>
                     </el-sub-menu>
 
                     <el-menu-item v-else :index="menu.key">
@@ -65,7 +77,7 @@
                 <AdminInfo v-if="activeMenuKey === 'admin-info'" />
                 <UserInfo v-else-if="activeMenuKey === 'user-info'" />
                 <ArticleFavoriteInfo v-else-if="activeMenuKey === 'article-favorite'" />
-                <DeviceInfo v-else-if="activeMenuKey === 'device-info'" />
+                <DeviceInfo v-else-if="activeMenuKey === 'device-phone'" />
 
                 <el-card v-else shadow="never" class="overview-card">
                     <template #header>
@@ -110,23 +122,6 @@ export default {
                     icon: 'Document'
                 },
                 {
-                    key: 'info-manage',
-                    title: '信息管理',
-                    icon: 'MessageBox',
-                    children: [
-                        {
-                            key: 'notice-info',
-                            title: '公告信息',
-                            icon: 'Bell'
-                        },
-                        {
-                            key: 'ad-info',
-                            title: '广告信息',
-                            icon: 'Picture'
-                        }
-                    ]
-                },
-                {
                     key: 'device-manage',
                     title: '设备信息管理',
                     icon: 'Monitor',
@@ -139,7 +134,19 @@ export default {
                         {
                             key: 'device-info',
                             title: '设备信息',
-                            icon: 'Cpu'
+                            icon: 'Cpu',
+                            children: [
+                                {
+                                    key: 'device-phone',
+                                    title: '手机',
+                                    icon: 'Iphone'
+                                },
+                                {
+                                    key: 'device-computer',
+                                    title: '电脑',
+                                    icon: 'Monitor'
+                                }
+                            ]
                         }
                     ]
                 },
@@ -152,11 +159,6 @@ export default {
                             key: 'article-favorite',
                             title: '文章收藏信息',
                             icon: 'Star'
-                        },
-                        {
-                            key: 'article-history',
-                            title: '文章浏览历史信息',
-                            icon: 'Clock'
                         }
                     ]
                 },
@@ -187,13 +189,7 @@ export default {
     },
     computed: {
         flatMenus() {
-            return this.menus.reduce((result, menu) => {
-                if (menu.children && menu.children.length) {
-                    return result.concat(menu.children)
-                }
-
-                return result.concat(menu)
-            }, [])
+            return this.flattenMenus(this.menus)
         },
         currentPage() {
             const current = this.flatMenus.find((menu) => menu.key === this.activeMenuKey)
@@ -222,23 +218,32 @@ export default {
             this.$router.push('/hello')
         },
         getBreadcrumb(key) {
-            for (let index = 0; index < this.menus.length; index += 1) {
-                const menu = this.menus[index]
+            const path = this.findMenuPath(this.menus, key)
+
+            return path.length ? `系统界面 / ${path.join(' / ')}` : '系统界面'
+        },
+        flattenMenus(menus) {
+            return menus.reduce((result, menu) => {
+                return result.concat(menu, this.flattenMenus(menu.children || []))
+            }, [])
+        },
+        findMenuPath(menus, key, parentPath = []) {
+            for (let index = 0; index < menus.length; index += 1) {
+                const menu = menus[index]
+                const currentPath = parentPath.concat(menu.title)
 
                 if (menu.key === key) {
-                    return `系统界面 / ${menu.title}`
+                    return currentPath
                 }
 
-                if (menu.children && menu.children.length) {
-                    const child = menu.children.find((item) => item.key === key)
+                const childPath = this.findMenuPath(menu.children || [], key, currentPath)
 
-                    if (child) {
-                        return `系统界面 / ${menu.title} / ${child.title}`
-                    }
+                if (childPath.length) {
+                    return childPath
                 }
             }
 
-            return '系统界面'
+            return []
         }
     }
 }

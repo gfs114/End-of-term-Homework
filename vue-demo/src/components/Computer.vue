@@ -208,7 +208,7 @@ import http from '@/utils/http'
 import AiAssistant from '@/components/AiAssistant.vue'
 
 export default {
-  name: "Computer",
+  name: "ComputerPage",
   components: {
     AiAssistant
   },
