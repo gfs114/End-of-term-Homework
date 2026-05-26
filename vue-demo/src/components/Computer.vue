@@ -710,6 +710,7 @@ export default {
           price: "¥11149 起",
           priceValue: 11149,
           accent: "#dc2626",
+          img: require("@/assets/computer_image/拯救者R9000P 2025 AI元启.jpg"),
         },
         {
           brand: "联想",
@@ -722,6 +723,7 @@ export default {
           price: "¥9499 起",
           priceValue: 9499,
           accent: "#ef4444",
+          img: require("@/assets/computer_image/拯救者Y7000P 2025 AI元启.jpg"),
         },
         {
           brand: "联想",
@@ -734,6 +736,7 @@ export default {
           price: "价格面议",
           priceValue: null,
           accent: "#f97316",
+          img: require("@/assets/computer_image/小新Pro16GT 2026 AI元启版.jpg"),
         },
         //-------------------HUAWEI-------------------------
         {
@@ -773,6 +776,7 @@ export default {
           price: "¥19999 起",
           priceValue: 19999,
           accent: "#ef4444",
+          img: require("@/assets/computer_image/MateBook Fold 非凡大师.png"),
         },
         {
           brand: "华为",
@@ -785,6 +789,7 @@ export default {
           price: "¥7999 起",
           priceValue: 7999,
           accent: "#f43f5e",
+          img: require("@/assets/computer_image/MateBook Pro.png"),
         },
         //--------------DELL/Alienware------------------
         {
@@ -824,6 +829,7 @@ export default {
           price: "¥7299 起",
           priceValue: 7299,
           accent: "#2563eb",
+          img: require("@/assets/computer_image/Latitude 5440.png"),
         },
         {
           brand: "戴尔",
@@ -836,6 +842,7 @@ export default {
           price: "¥5699 起",
           priceValue: 5699,
           accent: "#0ea5e9",
+          img: require("@/assets/computer_image/Latitude 5530.png"),
         },
         {
           brand: "戴尔",
@@ -848,6 +855,7 @@ export default {
           price: "¥25999 起",
           priceValue: 25999,
           accent: "#0ea5e9",
+          img: require("@/assets/computer_image/XPS14.png"),
         },
         {
           brand: "戴尔",
@@ -858,8 +866,9 @@ export default {
           memory: "32GB",
           storage: "1TB SSD",
           price: "¥26999 起",
-          priceValue: 25999,
+          priceValue: 26999,
           accent: "#0ea5e9",
+          img: require("@/assets/computer_image/XPS16.png"),
         },
         //----------------------惠普/暗影精灵------------------------
         {
@@ -898,6 +907,7 @@ export default {
           price: "¥9999 起",
           priceValue: 9999,
           accent: "#1d4ed8",
+          img: require("@/assets/computer_image/暗影精灵11.jpg"),
         },
         {
           brand: "惠普",
@@ -910,6 +920,7 @@ export default {
           price: "¥6199 起",
           priceValue: 6199,
           accent: "#2563eb",
+          img: require("@/assets/computer_image/战66 2025 酷睿Ultra版 16英寸.jpg"),
         },
         //---------------华硕/ROG---------------------
         {
