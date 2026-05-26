@@ -1,4 +1,4 @@
-import { createRouter, createWebHashHistory, RouterView } from "vue-router";
+import { createRouter, createWebHashHistory } from "vue-router";
 import Hello from "@/components/Hello.vue";
 import Login from "@/components/Login.vue";
 import Register from "@/components/Register.vue";
@@ -7,6 +7,14 @@ import ForgetPassword from "@/components/ForgetPassword.vue";
 import Phone from "@/components/Phone.vue";
 import Computer from "@/components/Computer.vue";
 import Admin from "@/components/manager/Admin.vue";
+import AdminInfo from "@/components/manager/AdminInfo.vue";
+import UserInfo from "@/components/manager/UserInfo.vue";
+import ArticleFavoriteInfo from "@/components/manager/ArticleFavoriteInfo.vue";
+import DeviceInfo from "@/components/manager/DeviceInfo.vue";
+import DeviceComputerInfo from "@/components/manager/DeviceComputerInfo.vue";
+import SystemLog from "@/components/manager/SystemLog.vue";
+import AuthorInfo from "@/components/manager/AuthorInfo.vue";
+import DeviceCategoryInfo from "@/components/manager/DeviceCategoryInfo.vue";
 import Mine from "@/components/Mine.vue";
 import ArticleDetail from "@/components/ArticleDetail.vue";
 import ArticleSubmit from "@/components/ArticleSubmit.vue";
@@ -16,19 +24,89 @@ const router = createRouter({
     routes: [
         {
             path: '/',
-            component: RouterView,
-            redirect: '/hello',
+            redirect: '/hello'
+        },
+        {
+            path: '/hello',
+            component: Hello
+        },
+        {
+            path: '/login',
+            component: Login
+        },
+        {
+            path: '/register',
+            component: Register
+        },
+        {
+            path: '/alogin',
+            component: AdminLogin
+        },
+        {
+            path: '/forget',
+            component: ForgetPassword
+        },
+        {
+            path: '/phone',
+            component: Phone
+        },
+        {
+            path: '/computer',
+            component: Computer
+        },
+        {
+            path: '/mine',
+            component: Mine
+        },
+        {
+            path: '/submit',
+            component: ArticleSubmit
+        },
+        {
+            path: '/alogin/admin',
+            component: Admin,
+            redirect: '/alogin/admin/user-info',
             children: [
-                { path: '/hello', component: Hello },
-                { path: '/login', component: Login },
-                { path: '/register', component: Register },
-                { path: '/alogin', component: AdminLogin },
-                { path: '/forget', component: ForgetPassword },
-                { path: '/phone', component: Phone },
-                { path: '/computer', component: Computer },
-                { path: '/mine', component: Mine },
-                { path: '/submit', component: ArticleSubmit },
-                { path: '/alogin/admin', component: Admin }
+                {
+                    path: 'system-log',
+                    name: 'admin-system-log',
+                    component: SystemLog
+                },
+                {
+                    path: 'device-category',
+                    name: 'admin-device-category',
+                    component: DeviceCategoryInfo
+                },
+                {
+                    path: 'device-phone',
+                    name: 'admin-device-phone',
+                    component: DeviceInfo
+                },
+                {
+                    path: 'device-computer',
+                    name: 'admin-device-computer',
+                    component: DeviceComputerInfo
+                },
+                {
+                    path: 'article-favorite',
+                    name: 'admin-article-favorite',
+                    component: ArticleFavoriteInfo
+                },
+                {
+                    path: 'admin-info',
+                    name: 'admin-admin-info',
+                    component: AdminInfo
+                },
+                {
+                    path: 'author-info',
+                    name: 'admin-author-info',
+                    component: AuthorInfo
+                },
+                {
+                    path: 'user-info',
+                    name: 'admin-user-info',
+                    component: UserInfo
+                }
             ]
         },
         {

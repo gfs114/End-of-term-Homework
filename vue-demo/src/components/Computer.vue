@@ -125,7 +125,11 @@
         </button>
       </div>
 
-      <div v-if="filteredComputers.length === 0" class="empty-state">
+      <div v-if="computerModelsLoading && !computers.length" class="empty-state">
+        电脑数据加载中...
+      </div>
+
+      <div v-else-if="filteredComputers.length === 0" class="empty-state">
         暂未找到匹配电脑，请换个关键词或筛选条件试试。
       </div>
     </section>
@@ -290,6 +294,78 @@ const COMPUTER_COMPARE_FIELDS = [
 ]
 const MAX_COMPARE_SLOTS = 5
 
+function getComputerResponseList(data) {
+  if (Array.isArray(data)) {
+    return data
+  }
+
+  if (!data || typeof data !== "object") {
+    return []
+  }
+
+  return data.data || data.list || data.computers || data.computerModels || []
+}
+
+function toNumber(value) {
+  const numberValue = Number(value || 0)
+
+  return Number.isFinite(numberValue) ? numberValue : 0
+}
+
+function resolveComputerImage(imageName, resolveImage) {
+  if (!imageName) {
+    return ""
+  }
+
+  if (typeof imageName !== "string") {
+    return imageName
+  }
+
+  if (/^(https?:)?\/\//.test(imageName) || imageName.startsWith("data:") || imageName.startsWith("/")) {
+    return imageName
+  }
+
+  if (typeof resolveImage !== "function") {
+    return imageName
+  }
+
+  return resolveImage(imageName) || imageName
+}
+
+function normalizeComputerModel(computer, resolveImage) {
+  const imageName = computer.image || computer.img || computer.imageUrl || computer.image_url || ""
+
+  return {
+    ...computer,
+    brand: computer.brand || "",
+    model: computer.model || "",
+    type: computer.type || "",
+    processor: computer.processor || "",
+    graphics: computer.graphics || "",
+    memory: computer.memory || "",
+    storage: computer.storage || "",
+    price: computer.price || "",
+    priceValue: toNumber(computer.priceValue || computer.price_value),
+    accent: computer.accent || "#2563eb",
+    screenSize: computer.screenSize || computer.screen_size || "",
+    resolution: computer.resolution || "",
+    refreshRate: computer.refreshRate || computer.refresh_rate || "",
+    weight: computer.weight || "",
+    status: computer.status || "listed",
+    imageName,
+    img: resolveComputerImage(imageName, resolveImage),
+    imageLoadFailed: false
+  }
+}
+
+function normalizeComputerModelList(list, resolveImage) {
+  if (!Array.isArray(list)) {
+    return []
+  }
+
+  return list.map((computer) => normalizeComputerModel(computer || {}, resolveImage))
+}
+
 export default {
   name: "ComputerPage",
   components: {
@@ -304,6 +380,9 @@ export default {
       currentModelPage: 1,
       modelPageSize: 21,
       compareModels: ["", ""],
+      computerModelsLoading: false,
+      computerModelsLoadFailed: false,
+      computerModelFallback: [],
       favoriteDevices: [],
       favoriteDeviceLoading: false,
       modelSectionAnimating: false,
@@ -1304,7 +1383,7 @@ export default {
       }
 
       return this.computers.filter(
-        (computer) => computer.brand === this.selectedBrand.name
+        (computer) => computer.brand === this.selectedBrand.name && this.isComputerListed(computer)
       );
     },
     selectedComputerSpecs() {
@@ -1337,6 +1416,10 @@ export default {
       const priceRange = this.getSelectedPriceRange();
 
       return this.computers.filter((computer) => {
+        if (!this.isComputerListed(computer)) {
+          return false;
+        }
+
         const matchesKeyword =
           !keyword || this.getComputerSearchText(computer).includes(keyword);
         const matchesBrand =
@@ -1438,6 +1521,10 @@ export default {
       }
     },
   },
+  created() {
+    this.computerModelFallback = this.computers.slice();
+    this.fetchComputerModels();
+  },
   mounted() {
     this.$nextTick(() => {
       this.observeModelSection();
@@ -1445,6 +1532,23 @@ export default {
     this.fetchFavoriteDevices();
   },
   methods: {
+    async fetchComputerModels() {
+      this.computerModelsLoading = true;
+      this.computerModelsLoadFailed = false;
+
+      try {
+        const { data } = await http.get("/computer-models/search/list");
+        const list = getComputerResponseList(data);
+        this.computers = normalizeComputerModelList(list, this.getComputerImage);
+        this.currentModelPage = 1;
+      } catch (error) {
+        this.computerModelsLoadFailed = true;
+        this.computers = normalizeComputerModelList(this.computerModelFallback, this.getComputerImage);
+        this.$message.error("获取后端电脑数据失败，已显示本地备用数据");
+      } finally {
+        this.computerModelsLoading = false;
+      }
+    },
     uniqueValues(values) {
       return values.filter((value, index) => values.indexOf(value) === index);
     },
@@ -1458,7 +1562,14 @@ export default {
         return {};
       }
 
-      return this.displaySpecs[computer.model] || {};
+      const fallbackSpec = this.displaySpecs[computer.model] || {};
+
+      return {
+        screenSize: computer.screenSize || fallbackSpec.screenSize,
+        resolution: computer.resolution || fallbackSpec.resolution,
+        refreshRate: computer.refreshRate || fallbackSpec.refreshRate,
+        weight: computer.weight || fallbackSpec.weight,
+      };
     },
     formatSpecValue(value) {
       return value || "暂无数据";
@@ -1483,6 +1594,22 @@ export default {
         this.normalizeGraphicsFilter(computer.graphics) ===
           this.modelFilters.graphics
       );
+    },
+    normalizeComputerStatus(status) {
+      return ["stopped", "unlisted", "off"].includes(String(status || "").toLowerCase()) ? "unlisted" : "listed";
+    },
+    getComputerStatusStorageKey(computer) {
+      return `device_status_computer_${computer.id || computer.model}`;
+    },
+    isComputerListed(computer) {
+      if (!computer) {
+        return false;
+      }
+
+      const savedStatus = localStorage.getItem(this.getComputerStatusStorageKey(computer));
+      const status = savedStatus || computer.status;
+
+      return this.normalizeComputerStatus(status) !== "unlisted";
     },
     selectBrand(brand) {
       this.selectedBrand = brand;
@@ -1568,6 +1695,25 @@ export default {
 
       return graphicsName;
     },
+    getComputerImage(imageName) {
+      if (!imageName) {
+        return "";
+      }
+
+      if (typeof imageName !== "string") {
+        return imageName;
+      }
+
+      if (/^(https?:)?\/\//.test(imageName) || imageName.startsWith("data:") || imageName.startsWith("/")) {
+        return imageName;
+      }
+
+      try {
+        return require(`@/assets/computer_image/${imageName}`);
+      } catch (error) {
+        return "";
+      }
+    },
     findComputerByModel(model) {
       if (!model) {
         return null;
@@ -1583,7 +1729,9 @@ export default {
         model && modelIndex !== index
       ));
 
-      return this.computers.filter((computer) => !selectedModels.includes(computer.model));
+      return this.computers.filter((computer) => (
+        this.isComputerListed(computer) && !selectedModels.includes(computer.model)
+      ));
     },
     setCompareModel(index, model) {
       const nextModels = this.compareModels.slice();

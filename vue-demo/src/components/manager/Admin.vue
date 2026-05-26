@@ -74,56 +74,29 @@
 
         <main class="admin-main">
             <section class="admin-content">
-                <AdminInfo v-if="activeMenuKey === 'admin-info'" />
-                <SystemLog v-else-if="activeMenuKey === 'system-log'" />
-                <UserInfo v-else-if="activeMenuKey === 'user-info'" />
-                <AuthorInfo v-else-if="activeMenuKey === 'author-info'" />
-                <ArticleFavoriteInfo v-else-if="activeMenuKey === 'article-favorite'" />
-                <DeviceCategoryInfo v-else-if="activeMenuKey === 'device-category'" />
-                <DeviceInfo v-else-if="activeMenuKey === 'device-phone'" />
-
-                <el-card v-else shadow="never" class="overview-card">
-                    <template #header>
-                        <div class="card-header">
-                            <span>{{ currentPage.title }}</span>
-                        </div>
-                    </template>
-
-                    <div class="placeholder-body">
-                        <el-empty :description="`${currentPage.title}模块功能开发中`">
-                            <el-button type="primary" plain>等待接入业务接口</el-button>
-                        </el-empty>
-                    </div>
-                </el-card>
+                <router-view />
             </section>
         </main>
     </section>
 </template>
 
 <script>
-import AdminInfo from '@/components/manager/AdminInfo.vue'
-import UserInfo from '@/components/manager/UserInfo.vue'
-import ArticleFavoriteInfo from '@/components/manager/ArticleFavoriteInfo.vue'
-import DeviceInfo from '@/components/manager/DeviceInfo.vue'
-import SystemLog from '@/components/manager/SystemLog.vue'
-import AuthorInfo from '@/components/manager/AuthorInfo.vue'
-import DeviceCategoryInfo from '@/components/manager/DeviceCategoryInfo.vue'
-
 export default {
     name: 'AdminPage',
-    components: {
-        AdminInfo,
-        UserInfo,
-        ArticleFavoriteInfo,
-        DeviceInfo,
-        SystemLog,
-        AuthorInfo,
-        DeviceCategoryInfo
-    },
     data() {
         return {
             isCollapsed: false,
-            activeMenuKey: 'admin-info',
+            activeMenuKey: 'user-info',
+            menuRouteMap: {
+                'system-log': '/alogin/admin/system-log',
+                'device-category': '/alogin/admin/device-category',
+                'device-phone': '/alogin/admin/device-phone',
+                'device-computer': '/alogin/admin/device-computer',
+                'article-favorite': '/alogin/admin/article-favorite',
+                'admin-info': '/alogin/admin/admin-info',
+                'author-info': '/alogin/admin/author-info',
+                'user-info': '/alogin/admin/user-info'
+            },
             menus: [
                 {
                     key: 'system-log',
@@ -196,63 +169,44 @@ export default {
             ]
         }
     },
-    computed: {
-        flatMenus() {
-            return this.flattenMenus(this.menus)
-        },
-        currentPage() {
-            const current = this.flatMenus.find((menu) => menu.key === this.activeMenuKey)
-
-            if (!current) {
-                return {
-                    title: '系统日志',
-                    breadcrumb: '系统界面 / 系统日志'
-                }
-            }
-
-            return {
-                title: current.title,
-                breadcrumb: this.getBreadcrumb(current.key)
-            }
+    watch: {
+        '$route'() {
+            this.syncActiveMenuByRoute()
         }
+    },
+    created() {
+        this.syncActiveMenuByRoute()
     },
     methods: {
         toggleCollapse() {
             this.isCollapsed = !this.isCollapsed
         },
         handleMenuSelect(key) {
+            const routePath = this.menuRouteMap[key]
+
+            if (!routePath) {
+                this.activeMenuKey = key
+                return
+            }
+
+            if (this.$route.path !== routePath) {
+                this.$router.push(routePath)
+                return
+            }
+
             this.activeMenuKey = key
         },
         goUserClient() {
             this.$router.push('/hello')
         },
-        getBreadcrumb(key) {
-            const path = this.findMenuPath(this.menus, key)
+        syncActiveMenuByRoute() {
+            const activeMenuKey = Object.keys(this.menuRouteMap).find((key) => {
+                return this.menuRouteMap[key] === this.$route.path
+            })
 
-            return path.length ? `系统界面 / ${path.join(' / ')}` : '系统界面'
-        },
-        flattenMenus(menus) {
-            return menus.reduce((result, menu) => {
-                return result.concat(menu, this.flattenMenus(menu.children || []))
-            }, [])
-        },
-        findMenuPath(menus, key, parentPath = []) {
-            for (let index = 0; index < menus.length; index += 1) {
-                const menu = menus[index]
-                const currentPath = parentPath.concat(menu.title)
-
-                if (menu.key === key) {
-                    return currentPath
-                }
-
-                const childPath = this.findMenuPath(menu.children || [], key, currentPath)
-
-                if (childPath.length) {
-                    return childPath
-                }
+            if (activeMenuKey) {
+                this.activeMenuKey = activeMenuKey
             }
-
-            return []
         }
     }
 }
@@ -431,3 +385,4 @@ export default {
     }
 }
 </style>
+

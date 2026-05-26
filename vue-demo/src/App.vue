@@ -18,7 +18,7 @@ export default {
   },
   computed: {
     isAdminPage() {
-      return this.$route.path === '/alogin/admin'
+      return this.$route.path.startsWith('/alogin/admin')
     }
   }
 }
