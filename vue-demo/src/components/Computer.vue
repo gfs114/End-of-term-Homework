@@ -29,7 +29,10 @@
       </div>
     </section>
 
-    <section class="model-section" aria-label="详细电脑型号">
+    <section ref="modelSection" :class="[
+      'model-section',
+      { 'model-section--animating': modelSectionAnimating },
+    ]" aria-label="详细电脑型号">
       <div class="model-control-panel">
         <div class="section-head">
           <div>
@@ -81,8 +84,8 @@
       </div>
 
       <div class="model-grid">
-        <article v-for="computer in filteredComputers" :key="computer.model" class="model-card" tabindex="0"
-          role="button" @click="openComputerDetail(computer, $event)"
+        <article v-for="(computer, index) in paginatedComputers" :key="computer.model" class="model-card"
+          :style="modelCardAnimationStyle(index)" tabindex="0" role="button" @click="openComputerDetail(computer, $event)"
           @keyup.enter="openComputerDetail(computer, $event)"
           @keyup.space.prevent="openComputerDetail(computer, $event)">
           <div v-if="hasComputerImage(computer)" class="computer-image">
@@ -108,8 +111,72 @@
         </article>
       </div>
 
+      <div v-if="totalModelPages > 1" class="model-pagination">
+        <button type="button" :disabled="currentModelPage === 1" @click="setModelPage(currentModelPage - 1)">
+          上一页
+        </button>
+        <button v-for="page in totalModelPages" :key="page" type="button" :class="{ active: currentModelPage === page }"
+          @click="setModelPage(page)">
+          {{ page }}
+        </button>
+        <button type="button" :disabled="currentModelPage === totalModelPages"
+          @click="setModelPage(currentModelPage + 1)">
+          下一页
+        </button>
+      </div>
+
       <div v-if="filteredComputers.length === 0" class="empty-state">
         暂未找到匹配电脑，请换个关键词或筛选条件试试。
+      </div>
+    </section>
+
+    <section class="computer-compare-section" aria-label="电脑配置 PK">
+      <div class="compare-head">
+        <div>
+          <p>电脑配置 PK</p>
+          <h2>选择电脑查看配置对比</h2>
+        </div>
+
+        <div class="compare-actions">
+          <button type="button" class="compare-add-button" :disabled="!canAddCompareSlot" @click="addCompareComputerSlot">
+            +
+          </button>
+          <button type="button" :disabled="!hasCompareSelection" @click="clearCompareComputers">
+            清空
+          </button>
+        </div>
+      </div>
+
+      <div class="compare-selectors">
+        <label v-for="(model, index) in compareModels" :key="index" class="compare-select">
+          <span>{{ getCompareComputerLabel(index) }}</span>
+          <select :value="model" @change="setCompareModel(index, $event.target.value)">
+            <option value="">请选择电脑</option>
+            <option v-for="computer in getCompareOptions(index)" :key="computer.model" :value="computer.model">
+              {{ computer.model }}
+            </option>
+          </select>
+        </label>
+      </div>
+
+      <div v-if="hasCompareSelection" class="compare-output">
+        <div class="compare-computer-titles" :style="compareGridStyle">
+          <div v-for="(computer, index) in compareComputers" :key="index">
+            <span>{{ getCompareComputerLabel(index) }}</span>
+            <strong>{{ computer ? computer.model : '未选择' }}</strong>
+          </div>
+        </div>
+
+        <div class="compare-table">
+          <div v-for="row in computerCompareRows" :key="row.label" class="compare-row" :style="compareGridStyle">
+            <div class="compare-cell compare-cell--label">{{ row.label }}</div>
+            <div v-for="(value, index) in row.values" :key="index" class="compare-cell">{{ value }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div v-else class="compare-empty">
+        请选择电脑进行配置 PK。
       </div>
     </section>
 
@@ -207,8 +274,24 @@
 import http from '@/utils/http'
 import AiAssistant from '@/components/AiAssistant.vue'
 
+const COMPUTER_COMPARE_FIELDS = [
+  { label: "品牌", key: "brand" },
+  { label: "型号", key: "model" },
+  { label: "类型", key: "type" },
+  { label: "屏幕尺寸", key: "screenSize" },
+  { label: "分辨率", key: "resolution" },
+  { label: "刷新率", key: "refreshRate" },
+  { label: "处理器", key: "processor" },
+  { label: "显卡", key: "graphics" },
+  { label: "内存", key: "memory" },
+  { label: "硬盘", key: "storage" },
+  { label: "重量", key: "weight" },
+  { label: "价格", key: "price" },
+]
+const MAX_COMPARE_SLOTS = 5
+
 export default {
-  name: "Computer",
+  name: "ComputerPage",
   components: {
     AiAssistant
   },
@@ -218,8 +301,15 @@ export default {
       modelKeyword: "",
       selectedBrand: null,
       selectedComputer: null,
+      currentModelPage: 1,
+      modelPageSize: 21,
+      compareModels: ["", ""],
       favoriteDevices: [],
       favoriteDeviceLoading: false,
+      modelSectionAnimating: false,
+      modelSectionVisible: false,
+      modelSectionObserver: null,
+      modelSectionTimer: null,
       detailOrigin: {
         x: 50,
         y: 50,
@@ -1256,6 +1346,36 @@ export default {
         );
       });
     },
+    totalModelPages() {
+      return Math.max(
+        1,
+        Math.ceil(this.filteredComputers.length / this.modelPageSize)
+      );
+    },
+    paginatedComputers() {
+      const start = (this.currentModelPage - 1) * this.modelPageSize;
+      return this.filteredComputers.slice(start, start + this.modelPageSize);
+    },
+    compareComputers() {
+      return this.compareModels.map((model) => this.findComputerByModel(model));
+    },
+    hasCompareSelection() {
+      return this.compareComputers.some(Boolean);
+    },
+    canAddCompareSlot() {
+      return this.compareModels.length < MAX_COMPARE_SLOTS;
+    },
+    compareGridStyle() {
+      return {
+        "--compare-count": this.compareModels.length,
+      };
+    },
+    computerCompareRows() {
+      return COMPUTER_COMPARE_FIELDS.map((field) => ({
+        label: field.label,
+        values: this.compareComputers.map((computer) => this.getComputerCompareValue(computer, field.key)),
+      }));
+    },
     detailVars() {
       return {
         "--detail-origin-x": `${this.detailOrigin.x}%`,
@@ -1288,7 +1408,26 @@ export default {
       return this.isFavoriteDevice("computer", this.selectedComputer && this.selectedComputer.model);
     },
   },
+  watch: {
+    modelKeyword() {
+      this.resetModelPage();
+    },
+    modelFilters: {
+      deep: true,
+      handler() {
+        this.resetModelPage();
+      },
+    },
+    totalModelPages(total) {
+      if (this.currentModelPage > total) {
+        this.currentModelPage = total;
+      }
+    },
+  },
   mounted() {
+    this.$nextTick(() => {
+      this.observeModelSection();
+    });
     this.fetchFavoriteDevices();
   },
   methods: {
@@ -1340,6 +1479,64 @@ export default {
     setModelFilter(key, value) {
       this.modelFilters[key] = value;
     },
+    setModelPage(page) {
+      if (page < 1 || page > this.totalModelPages) {
+        return;
+      }
+
+      this.currentModelPage = page;
+    },
+    resetModelPage() {
+      this.currentModelPage = 1;
+    },
+    observeModelSection() {
+      if (!this.$refs.modelSection) {
+        return;
+      }
+
+      if (!window.IntersectionObserver) {
+        this.playModelSectionAnimation();
+        return;
+      }
+
+      this.modelSectionObserver = new IntersectionObserver(
+        (entries) => {
+          const entry = entries[0];
+
+          if (entry.isIntersecting && !this.modelSectionVisible) {
+            this.modelSectionVisible = true;
+            this.playModelSectionAnimation();
+          }
+
+          if (!entry.isIntersecting) {
+            this.modelSectionVisible = false;
+          }
+        },
+        {
+          root: null,
+          threshold: 0.18,
+        }
+      );
+
+      this.modelSectionObserver.observe(this.$refs.modelSection);
+    },
+    playModelSectionAnimation() {
+      window.clearTimeout(this.modelSectionTimer);
+
+      this.modelSectionAnimating = false;
+
+      this.$nextTick(() => {
+        this.modelSectionAnimating = true;
+        this.modelSectionTimer = window.setTimeout(() => {
+          this.modelSectionAnimating = false;
+        }, 900);
+      });
+    },
+    modelCardAnimationStyle(index) {
+      return {
+        animationDelay: `${Math.min(index * 110, 660)}ms`,
+      };
+    },
     normalizeGraphicsFilter(graphics) {
       const graphicsName = graphics || "";
 
@@ -1356,6 +1553,46 @@ export default {
       }
 
       return graphicsName;
+    },
+    findComputerByModel(model) {
+      if (!model) {
+        return null;
+      }
+
+      return this.computers.find((computer) => computer.model === model) || null;
+    },
+    getCompareComputerLabel(index) {
+      return `电脑 ${String.fromCharCode(65 + index)}`;
+    },
+    getCompareOptions(index) {
+      const selectedModels = this.compareModels.filter((model, modelIndex) => (
+        model && modelIndex !== index
+      ));
+
+      return this.computers.filter((computer) => !selectedModels.includes(computer.model));
+    },
+    setCompareModel(index, model) {
+      const nextModels = this.compareModels.slice();
+      nextModels[index] = model;
+      this.compareModels = nextModels;
+    },
+    addCompareComputerSlot() {
+      if (!this.canAddCompareSlot) {
+        return;
+      }
+
+      this.compareModels = this.compareModels.concat("");
+    },
+    clearCompareComputers() {
+      this.compareModels = ["", ""];
+    },
+    getComputerCompareValue(computer, key) {
+      if (!computer) {
+        return "未选择";
+      }
+
+      const displaySpec = this.getDisplaySpec(computer);
+      return this.formatSpecValue(computer[key] || displaySpec[key]);
     },
     getUsername() {
       return localStorage.getItem("loginUsername") || "";
@@ -1463,6 +1700,13 @@ export default {
     closeComputerDetail() {
       this.selectedComputer = null;
     },
+  },
+  beforeUnmount() {
+    window.clearTimeout(this.modelSectionTimer);
+
+    if (this.modelSectionObserver) {
+      this.modelSectionObserver.disconnect();
+    }
   },
 };
 </script>
@@ -1586,6 +1830,11 @@ export default {
 
 .model-section {
   margin-top: 18px;
+  scroll-margin-top: 18px;
+}
+
+.model-section--animating .model-control-panel {
+  animation: model-section-rise 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .model-control-panel {
@@ -1670,6 +1919,42 @@ export default {
 .model-card:active,
 .brand-computer-card:active {
   transform: scale(0.97);
+}
+
+.model-section--animating .model-card {
+  animation: model-card-fade-up 0.72s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.model-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.model-pagination button {
+  min-width: 38px;
+  min-height: 36px;
+  padding: 0 13px;
+  border: 1px solid #d6e1ee;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #43546b;
+  cursor: pointer;
+}
+
+.model-pagination button.active,
+.model-pagination button:hover:not(:disabled) {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #fff;
+}
+
+.model-pagination button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
 }
 
 .computer-image {
@@ -1759,6 +2044,201 @@ export default {
 .empty-state {
   grid-column: 1 / -1;
   padding: 42px;
+  border: 1px dashed #b9c8da;
+  border-radius: 8px;
+  background: #f8fbff;
+  color: #6b7a90;
+  text-align: center;
+}
+
+.model-section .empty-state {
+  margin-top: 16px;
+}
+
+.computer-compare-section {
+  margin-top: 22px;
+  padding: 24px;
+  border: 1px solid #dbe7f3;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 18px 50px rgba(45, 73, 112, 0.08);
+}
+
+.compare-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.compare-head p {
+  margin: 0 0 6px;
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.compare-head h2 {
+  margin: 0;
+  color: #101827;
+  font-size: 24px;
+  line-height: 1.25;
+}
+
+.compare-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.compare-actions button {
+  min-width: 62px;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid #d6e1ee;
+  border-radius: 8px;
+  background: #fff;
+  color: #43546b;
+  cursor: pointer;
+}
+
+.compare-actions .compare-add-button {
+  min-width: 36px;
+  width: 36px;
+  padding: 0;
+  color: #fff;
+  background: #2563eb;
+  border-color: #2563eb;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.compare-actions button:hover:not(:disabled) {
+  border-color: #2563eb;
+  color: #2563eb;
+}
+
+.compare-actions .compare-add-button:hover:not(:disabled) {
+  color: #fff;
+  background: #1d4ed8;
+}
+
+.compare-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.compare-selectors {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 16px;
+}
+
+.compare-select {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  color: #5f6f86;
+  font-size: 13px;
+}
+
+.compare-select select {
+  width: 100%;
+  min-width: 0;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid #cbd8e6;
+  border-radius: 8px;
+  background: #fff;
+  color: #152033;
+  font-size: 14px;
+  outline: none;
+}
+
+.compare-select select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.compare-output {
+  margin-top: 18px;
+  overflow-x: auto;
+  border: 1px solid #dbe7f3;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.compare-computer-titles {
+  display: grid;
+  grid-template-columns: repeat(var(--compare-count, 2), minmax(140px, 1fr));
+  margin-left: 112px;
+  border-left: 1px solid #eef3f8;
+}
+
+.compare-computer-titles div {
+  min-width: 0;
+  padding: 14px 16px;
+  border-left: 1px solid #eef3f8;
+}
+
+.compare-computer-titles div:first-child {
+  border-left: 0;
+}
+
+.compare-computer-titles span {
+  display: block;
+  margin-bottom: 4px;
+  color: #8090a6;
+  font-size: 12px;
+}
+
+.compare-computer-titles strong {
+  display: block;
+  overflow-wrap: anywhere;
+  color: #152033;
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+.compare-table {
+  border-top: 1px solid #eef3f8;
+}
+
+.compare-row {
+  display: grid;
+  grid-template-columns: 112px repeat(var(--compare-count, 2), minmax(140px, 1fr));
+  min-height: 48px;
+  border-top: 1px solid #eef3f8;
+}
+
+.compare-row:first-child {
+  border-top: 0;
+}
+
+.compare-cell {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 12px 16px;
+  border-left: 1px solid #eef3f8;
+  color: #253247;
+  font-size: 14px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.compare-cell--label {
+  border-left: 0;
+  background: #f8fbff;
+  color: #5f6f86;
+  font-weight: 800;
+}
+
+.compare-empty {
+  margin-top: 18px;
+  padding: 28px;
   border: 1px dashed #b9c8da;
   border-radius: 8px;
   background: #f8fbff;
@@ -1980,6 +2460,30 @@ export default {
   opacity: 0;
 }
 
+@keyframes model-section-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(72px) scale(0.96);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes model-card-fade-up {
+  0% {
+    opacity: 0;
+    transform: translateY(86px) scale(0.92);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @keyframes modal-open {
   0% {
     opacity: 0;
@@ -2004,9 +2508,22 @@ export default {
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+
+  .model-section--animating .model-control-panel,
+  .model-section--animating .model-card,
+  .computer-detail-enter-active .detail-panel,
+  .computer-detail-leave-active .detail-panel,
+  .brand-modal-enter-active .brand-modal-panel,
+  .brand-modal-leave-active .brand-modal-panel {
+    animation: none;
+  }
+}
+
 @media (max-width: 980px) {
   .brand-hero,
-  .section-head {
+  .section-head,
+  .compare-head {
     align-items: stretch;
     flex-direction: column;
   }
@@ -2021,6 +2538,10 @@ export default {
   .brand-computer-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .compare-selectors {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 640px) {
@@ -2029,7 +2550,8 @@ export default {
   }
 
   .brand-hero,
-  .model-control-panel {
+  .model-control-panel,
+  .computer-compare-section {
     padding: 24px;
   }
 
@@ -2037,6 +2559,21 @@ export default {
   .model-grid,
   .brand-computer-grid {
     grid-template-columns: 1fr;
+  }
+
+  .compare-computer-titles {
+    grid-template-columns: repeat(var(--compare-count, 2), minmax(120px, 1fr));
+    margin-left: 84px;
+  }
+
+  .compare-row {
+    grid-template-columns: 84px repeat(var(--compare-count, 2), minmax(120px, 1fr));
+  }
+
+  .compare-cell,
+  .compare-computer-titles div {
+    padding: 10px;
+    font-size: 13px;
   }
 
   .filter-title {

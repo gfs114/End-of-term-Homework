@@ -90,6 +90,11 @@ export default {
           const result = response.data || response
 
           if (result.code === '200' || result.code === 200) {
+            const adminInfo = result.data || {}
+            localStorage.removeItem('loginUsername')
+            localStorage.removeItem('loginEmail')
+            localStorage.setItem('adminUsername', adminInfo.username || this.loginForm.username)
+            localStorage.setItem('adminRole', adminInfo.role || 'ADMIN')
             this.$message.success('登录成功')
             this.$router.push('/alogin/admin')//跳转页面在这改
           } else {

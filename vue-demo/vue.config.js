@@ -12,5 +12,10 @@ module.exports = defineConfig({
         '/assets/shader-worker-CJN-6C3l.js': path.resolve(__dirname, 'node_modules/@wxperia/liquid-glass-vue/dist/assets/shader-worker-CJN-6C3l.js')
       }
     }
-  }
+  },
+  devServer: {
+    client: {
+      overlay: false,
+    },
+  },
 })

@@ -17,6 +17,8 @@
             </el-button>
         </div>
 
+        <Creater />
+
         <section class="my-articles-card">
             <div class="articles-head">
                 <div>
@@ -141,6 +143,7 @@
 </template>
 
 <script>
+import Creater from '@/components/Creater.vue'
 import http from '@/utils/http'
 
 function pickList(payload) {
@@ -173,7 +176,12 @@ function formatTime(value) {
 
 export default {
     name: 'MinePage',
+    components: {
+        Creater
+    },
     data() {
+        const currentUsername = localStorage.getItem('loginUsername') || localStorage.getItem('adminUsername') || ''
+
         return {
             loading: false,
             articlesLoading: false,
@@ -181,7 +189,7 @@ export default {
             articlesError: '',
             devicesError: '',
             passwordDialogVisible: false,
-            username: localStorage.getItem('loginUsername') || '未登录用户',
+            username: currentUsername || '未登录用户',
             email: localStorage.getItem('loginEmail') || '暂未绑定邮箱',
             allArticles: [],
             myArticles: [],
@@ -223,7 +231,7 @@ export default {
         }
     },
     mounted() {
-        if (!localStorage.getItem('loginUsername')) {
+        if (!this.getCurrentUsername()) {
             this.$message.warning('请先登录')
             this.$router.push({
                 path: '/login',
@@ -236,6 +244,9 @@ export default {
         this.fetchFavoriteDevices()
     },
     methods: {
+        getCurrentUsername() {
+            return localStorage.getItem('loginUsername') || localStorage.getItem('adminUsername') || ''
+        },
         goSubmit() {
             this.$router.push('/submit')
         },
@@ -368,7 +379,7 @@ export default {
 
 <style scoped>
 .mine-page {
-    width: min(860px, 100%);
+    width: min(1120px, 100%);
     margin: 0 auto;
     color: #152033;
 }
