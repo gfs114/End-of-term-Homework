@@ -859,6 +859,7 @@ export default {
           price: "¥14999 起",
           priceValue: 14999,
           accent: "#0f172a",
+          img: require("@/assets/computer_image/ProArt创13 2026.jpg"),
         },
         {
           brand: "华硕",
@@ -871,6 +872,7 @@ export default {
           price: "¥3799 起",
           priceValue: 3799,
           accent: "#475569",
+          img: require("@/assets/computer_image/无畏14 2024.png"),
         },
         {
           brand: "华硕",
@@ -883,6 +885,7 @@ export default {
           price: "¥10499 起",
           priceValue: 10499,
           accent: "#64748b",
+          img: require("@/assets/computer_image/天选4 13代酷睿版.png"),
         },
         {
           brand: "华硕",
@@ -895,7 +898,7 @@ export default {
           price: "¥13499 起",
           priceValue: 13499,
           accent: "#64748b",
-          img: "https://www.asus.com/media/ROG/ROG-Zephyrus-G14-GA401UQ/image/ROG-Zephyrus-G14-GA401UQ-1.png",
+          img: require("@/assets/computer_image/ROG 幻16Air 酷睿版.jpg"),
         },
         {
           brand: "华硕",
@@ -908,6 +911,7 @@ export default {
           price: "¥14999 起",
           priceValue: 14999,
           accent: "#64748b",
+          img: require("@/assets/computer_image/ROG 幻16Air 锐龙AI版.jpg"),
         },
         //----------------------Acer宏碁/掠夺者-----------------------
         {
@@ -921,6 +925,7 @@ export default {
           price: "¥11999 起",
           priceValue: 11999,
           accent: "#16a34a",
+          img: require("@/assets/computer_image/掠夺者 Neo 16.jpg"),
         },
         {
           brand: "宏碁",
@@ -933,6 +938,7 @@ export default {
           price: "¥6999 起",
           priceValue: 6999,
           accent: "#65a30d",
+          img: require("@/assets/computer_image/非凡 Go Pro.jpg"),
         },
         {
           brand: "宏碁",
@@ -942,9 +948,10 @@ export default {
           graphics: "RTX 5070",
           memory: "32GB",
           storage: "2TB SSD",
-          price: "价格面议",
-          priceValue: null,
+          price: "¥19999 起",
+          priceValue: 19999,
           accent: "#16a34a",
+          img: require("@/assets/computer_image/掠夺者·刀锋8.jpg"),
         },
         {
           brand: "宏碁",
@@ -957,6 +964,7 @@ export default {
           price: "¥7299 起",
           priceValue: 7299,
           accent: "#65a30d",
+          img: require("@/assets/computer_image/非凡 X14.jpg"),
         },
         //----------------------机械革命-----------------------
         {
