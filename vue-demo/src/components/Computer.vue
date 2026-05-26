@@ -1068,18 +1068,7 @@ export default {
           price: "¥8999 起",
           priceValue: 8999,
           accent: "#7c3aed",
-        },
-        {
-          brand: "机械革命",
-          model: "无界 14 Pro",
-          type: "全能本",
-          processor: "酷睿 Ultra 5",
-          graphics: "Intel Arc 核显",
-          memory: "16GB",
-          storage: "1TB SSD",
-          price: "¥4999 起",
-          priceValue: 4999,
-          accent: "#2563eb",
+          img: require("@/assets/computer_image/蛟龙 16 Pro.png"),
         },
         {
           brand: "机械革命",
@@ -1092,6 +1081,7 @@ export default {
           price: "¥5699 起",
           priceValue: 5699,
           accent: "#7c3aed",
+          img: require("@/assets/computer_image/蛟龙15K.png"),
         },
         {
           brand: "机械革命",
@@ -1104,6 +1094,7 @@ export default {
           price: "¥6999 起",
           priceValue: 6999,
           accent: "#2563eb",
+          img: require("@/assets/computer_image/无界15X 酷睿版 2024.png"),
         },
         //----------------------七彩虹-----------------------
         {
@@ -1117,6 +1108,7 @@ export default {
           price: "¥6999 起",
           priceValue: 6999,
           accent: "#ec4899",
+          img: require("@/assets/computer_image/将星 X15 AT.png"),
         },
         {
           brand: "七彩虹",
@@ -1129,6 +1121,7 @@ export default {
           price: "¥9999 起",
           priceValue: 9999,
           accent: "#f97316",
+          img: require("@/assets/computer_image/隐星 P16 TA.png"),
         },
         {
           brand: "七彩虹",
@@ -1141,6 +1134,7 @@ export default {
           price: "¥5999 起",
           priceValue: 5999,
           accent: "#ec4899",
+          img: require("@/assets/computer_image/隐星 P16.png"),
         },
         {
           brand: "七彩虹",
@@ -1153,6 +1147,7 @@ export default {
           price: "¥3799 起",
           priceValue: 3799,
           accent: "#f97316",
+          img: require("@/assets/computer_image/E14.png"),
         },
         //----------------------火影-----------------------
         {
@@ -1166,6 +1161,7 @@ export default {
           price: "¥3999 起",
           priceValue: 3999,
           accent: "#dc2626",
+          img: require("@/assets/computer_image/众颜 U6.jpg"),
         },
         {
           brand: "火影",
@@ -1178,6 +1174,7 @@ export default {
           price: "¥6499 起",
           priceValue: 6499,
           accent: "#111827",
+          img: require("@/assets/computer_image/T9 Plus.jpg"),
         },
         {
           brand: "火影",
@@ -1190,6 +1187,7 @@ export default {
           price: "价格面议",
           priceValue: null,
           accent: "#dc2626",
+          img: require("@/assets/computer_image/众颜U6 2024.jpg"),  
         },
         {
           brand: "火影",
@@ -1202,6 +1200,7 @@ export default {
           price: "价格面议",
           priceValue: null,
           accent: "#111827",
+          img: require("@/assets/computer_image/T9 系列.jpg"),
         },
         //----------------------Honor-----------------------
         {
@@ -1215,18 +1214,20 @@ export default {
           price: "¥8999 起",
           priceValue: 8999,
           accent: "#0ea5e9",
+          img: require("@/assets/computer_image/MagicBook Pro 16.png"),
         },
         {
           brand: "荣耀",
-          model: "MagicBook 14 Pro",
+          model: "MagicBook Pro 14",
           type: "轻薄本",
-          processor: "酷睿 Ultra 5 125H",
-          graphics: "Intel Arc 核显",
+          processor: "酷睿 Ultra 5 285H",
+          graphics: "Intel Arc 140T核显",
           memory: "16GB",
           storage: "1TB SSD",
           price: "¥5999 起",
           priceValue: 5999,
           accent: "#38bdf8",
+          img: require("@/assets/computer_image/MagicBook Pro 14.png"),
         },
         {
           brand: "荣耀",
@@ -1239,6 +1240,7 @@ export default {
           price: "¥10999 起",
           priceValue: 10999,
           accent: "#0ea5e9",
+          img: require("@/assets/computer_image/MagicBook Pro 16 2026.png"),
         },
         {
           brand: "荣耀",
@@ -1251,6 +1253,7 @@ export default {
           price: "价格面议",
           priceValue: null,
           accent: "#38bdf8",
+          img: require("@/assets/computer_image/MagicBook Pro 16.png"),
         },
         
         
