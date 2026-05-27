@@ -207,12 +207,8 @@
             <p class="phone-detail-brand">{{ selectedPhone.brand }}</p>
             <h2>{{ selectedPhone.model }}</h2>
 
-            <button
-              type="button"
-              :class="['device-favorite-button', { active: selectedPhoneFavorite }]"
-              :disabled="favoriteDeviceLoading"
-              @click="toggleFavoritePhone"
-            >
+            <button type="button" :class="['device-favorite-button', { active: selectedPhoneFavorite }]"
+              :disabled="favoriteDeviceLoading" @click="toggleFavoritePhone">
               {{ selectedPhoneFavorite ? '已喜欢' : '喜欢设备' }}
             </button>
 
@@ -269,15 +265,8 @@
       </div>
     </transition>
 
-    <AiAssistant
-      page-type="phone"
-      title="手机 AI 选购助手"
-      eyebrow="手机推荐"
-      welcome="你好，我可以按预算、品牌、处理器、电池和使用场景帮你推荐手机。"
-      placeholder="例如：预算 5000，想买拍照好的手机"
-      :suggestions="phoneAiSuggestions"
-      :context="phoneAiContext"
-    />
+    <AiAssistant page-type="phone" title="手机 AI 选购助手" eyebrow="手机推荐" welcome="你好，我可以按预算、品牌、处理器、电池和使用场景帮你推荐手机。"
+      placeholder="例如：预算 5000，想买拍照好的手机" :suggestions="phoneAiSuggestions" :context="phoneAiContext" />
   </section>
 </template>
 
@@ -1300,7 +1289,7 @@ export default {
           batteryValue: 4300,
           price: "¥5,999 起",
           priceValue: 5999,
-          image:require("@/assets/phone_image/S26.jpg"),
+          image: require("@/assets/phone_image/S26.jpg"),
         },
         {
           brand: "三星",

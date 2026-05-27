@@ -329,6 +329,7 @@ export default {
   color: rgba(245, 245, 247, 0.82);
   font-size: 18px;
   line-height: 1.9;
+  white-space: pre-wrap;
   word-break: break-word;
 }
 
