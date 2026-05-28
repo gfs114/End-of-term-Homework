@@ -20,7 +20,9 @@
         :class="['brand-card', { active: selectedBrand && selectedBrand.name === brand.name }]" tabindex="0"
         role="button" @click="selectBrand(brand)" @keyup.enter="selectBrand(brand)"
         @keyup.space.prevent="selectBrand(brand)">
-        <div class="brand-mark" :style="{ background: brand.color }">{{ brand.shortName }}</div>
+        <div class="brand-mark">
+          <img :src="brand.img" :alt="brand.name" class="brand-logo" />
+        </div>
         <h2>{{ brand.name }}</h2>
       </article>
 
@@ -366,6 +368,23 @@ function normalizeComputerModelList(list, resolveImage) {
   return list.map((computer) => normalizeComputerModel(computer || {}, resolveImage))
 }
 
+function isFavoriteResponseSuccess(data) {
+  const code = data && data.code
+  return code === undefined || code === 200 || code === "200"
+}
+
+function getFavoriteResponseMessage(data, fallback) {
+  return (data && (data.message || data.msg)) || fallback
+}
+
+function buildFavoriteDeviceParams(device) {
+  return {
+    username: device.username,
+    device_type: device.device_type,
+    device_model: device.device_model
+  }
+}
+
 export default {
   name: "ComputerPage",
   components: {
@@ -400,18 +419,18 @@ export default {
         price: "全部",
       },
       brands: [
-        { name: "Apple", shortName: "Apple", color: "linear-gradient(135deg, #111827, #6b7280)" },
-        { name: "联想", shortName: "Lenovo", color: "linear-gradient(135deg, #dc2626, #f97316)" },
-        { name: "华为", shortName: "HUAWEI", color: "linear-gradient(135deg, #ef4444, #f97316)" },
-        { name: "戴尔", shortName: "DELL", color: "linear-gradient(135deg, #2563eb, #38bdf8)" },
-        { name: "惠普", shortName: "HP", color: "linear-gradient(135deg, #1d4ed8, #0ea5e9)" },
-        { name: "华硕", shortName: "ASUS", color: "linear-gradient(135deg, #0f172a, #64748b)" },
-        { name: "宏碁", shortName: "Acer", color: "linear-gradient(135deg, #16a34a, #84cc16)" },
-        { name: "机械革命", shortName: "MECHrevo", color: "linear-gradient(135deg, #7c3aed, #2563eb)" },
-        { name: "七彩虹", shortName: "COLORFUL", color: "linear-gradient(135deg, #ec4899, #f97316)" },
-        { name: "火影", shortName: "Hasee", color: "linear-gradient(135deg, #dc2626, #111827)" },
-        { name: "荣耀", shortName: "HONOR", color: "linear-gradient(135deg, #0f172a, #38bdf8)" },
-        { name: "小米", shortName: "Xiaomi", color: "linear-gradient(135deg, #FF7E00, #38bdf8)" },
+        { name: "Apple", shortName: "Apple", img: require("@/assets/brand_icon/Apple.png") },
+        { name: "联想", shortName: "Lenovo", img: require("@/assets/brand_icon/Lenovo.png") },
+        { name: "华为", shortName: "HUAWEI", img: require("@/assets/brand_icon/HUAWEI.png") },
+        { name: "戴尔", shortName: "DELL", img: require("@/assets/brand_icon/Dell.png") },
+        { name: "惠普", shortName: "HP", img: require("@/assets/brand_icon/HP.png") },
+        { name: "华硕", shortName: "ASUS", img: require("@/assets/brand_icon/Asus.png") },
+        { name: "宏碁", shortName: "Acer", img: require("@/assets/brand_icon/acer.png") },
+        { name: "机械革命", shortName: "MECHrevo", img: require("@/assets/brand_icon/MECHREVO.jpg") },
+        { name: "七彩虹", shortName: "COLORFUL", img: require("@/assets/brand_icon/Colorful.jpg") },
+        { name: "火影", shortName: "FIREBAT", img: require("@/assets/brand_icon/FIREBAT.png") },
+        { name: "荣耀", shortName: "HONOR", img: require("@/assets/brand_icon/Honor.png") },
+        { name: "小米", shortName: "Xiaomi", img: require("@/assets/brand_icon/Xiaomi.png") },
       ],
       priceOptions: [
         { label: "全部", min: 0, max: Infinity },
@@ -1819,23 +1838,32 @@ export default {
       this.favoriteDeviceLoading = true;
       try {
         if (wasFavorite) {
-          await http.delete("/user-favorite-devices", { data: payload });
-          this.favoriteDevices = this.favoriteDevices.filter(
-            (device) => this.getFavoriteDeviceKey(device) !== this.getFavoriteDeviceKey(payload)
-          );
+          const { data } = await http.delete("/user-favorite-devices", {
+            params: buildFavoriteDeviceParams(payload),
+            data: payload
+          });
+          if (!isFavoriteResponseSuccess(data)) {
+            throw new Error(getFavoriteResponseMessage(data, "取消喜欢失败"));
+          }
+          await this.fetchFavoriteDevices();
           this.$message.success("已取消喜欢");
         } else {
-          await http.post("/user-favorite-devices", payload);
-          this.favoriteDevices = [
-            ...this.favoriteDevices.filter(
-              (device) => this.getFavoriteDeviceKey(device) !== this.getFavoriteDeviceKey(payload)
-            ),
-            payload
-          ];
+          const { data } = await http.post("/user-favorite-devices", payload);
+          const responseMessage = getFavoriteResponseMessage(data, "喜欢设备失败");
+          if (!isFavoriteResponseSuccess(data)) {
+            if (responseMessage.includes("已收藏")) {
+              await this.fetchFavoriteDevices();
+              this.$message.warning(responseMessage);
+              return;
+            }
+
+            throw new Error(responseMessage);
+          }
+          await this.fetchFavoriteDevices();
           this.$message.success("已加入我喜欢的设备");
         }
       } catch (error) {
-        this.$message.error(wasFavorite ? "取消喜欢失败" : "喜欢设备失败");
+        this.$message.error(error.message || (wasFavorite ? "取消喜欢失败" : "喜欢设备失败"));
       } finally {
         this.favoriteDeviceLoading = false;
       }
@@ -1979,9 +2007,14 @@ export default {
   height: 72px;
   margin: 0 auto;
   border-radius: 8px;
-  color: #fff;
-  font-size: 16px;
-  font-weight: 800;
+  background: #fff;
+}
+
+.brand-logo {
+  display: block;
+  max-width: 64px;
+  max-height: 56px;
+  object-fit: contain;
 }
 
 .brand-card h2 {

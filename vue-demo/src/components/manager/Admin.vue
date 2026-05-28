@@ -1,4 +1,4 @@
-<template>
+﻿<template>
     <section class="admin-page">
         <aside :class="['admin-sidebar', { collapsed: isCollapsed }]">
             <div class="admin-brand">
@@ -92,6 +92,7 @@ export default {
                 'device-category': '/alogin/admin/device-category',
                 'device-phone': '/alogin/admin/device-phone',
                 'device-computer': '/alogin/admin/device-computer',
+                'article-info': '/alogin/admin/article-info',
                 'article-favorite': '/alogin/admin/article-favorite',
                 'admin-info': '/alogin/admin/admin-info',
                 'author-info': '/alogin/admin/author-info',
@@ -138,10 +139,15 @@ export default {
                     icon: 'Reading',
                     children: [
                         {
-                            key: 'article-favorite',
-                            title: '文章收藏信息',
-                            icon: 'Star'
+                            key: 'article-info',
+                            title: '文章内容',
+                            icon: 'Document'
                         }
+                        // {
+                        //     key: 'article-favorite',
+                        //     title: '文章收藏信息',
+                        //     icon: 'Star'
+                        // }
                     ]
                 },
                 {

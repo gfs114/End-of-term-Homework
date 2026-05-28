@@ -10,6 +10,7 @@ import Admin from "@/components/manager/Admin.vue";
 import AdminInfo from "@/components/manager/AdminInfo.vue";
 import UserInfo from "@/components/manager/UserInfo.vue";
 import ArticleFavoriteInfo from "@/components/manager/ArticleFavoriteInfo.vue";
+import ArticleInfo from "@/components/manager/ArticleInfo.vue";
 import DeviceInfo from "@/components/manager/DeviceInfo.vue";
 import DeviceComputerInfo from "@/components/manager/DeviceComputerInfo.vue";
 import SystemLog from "@/components/manager/SystemLog.vue";
@@ -86,6 +87,11 @@ const router = createRouter({
                     path: 'device-computer',
                     name: 'admin-device-computer',
                     component: DeviceComputerInfo
+                },
+                {
+                    path: 'article-info',
+                    name: 'admin-article-info',
+                    component: ArticleInfo
                 },
                 {
                     path: 'article-favorite',

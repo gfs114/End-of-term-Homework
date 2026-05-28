@@ -25,7 +25,7 @@
         >
           <div class="form-grid">
             <el-form-item label="文章标题" prop="title">
-              <el-input v-model.trim="form.title" maxlength="80" show-word-limit placeholder="请输入文章标题" />
+              <el-input v-model.trim="form.title" maxlength="80" placeholder="请输入文章标题" />
             </el-form-item>
           </div>
 
