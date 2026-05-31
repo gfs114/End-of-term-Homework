@@ -11,7 +11,7 @@
       <section class="submit-hero">
         <div>
           <p class="eyebrow">Contribute</p>
-          <h1>投稿</h1>
+          <h1>{{ isEditMode ? '编辑文章' : '投稿' }}</h1>
         </div>
       </section>
 
@@ -55,7 +55,7 @@
             <div class="submit-buttons">
               <el-button @click="resetForm">重置</el-button>
               <el-button type="primary" :loading="loading" @click="submitArticle">
-                提交投稿
+                {{ isEditMode ? '保存修改' : '提交投稿' }}
               </el-button>
             </div>
           </div>
@@ -72,6 +72,21 @@ function pickCreatedId(payload) {
   return payload?.data?.id || payload?.article?.id || payload?.id
 }
 
+function pickList(payload) {
+  if (Array.isArray(payload)) return payload
+  if (Array.isArray(payload?.data)) return payload.data
+  if (Array.isArray(payload?.articles)) return payload.articles
+  if (Array.isArray(payload?.data?.data)) return payload.data.data
+  return []
+}
+
+function pickArticle(payload) {
+  if (payload?.data && !Array.isArray(payload.data)) return payload.data
+  if (payload?.article) return payload.article
+  if (payload?.id) return payload
+  return null
+}
+
 export default {
   name: 'ArticleSubmit',
   data() {
@@ -81,7 +96,8 @@ export default {
       loading: false,
       categories: ['业界', '手机', '电脑', '测评', '视频', 'AI', '苹果', '软件'],
       statusOptions: [
-        { label: '草稿', value: 'draft' }
+        { label: '草稿', value: 'draft' },
+        { label: '已发表', value: 'published' }
       ],
       form: {
         title: '',
@@ -108,14 +124,36 @@ export default {
       }
     }
   },
+  computed: {
+    currentUsername() {
+      return localStorage.getItem('loginUsername') || localStorage.getItem('adminUsername') || ''
+    },
+    editArticleId() {
+      const queryId = this.$route.query.editId
+      return Array.isArray(queryId) ? queryId[0] : queryId
+    },
+    isEditMode() {
+      return Boolean(this.editArticleId)
+    }
+  },
+  watch: {
+    editArticleId() {
+      if (this.isEditMode) {
+        this.loadEditArticle()
+      } else {
+        this.resetForm()
+      }
+    }
+  },
   created() {
-    this.requireLogin()
+    if (this.requireLogin() && this.isEditMode) {
+      this.loadEditArticle()
+    }
   },
   methods: {
     requireLogin() {
-      const loginUsername = localStorage.getItem('loginUsername') || ''
-      if (loginUsername) {
-        this.form.author = loginUsername
+      if (this.currentUsername) {
+        this.form.author = this.currentUsername
         return true
       }
 
@@ -126,6 +164,83 @@ export default {
       })
       return false
     },
+    async loadEditArticle() {
+      if (!this.editArticleId) return
+
+      const cachedArticle = this.readCachedEditArticle()
+      if (cachedArticle) {
+        this.fillArticleForm(cachedArticle)
+      }
+
+      this.loading = true
+      try {
+        const article = await this.fetchEditArticleById()
+        this.fillArticleForm(article)
+      } catch (error) {
+        if (!cachedArticle) {
+          this.$message.error('文章加载失败，无法编辑')
+          this.$router.push('/mine')
+        }
+      } finally {
+        this.loading = false
+      }
+    },
+    fillArticleForm(article) {
+      this.form = {
+        title: article.title || '',
+        author: article.author || this.currentUsername,
+        category: article.category || '业界',
+        status: article.status || 'draft',
+        content: article.content || ''
+      }
+    },
+    readCachedEditArticle() {
+      try {
+        const cached = JSON.parse(sessionStorage.getItem('articleEditDraft') || 'null')
+        if (String(cached?.articleId) !== String(this.editArticleId)) {
+          return null
+        }
+
+        return cached.article || null
+      } catch (error) {
+        return null
+      }
+    },
+    async fetchEditArticleById() {
+      try {
+        const { data } = await http.get(`/articles/${this.editArticleId}`)
+        const article = pickArticle(data)
+        if (article) return article
+      } catch (error) {
+        // Fall back to the list endpoint for APIs that do not expose article detail.
+      }
+
+      const { data } = await http.get('/articles')
+      const article = pickList(data).find((item) => String(item.id) === String(this.editArticleId))
+      if (!article) throw new Error('Article not found')
+      return article
+    },
+    buildArticlePayload() {
+      const payload = {
+        title: this.form.title,
+        author: this.form.author || this.currentUsername,
+        category: this.form.category,
+        status: this.form.status,
+        content: this.form.content
+      }
+
+      if (!this.isEditMode) {
+        return payload
+      }
+
+      return {
+        ...payload,
+        editor: this.currentUsername,
+        updated_by: this.currentUsername,
+        updatedBy: this.currentUsername,
+        last_editor: this.currentUsername
+      }
+    },
     submitArticle() {
       if (!this.requireLogin()) return
 
@@ -134,26 +249,49 @@ export default {
 
         this.loading = true
         try {
-          const { data } = await http.post('/articles', {
-            title: this.form.title,
-            author: this.form.author,
-            category: this.form.category,
-            status: this.form.status,
-            content: this.form.content
-          })
-          const createdId = pickCreatedId(data)
-          this.$message.success('投稿提交成功')
-          this.$router.push(createdId ? `/article/${createdId}` : '/hello')
+          const payload = this.buildArticlePayload()
+          const { data } = this.isEditMode
+            ? await http.put(`/articles/${this.editArticleId}`, payload)
+            : await http.post('/articles', payload)
+          const articleId = this.isEditMode ? this.editArticleId : pickCreatedId(data)
+
+          if (this.isEditMode) {
+            this.rememberArticleEditor(articleId)
+          }
+
+          this.$message.success(this.isEditMode ? '文章修改成功' : '投稿提交成功')
+          this.$router.push(articleId ? `/article/${articleId}` : '/hello')
         } catch (error) {
           const data = error.response && error.response.data
-          this.$message.error((data && (data.message || data.msg)) || '投稿提交失败，请稍后再试')
+          this.$message.error((data && (data.message || data.msg)) || (this.isEditMode ? '文章修改失败，请稍后再试' : '投稿提交失败，请稍后再试'))
         } finally {
           this.loading = false
         }
       })
     },
+    rememberArticleEditor(articleId) {
+      if (!articleId || !this.currentUsername) return
+
+      try {
+        const storageKey = 'articleEditorMeta'
+        const meta = JSON.parse(localStorage.getItem(storageKey) || '{}')
+        meta[String(articleId)] = {
+          editor: this.currentUsername,
+          updatedAt: new Date().toISOString()
+        }
+        localStorage.setItem(storageKey, JSON.stringify(meta))
+      } catch (error) {
+        // Local edit metadata is only a display fallback.
+      }
+    },
     resetForm() {
+      if (this.isEditMode) {
+        this.loadEditArticle()
+        return
+      }
+
       this.$refs.submitForm.resetFields()
+      this.form.author = this.currentUsername
     }
   }
 }

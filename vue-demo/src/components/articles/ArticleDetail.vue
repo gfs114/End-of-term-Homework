@@ -17,6 +17,7 @@
 
         <div class="detail-meta">
           <span>作者：{{ article.author || '未知作者' }}</span>
+          <span v-if="editedBy">编辑：{{ editedBy }}</span>
           <span>浏览：{{ article.views || 0 }}</span>
           <time>{{ articleTime }}</time>
         </div>
@@ -81,6 +82,10 @@ export default {
       const date = new Date(value)
       if (Number.isNaN(date.getTime())) return value
       return date.toLocaleString('zh-CN')
+    },
+    editedBy() {
+      if (!this.article) return ''
+      return this.getArticleEditor(this.article)
     }
   },
   created() {
@@ -99,6 +104,40 @@ export default {
         this.favoriteIds = Array.isArray(ids) ? ids.map(String) : []
       } catch (error) {
         this.favoriteIds = []
+      }
+    },
+    getArticleEditor(article) {
+      return String(
+        article?.editor ||
+        article?.updated_by ||
+        article?.updatedBy ||
+        article?.last_editor ||
+        article?.edited_by ||
+        ''
+      ).trim()
+    },
+    mergeLocalEditor(article) {
+      if (!article || !article.id || this.getArticleEditor(article)) {
+        return article
+      }
+
+      try {
+        const articleEditorMeta = JSON.parse(localStorage.getItem('articleEditorMeta') || '{}')
+        const localMeta = articleEditorMeta[String(article.id)]
+        const editor = String(localMeta?.editor || '').trim()
+
+        if (!editor) {
+          return article
+        }
+
+        return {
+          ...article,
+          editor,
+          updated_by: editor,
+          localEditedAt: localMeta.updatedAt || ''
+        }
+      } catch (error) {
+        return article
       }
     },
     toggleFavorite() {
@@ -160,7 +199,7 @@ export default {
 
       try {
         const article = await this.fetchDetailById()
-        this.article = article
+        this.article = this.mergeLocalEditor(article)
         this.favoriteCount = Number(article.favorites) || 0
       } catch (error) {
         this.errorMessage = '文章不存在或加载失败'

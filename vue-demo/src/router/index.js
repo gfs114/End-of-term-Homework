@@ -9,7 +9,7 @@ import Computer from "@/components/Computer.vue";
 import Admin from "@/components/manager/Admin.vue";
 import AdminInfo from "@/components/manager/AdminInfo.vue";
 import UserInfo from "@/components/manager/UserInfo.vue";
-import ArticleFavoriteInfo from "@/components/manager/ArticleFavoriteInfo.vue";
+import ArticleFavoriteInfo from "@/components/articles/ArticleFavoriteInfo.vue";
 import ArticleInfo from "@/components/manager/ArticleInfo.vue";
 import DeviceInfo from "@/components/manager/DeviceInfo.vue";
 import DeviceComputerInfo from "@/components/manager/DeviceComputerInfo.vue";
@@ -17,8 +17,8 @@ import SystemLog from "@/components/manager/SystemLog.vue";
 import AuthorInfo from "@/components/manager/AuthorInfo.vue";
 import DeviceCategoryInfo from "@/components/manager/DeviceCategoryInfo.vue";
 import Mine from "@/components/Mine.vue";
-import ArticleDetail from "@/components/ArticleDetail.vue";
-import ArticleSubmit from "@/components/ArticleSubmit.vue";
+import ArticleDetail from "@/components/articles/ArticleDetail.vue";
+import ArticleSubmit from "@/components/articles/ArticleSubmit.vue";
 
 const router = createRouter({
     history: createWebHashHistory(),

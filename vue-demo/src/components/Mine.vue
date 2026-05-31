@@ -64,7 +64,7 @@
                     </div>
                     <div class="article-actions">
                         <el-button type="primary" link @click="goArticleDetail(article)">查看</el-button>
-                        <el-button type="primary" link @click="openArticleDialog('edit', article)">编辑</el-button>
+                        <el-button type="primary" link @click="goArticleEdit(article)">编辑</el-button>
                         <el-button
                             v-if="!isArticlePublished(article)"
                             type="success"
@@ -131,13 +131,22 @@
             <div v-else-if="!favoriteDevices.length" class="article-state">你还没有喜欢的设备</div>
 
             <div v-else class="device-list">
-                <article v-for="device in favoriteDevices" :key="device.key" class="device-row">
+                <article
+                    v-for="device in favoriteDevices"
+                    :key="device.key"
+                    class="device-row"
+                >
                     <div>
                         <span class="device-type">{{ device.typeLabel }}</span>
                         <h3>{{ device.brand }} {{ device.model }}</h3>
                         <p>{{ device.specs }}</p>
                     </div>
-                    <strong>{{ device.price }}</strong>
+                    <div class="device-row-actions">
+                        <strong>{{ device.price }}</strong>
+                        <el-button type="primary" plain @click.stop="goFavoriteDeviceDetail(device)">
+                            查看详情
+                        </el-button>
+                    </div>
                 </article>
             </div>
         </section>
@@ -241,7 +250,7 @@
 </template>
 
 <script>
-import Creater from '@/components/Creater.vue'
+import Creater from '@/components/articles/Creater.vue'
 import http from '@/utils/http'
 
 function pickList(payload) {
@@ -424,6 +433,26 @@ export default {
         },
         goArticleDetail(article) {
             this.$router.push(`/article/${article.id}`)
+        },
+        goArticleEdit(article) {
+            if (!article || !article.id) {
+                this.$message.warning('文章信息不完整，无法编辑')
+                return
+            }
+
+            try {
+                sessionStorage.setItem('articleEditDraft', JSON.stringify({
+                    articleId: String(article.id),
+                    article
+                }))
+            } catch (error) {
+                // The submit page can still load by id if session storage is unavailable.
+            }
+
+            this.$router.push({
+                path: '/submit',
+                query: { editId: article.id }
+            })
         },
         isArticlePublished(article) {
             return String((article && article.status) || '') === 'published'
@@ -615,6 +644,30 @@ export default {
                 price: item.device_price || item.devicePrice || '暂无价格',
                 specs: item.device_specs || item.deviceSpecs || '暂无配置'
             }
+        },
+        goFavoriteDeviceDetail(device) {
+            if (!device || !device.model) {
+                this.$message.warning('设备信息不完整，无法查看详情')
+                return
+            }
+
+            if (device.type === 'phone') {
+                this.$router.push({
+                    path: '/phone',
+                    query: { phoneModel: device.model }
+                })
+                return
+            }
+
+            if (device.type === 'computer') {
+                this.$router.push({
+                    path: '/computer',
+                    query: { computerModel: device.model }
+                })
+                return
+            }
+
+            this.$message.warning('暂不支持查看该设备详情')
         },
         async fetchMyArticles() {
             this.articlesLoading = true
@@ -1079,6 +1132,12 @@ export default {
     border: 1px solid #eef3f8;
     border-radius: 8px;
     background: #fff;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.device-row:hover {
+    border-color: #93c5fd;
+    box-shadow: 0 14px 34px rgba(37, 99, 235, 0.1);
 }
 
 .device-type {
@@ -1108,6 +1167,12 @@ export default {
 .device-row strong {
     color: #253247;
     white-space: nowrap;
+}
+
+.device-row-actions {
+    display: grid;
+    justify-items: end;
+    gap: 10px;
 }
 
 .password-overlay {
@@ -1241,6 +1306,10 @@ export default {
     .article-row,
     .device-row {
         grid-template-columns: 1fr;
+    }
+
+    .device-row-actions {
+        justify-items: start;
     }
 
     .articles-head {

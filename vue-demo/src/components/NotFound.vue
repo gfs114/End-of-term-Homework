@@ -1,54 +1,55 @@
 <template>
   <main class="not-found-page">
-    <section class="not-found-shell" aria-label="404 恐龙小游戏">
-      <header class="not-found-header">
-        <div>
-          <p class="not-found-code">404</p>
-          <h1>页面跑丢了</h1>
-        </div>
-
-        <div class="score-panel" aria-label="游戏分数">
-          <span>当前 {{ score }}</span>
-          <strong>最高 {{ bestScore }}</strong>
-        </div>
-      </header>
-
+    <section class="chrome-offline-page" aria-label="深色恐龙小游戏">
       <section
         ref="gameStage"
-        class="game-stage"
+        class="chrome-dino-stage"
         tabindex="0"
+        aria-label="Chrome dinosaur runner"
         @click="handleStageClick"
         @touchstart.prevent="handleStageTouch"
       >
+        <div class="chrome-dino-score" aria-label="game score">
+          <span>HI {{ paddedBestScore }}</span>
+          <span>{{ paddedScore }}</span>
+        </div>
+
         <canvas
           ref="gameCanvas"
           class="dino-canvas"
-          aria-label="恐龙跳跃游戏画布"
+          aria-label="Dinosaur runner canvas"
         ></canvas>
 
         <div v-if="!isPlaying || gameOver" class="game-overlay">
-          <strong>{{ gameOver ? "撞到了" : "DINO RUN" }}</strong>
+          <strong v-if="gameOver">游戏结束</strong>
           <span>{{ gameMessage }}</span>
         </div>
       </section>
 
-      <footer class="game-toolbar">
-        <button type="button" @click="startGame">
-          {{ isPlaying && !gameOver ? "重新开始" : "开始游戏" }}
-        </button>
-        <div class="control-hints" aria-label="键盘控制">
-          <span><kbd>Space</kbd><kbd>↑</kbd> 跳跃</span>
-          <span><kbd>↓</kbd> 低头</span>
-        </div>
-      </footer>
+      <header class="offline-copy">
+        <h1>点按恐龙开始</h1>
+        <p>请试试以下办法：</p>
+        <ul>
+          <li>检查网络连接线、调制解调器和路由器</li>
+          <li>重新连接到 Wi-Fi</li>
+          <li>运行 Windows 网络诊断</li>
+        </ul>
+        <p class="offline-error">ERR_INTERNET_DISCONNECTED</p>
+      </header>
     </section>
   </main>
 </template>
 
 <script>
 const BEST_SCORE_KEY = "not-found-dino-best-score"
-const GRAVITY = 0.0024
-const JUMP_SPEED = -0.82
+const DINO_CANVAS_WIDTH = 600
+const DINO_CANVAS_HEIGHT = 190
+const GROUND_Y = 136
+const GRAVITY = 0.00265
+const JUMP_SPEED = -0.72
+const DARK_BG = "#202124"
+const DINO_FILL = "#bdc1c6"
+const DINO_STROKE = "#111315"
 
 function getRandomNumber(min, max) {
   return Math.random() * (max - min) + min
@@ -63,6 +64,10 @@ function boxesOverlap(boxA, boxB) {
   )
 }
 
+function padScore(value) {
+  return String(Math.max(0, Math.floor(value))).padStart(5, "0")
+}
+
 export default {
   name: "NotFoundPage",
   data() {
@@ -72,7 +77,15 @@ export default {
       isPlaying: false,
       gameOver: false,
       isDucking: false,
-      gameMessage: "按空格开始，或点击画面开始"
+      gameMessage: "按空格键或点按恐龙开始"
+    }
+  },
+  computed: {
+    paddedScore() {
+      return padScore(this.score)
+    },
+    paddedBestScore() {
+      return padScore(this.bestScore)
     }
   },
   mounted() {
@@ -100,39 +113,36 @@ export default {
   methods: {
     createGameState() {
       return {
-        width: 900,
-        height: 320,
-        groundY: 236,
+        width: DINO_CANVAS_WIDTH,
+        height: DINO_CANVAS_HEIGHT,
+        groundY: GROUND_Y,
         distance: 0,
-        speed: 0.38,
+        speed: 0.34,
         spawnTimer: 0,
-        nextSpawn: 900,
+        nextSpawn: 880,
         downPressed: false,
         dino: {
-          x: 72,
-          y: 182,
-          width: 44,
-          height: 54,
-          normalWidth: 44,
-          normalHeight: 54,
-          duckWidth: 66,
-          duckHeight: 32,
+          x: 128,
+          y: GROUND_Y - 58,
+          width: 58,
+          height: 58,
+          normalWidth: 58,
+          normalHeight: 58,
+          duckWidth: 76,
+          duckHeight: 34,
           velocityY: 0,
           onGround: true,
           stepTimer: 0
         },
         obstacles: [],
-        clouds: [
-          { x: 110, y: 66, width: 86, speed: 0.04 },
-          { x: 430, y: 42, width: 112, speed: 0.032 },
-          { x: 760, y: 82, width: 74, speed: 0.05 }
-        ],
+        clouds: [],
         groundMarks: [
-          { x: 40, width: 48 },
-          { x: 190, width: 20 },
-          { x: 360, width: 68 },
-          { x: 560, width: 30 },
-          { x: 720, width: 92 }
+          { x: 20, width: 14 },
+          { x: 110, width: 3 },
+          { x: 154, width: 12 },
+          { x: 272, width: 4 },
+          { x: 390, width: 18 },
+          { x: 516, width: 5 }
         ]
       }
     },
@@ -154,7 +164,7 @@ export default {
       try {
         window.localStorage.setItem(BEST_SCORE_KEY, String(this.bestScore))
       } catch {
-        // localStorage 不可用时只保留本次页面内最高分。
+        // Keep the high score only in memory when localStorage is unavailable.
       }
     },
     handleResize() {
@@ -168,21 +178,22 @@ export default {
         return
       }
 
-      const parentWidth = canvas.parentElement ? canvas.parentElement.clientWidth : 900
-      const width = Math.max(320, Math.min(parentWidth, 980))
-      const height = width < 520 ? 260 : 320
+      const parentWidth = canvas.parentElement ? canvas.parentElement.clientWidth : DINO_CANVAS_WIDTH
+      const width = Math.max(280, Math.min(parentWidth, DINO_CANVAS_WIDTH))
+      const height = Math.round(width * (DINO_CANVAS_HEIGHT / DINO_CANVAS_WIDTH))
       const scale = window.devicePixelRatio || 1
 
+      canvas.style.width = `${width}px`
       canvas.style.height = `${height}px`
-      canvas.width = Math.round(width * scale)
-      canvas.height = Math.round(height * scale)
+      canvas.width = Math.round(DINO_CANVAS_WIDTH * scale)
+      canvas.height = Math.round(DINO_CANVAS_HEIGHT * scale)
 
       const context = canvas.getContext("2d")
       context.setTransform(scale, 0, 0, scale, 0, 0)
 
-      this.game.width = width
-      this.game.height = height
-      this.game.groundY = height - 84
+      this.game.width = DINO_CANVAS_WIDTH
+      this.game.height = DINO_CANVAS_HEIGHT
+      this.game.groundY = GROUND_Y
       this.snapDinoToGround()
     },
     snapDinoToGround() {
@@ -191,10 +202,10 @@ export default {
       }
 
       const dino = this.game.dino
-      const targetHeight = this.isDucking && dino.onGround ? dino.duckHeight : dino.normalHeight
+      const isDuckingOnGround = this.isDucking && dino.onGround
 
-      dino.height = targetHeight
-      dino.width = this.isDucking && dino.onGround ? dino.duckWidth : dino.normalWidth
+      dino.width = isDuckingOnGround ? dino.duckWidth : dino.normalWidth
+      dino.height = isDuckingOnGround ? dino.duckHeight : dino.normalHeight
 
       if (dino.onGround) {
         dino.y = this.game.groundY - dino.height
@@ -239,16 +250,16 @@ export default {
       const dino = game.dino
 
       game.distance += game.speed * deltaTime
-      game.speed = Math.min(0.78, 0.38 + game.distance / 26000)
+      game.speed = Math.min(0.68, 0.34 + game.distance / 34000)
       game.spawnTimer += deltaTime
       dino.stepTimer += deltaTime
-      this.score = Math.floor(game.distance / 8)
+      this.score = Math.floor(game.distance / 10)
 
       if (!dino.onGround) {
         dino.velocityY += GRAVITY * deltaTime
 
         if (game.downPressed) {
-          dino.velocityY += GRAVITY * deltaTime * 1.6
+          dino.velocityY += GRAVITY * deltaTime * 1.8
         }
 
         dino.y += dino.velocityY * deltaTime
@@ -264,11 +275,10 @@ export default {
       if (game.spawnTimer >= game.nextSpawn) {
         this.addObstacle()
         game.spawnTimer = 0
-        game.nextSpawn = getRandomNumber(780, Math.max(980, 1450 - this.score * 1.5))
+        game.nextSpawn = getRandomNumber(760, Math.max(860, 1350 - this.score * 1.2))
       }
 
       this.updateObstacles(deltaTime)
-      this.updateClouds(deltaTime)
       this.updateGround(deltaTime)
 
       if (this.hasCollision()) {
@@ -277,69 +287,56 @@ export default {
     },
     addObstacle() {
       const game = this.game
-      const allowBird = this.score > 180
-      const shouldAddBird = allowBird && Math.random() > 0.68
+      const allowPterosaur = this.score > 180
+      const shouldAddPterosaur = allowPterosaur && Math.random() > 0.74
 
-      if (shouldAddBird) {
-        const isLowBird = Math.random() > 0.28
+      if (shouldAddPterosaur) {
+        const lowFlight = Math.random() > 0.35
+
         game.obstacles.push({
-          type: "bird",
-          x: game.width + 24,
-          y: isLowBird ? game.groundY - 70 : game.groundY - 112,
-          width: 52,
+          type: "pterosaur",
+          x: game.width + 18,
+          y: lowFlight ? game.groundY - 48 : game.groundY - 82,
+          width: 46,
           height: 30,
-          flapOffset: Math.random() * 300
+          flapOffset: Math.random() * 240
         })
         return
       }
 
       const cactusType = Math.random()
-      const width = cactusType > 0.72 ? 58 : cactusType > 0.42 ? 42 : 28
-      const height = cactusType > 0.55 ? 58 : 48
+      const width = cactusType > 0.72 ? 34 : cactusType > 0.42 ? 25 : 17
+      const height = cactusType > 0.55 ? 48 : 36
 
       game.obstacles.push({
         type: "cactus",
-        x: game.width + 24,
+        x: game.width + 18,
         y: game.groundY - height,
         width,
-        height
+        height,
+        cluster: width > 24
       })
     },
     updateObstacles(deltaTime) {
-      const game = this.game
-      const moveBy = game.speed * deltaTime
+      const moveBy = this.game.speed * deltaTime
 
-      game.obstacles.forEach((obstacle) => {
+      this.game.obstacles.forEach((obstacle) => {
         obstacle.x -= moveBy
       })
 
-      game.obstacles = game.obstacles.filter((obstacle) => {
+      this.game.obstacles = this.game.obstacles.filter((obstacle) => {
         return obstacle.x + obstacle.width > -20
       })
     },
-    updateClouds(deltaTime) {
-      const game = this.game
-
-      game.clouds.forEach((cloud) => {
-        cloud.x -= cloud.speed * deltaTime
-
-        if (cloud.x + cloud.width < -20) {
-          cloud.x = game.width + getRandomNumber(80, 260)
-          cloud.y = getRandomNumber(34, Math.max(62, game.groundY - 160))
-          cloud.width = getRandomNumber(72, 118)
-        }
-      })
-    },
     updateGround(deltaTime) {
-      const game = this.game
-      const moveBy = game.speed * deltaTime
+      const moveBy = this.game.speed * deltaTime
 
-      game.groundMarks.forEach((mark) => {
+      this.game.groundMarks.forEach((mark) => {
         mark.x -= moveBy
 
         if (mark.x + mark.width < -10) {
-          mark.x = game.width + getRandomNumber(20, 180)
-          mark.width = getRandomNumber(18, 88)
+          mark.x = this.game.width + getRandomNumber(14, 96)
+          mark.width = getRandomNumber(2, 18)
         }
       })
     },
@@ -428,24 +425,24 @@ export default {
       const dino = this.game.dino
       const dinoBox = this.isDucking
         ? {
-            x: dino.x + 8,
+            x: dino.x + 9,
             y: dino.y + 6,
-            width: dino.width - 16,
+            width: dino.width - 15,
             height: dino.height - 10
           }
         : {
-            x: dino.x + 7,
-            y: dino.y + 4,
-            width: dino.width - 14,
-            height: dino.height - 8
+            x: dino.x + 9,
+            y: dino.y + 6,
+            width: dino.width - 17,
+            height: dino.height - 11
           }
 
       return this.game.obstacles.some((obstacle) => {
         const obstacleBox = {
-          x: obstacle.x + 5,
-          y: obstacle.y + 5,
-          width: obstacle.width - 10,
-          height: obstacle.height - 10
+          x: obstacle.x + 4,
+          y: obstacle.y + 4,
+          width: obstacle.width - 8,
+          height: obstacle.height - 8
         }
 
         return boxesOverlap(dinoBox, obstacleBox)
@@ -454,7 +451,7 @@ export default {
     endGame() {
       this.gameOver = true
       this.isPlaying = false
-      this.gameMessage = "按空格再跑一次"
+      this.gameMessage = "按空格键再跑一次"
       this.saveBestScore()
       this.stopLoop()
       this.drawScene()
@@ -467,121 +464,95 @@ export default {
       }
 
       const context = canvas.getContext("2d")
-      const game = this.game
 
-      context.clearRect(0, 0, game.width, game.height)
+      context.clearRect(0, 0, this.game.width, this.game.height)
       this.drawBackground(context)
-      this.drawClouds(context)
+      this.drawDarkMoon(context)
       this.drawGround(context)
       this.drawObstacles(context)
-      this.drawDino(context)
+      this.drawPixelDino(context)
     },
     drawBackground(context) {
-      const game = this.game
-      const skyGradient = context.createLinearGradient(0, 0, 0, game.height)
-
-      skyGradient.addColorStop(0, "#f8fbff")
-      skyGradient.addColorStop(0.62, "#ffffff")
-      skyGradient.addColorStop(1, "#fff7ed")
-
-      context.fillStyle = skyGradient
-      context.fillRect(0, 0, game.width, game.height)
-
-      context.fillStyle = "rgba(255, 214, 102, 0.75)"
+      context.fillStyle = DARK_BG
+      context.fillRect(0, 0, this.game.width, this.game.height)
+    },
+    drawDarkMoon(context) {
+      context.fillStyle = "#24272b"
       context.beginPath()
-      context.arc(game.width - 72, 58, 26, 0, Math.PI * 2)
+      context.arc(334, 30, 24, 0, Math.PI * 2)
+      context.fill()
+
+      context.fillStyle = DARK_BG
+      context.beginPath()
+      context.arc(320, 22, 27, 0, Math.PI * 2)
       context.fill()
     },
-    drawClouds(context) {
-      context.fillStyle = "rgba(148, 163, 184, 0.28)"
-
-      this.game.clouds.forEach((cloud) => {
-        const y = cloud.y
-
-        context.beginPath()
-        context.ellipse(cloud.x + 18, y + 18, 18, 11, 0, 0, Math.PI * 2)
-        context.ellipse(cloud.x + 42, y + 14, 24, 15, 0, 0, Math.PI * 2)
-        context.ellipse(cloud.x + 72, y + 18, 22, 12, 0, 0, Math.PI * 2)
-        context.fill()
-      })
-    },
     drawGround(context) {
-      const game = this.game
+      context.fillStyle = DINO_FILL
+      context.fillRect(0, this.game.groundY, this.game.width, 2)
 
-      context.strokeStyle = "#6b7280"
-      context.lineWidth = 2
-      context.beginPath()
-      context.moveTo(0, game.groundY + 1)
-      context.lineTo(game.width, game.groundY + 1)
-      context.stroke()
-
-      context.fillStyle = "#9ca3af"
-      game.groundMarks.forEach((mark) => {
-        context.fillRect(mark.x, game.groundY + 16, mark.width, 3)
+      this.game.groundMarks.forEach((mark) => {
+        context.fillRect(Math.round(mark.x), this.game.groundY + 11, Math.round(mark.width), 2)
       })
     },
     drawObstacles(context) {
       this.game.obstacles.forEach((obstacle) => {
-        if (obstacle.type === "bird") {
-          this.drawBird(context, obstacle)
+        if (obstacle.type === "pterosaur") {
+          this.drawPixelPterosaur(context, obstacle)
           return
         }
 
-        this.drawCactus(context, obstacle)
+        this.drawPixelCactus(context, obstacle)
       })
     },
-    drawCactus(context, cactus) {
-      const x = cactus.x
-      const y = cactus.y
+    drawBlock(context, x, y, width, height, fill = DINO_FILL) {
+      context.fillStyle = DINO_STROKE
+      context.fillRect(Math.round(x), Math.round(y), Math.round(width), Math.round(height))
+      context.fillStyle = fill
+      context.fillRect(
+        Math.round(x + 2),
+        Math.round(y + 2),
+        Math.max(1, Math.round(width - 4)),
+        Math.max(1, Math.round(height - 4))
+      )
+    },
+    drawPixelCactus(context, cactus) {
+      const x = Math.round(cactus.x)
+      const y = Math.round(cactus.y)
 
-      context.fillStyle = "#1f7a4d"
-      context.fillRect(x + cactus.width * 0.38, y, cactus.width * 0.25, cactus.height)
+      this.drawBlock(context, x + 7, y, 8, cactus.height)
+      this.drawBlock(context, x + 2, y + 15, 7, 6)
+      this.drawBlock(context, x + 2, y + 8, 5, 14)
+      this.drawBlock(context, x + 14, y + 22, 8, 6)
+      this.drawBlock(context, x + 20, y + 13, 5, 16)
 
-      context.fillRect(x + cactus.width * 0.1, y + cactus.height * 0.42, cactus.width * 0.32, 7)
-      context.fillRect(x + cactus.width * 0.1, y + cactus.height * 0.28, 7, cactus.height * 0.22)
-
-      context.fillRect(x + cactus.width * 0.58, y + cactus.height * 0.3, cactus.width * 0.32, 7)
-      context.fillRect(x + cactus.width * 0.82, y + cactus.height * 0.16, 7, cactus.height * 0.24)
-
-      if (cactus.width > 40) {
-        context.fillRect(x + cactus.width * 0.06, y + 10, cactus.width * 0.18, cactus.height - 10)
+      if (cactus.cluster) {
+        this.drawBlock(context, x + 22, y + 10, 7, cactus.height - 10)
+        this.drawBlock(context, x + 29, y + 22, 5, 6)
       }
     },
-    drawBird(context, bird) {
-      const wingUp = Math.sin((this.game.distance + bird.flapOffset) / 38) > 0
-      const x = bird.x
-      const y = bird.y
+    drawPixelPterosaur(context, bird) {
+      const x = Math.round(bird.x)
+      const y = Math.round(bird.y)
+      const wingUp = Math.sin((this.game.distance + bird.flapOffset) / 34) > 0
 
-      context.fillStyle = "#334155"
-      context.beginPath()
-      context.ellipse(x + 27, y + 17, 20, 11, 0, 0, Math.PI * 2)
-      context.fill()
+      this.drawBlock(context, x + 14, y + 12, 22, 8)
+      this.drawBlock(context, x + 34, y + 10, 9, 6)
+      this.drawBlock(context, x + 41, y + 12, 5, 4)
+      this.drawBlock(context, x + 6, y + 14, 10, 5)
 
-      context.beginPath()
-      context.moveTo(x + 45, y + 14)
-      context.lineTo(x + 56, y + 18)
-      context.lineTo(x + 45, y + 22)
-      context.closePath()
-      context.fill()
-
-      context.fillStyle = "#0f172a"
-      context.beginPath()
-      context.arc(x + 18, y + 14, 2, 0, Math.PI * 2)
-      context.fill()
-
-      context.strokeStyle = "#334155"
-      context.lineWidth = 6
-      context.lineCap = "round"
-      context.beginPath()
-      context.moveTo(x + 28, y + 17)
-      context.lineTo(x + 10, wingUp ? y + 4 : y + 29)
-      context.stroke()
+      if (wingUp) {
+        this.drawBlock(context, x + 17, y + 2, 16, 7)
+        this.drawBlock(context, x + 22, y + 8, 9, 6)
+      } else {
+        this.drawBlock(context, x + 17, y + 22, 16, 7)
+        this.drawBlock(context, x + 22, y + 17, 9, 6)
+      }
     },
-    drawDino(context) {
+    drawPixelDino(context) {
       const dino = this.game.dino
 
       context.save()
-      context.fillStyle = this.gameOver ? "#ef4444" : "#1f2937"
 
       if (this.isDucking && dino.onGround) {
         this.drawDuckingDino(context, dino)
@@ -592,46 +563,52 @@ export default {
       context.restore()
     },
     drawRunningDino(context, dino) {
-      const x = dino.x
-      const y = dino.y
-      const step = Math.floor(dino.stepTimer / 120) % 2
+      const x = Math.round(dino.x)
+      const y = Math.round(dino.y)
+      const step = Math.floor(dino.stepTimer / 115) % 2
 
-      context.fillRect(x + 12, y + 21, 25, 27)
-      context.fillRect(x + 25, y + 4, 22, 22)
-      context.fillRect(x + 38, y + 10, 9, 5)
-      context.fillRect(x + 6, y + 28, 12, 6)
+      this.drawBlock(context, x + 13, y + 23, 29, 30)
+      this.drawBlock(context, x + 31, y + 12, 17, 24)
+      this.drawBlock(context, x + 38, y + 1, 28, 24)
+      this.drawBlock(context, x + 61, y + 8, 12, 8)
+      this.drawBlock(context, x + 5, y + 30, 15, 8)
+      this.drawBlock(context, x, y + 20, 8, 18)
+      this.drawBlock(context, x + 31, y + 30, 6, 10)
 
-      context.fillStyle = "#f8fafc"
-      context.fillRect(x + 39, y + 10, 3, 3)
-      context.fillStyle = this.gameOver ? "#ef4444" : "#1f2937"
+      context.fillStyle = DINO_STROKE
+      context.fillRect(x + 55, y + 8, 4, 4)
 
       if (dino.onGround && step === 0) {
-        context.fillRect(x + 14, y + 48, 8, 8)
-        context.fillRect(x + 30, y + 46, 8, 10)
+        this.drawBlock(context, x + 15, y + 51, 9, 12)
+        this.drawBlock(context, x + 35, y + 48, 9, 15)
+        context.fillStyle = DINO_STROKE
+        context.fillRect(x + 11, y + 62, 14, 4)
       } else {
-        context.fillRect(x + 16, y + 46, 8, 10)
-        context.fillRect(x + 30, y + 48, 8, 8)
+        this.drawBlock(context, x + 17, y + 48, 9, 15)
+        this.drawBlock(context, x + 36, y + 51, 9, 12)
+        context.fillStyle = DINO_STROKE
+        context.fillRect(x + 35, y + 62, 14, 4)
       }
     },
     drawDuckingDino(context, dino) {
-      const x = dino.x
-      const y = dino.y
-      const step = Math.floor(dino.stepTimer / 120) % 2
+      const x = Math.round(dino.x)
+      const y = Math.round(dino.y)
+      const step = Math.floor(dino.stepTimer / 115) % 2
 
-      context.fillRect(x + 8, y + 11, 42, 20)
-      context.fillRect(x + 42, y + 4, 24, 18)
-      context.fillRect(x + 2, y + 17, 14, 5)
+      this.drawBlock(context, x + 6, y + 11, 45, 20)
+      this.drawBlock(context, x + 45, y + 3, 26, 19)
+      this.drawBlock(context, x + 66, y + 9, 10, 6)
+      this.drawBlock(context, x, y + 17, 12, 6)
 
-      context.fillStyle = "#f8fafc"
-      context.fillRect(x + 57, y + 10, 3, 3)
-      context.fillStyle = "#1f2937"
+      context.fillStyle = DINO_STROKE
+      context.fillRect(x + 61, y + 8, 4, 4)
 
       if (step === 0) {
-        context.fillRect(x + 17, y + 29, 10, 5)
-        context.fillRect(x + 39, y + 27, 10, 7)
+        this.drawBlock(context, x + 15, y + 29, 11, 6)
+        this.drawBlock(context, x + 43, y + 27, 11, 8)
       } else {
-        context.fillRect(x + 17, y + 27, 10, 7)
-        context.fillRect(x + 39, y + 29, 10, 5)
+        this.drawBlock(context, x + 15, y + 27, 11, 8)
+        this.drawBlock(context, x + 43, y + 29, 11, 6)
       }
     }
   }
@@ -640,193 +617,126 @@ export default {
 
 <style scoped>
 .not-found-page {
-  min-height: calc(100vh - 32px);
+  min-height: calc(100vh - 120px);
   display: flex;
-  align-items: center;
   justify-content: center;
-  padding: 32px 18px;
-  background:
-    linear-gradient(135deg, rgba(37, 99, 235, 0.08), transparent 36%),
-    linear-gradient(315deg, rgba(249, 115, 22, 0.1), transparent 34%),
-    #f8fafc;
+  padding: 40px 20px 28px;
+  color: #bdc1c6;
+  background: #202124;
   box-sizing: border-box;
+  font-family: "Segoe UI", Tahoma, "Microsoft YaHei", sans-serif;
 }
 
-.not-found-shell {
-  width: min(980px, 100%);
+.chrome-offline-page {
+  width: min(600px, 100%);
 }
 
-.not-found-header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 20px;
-  margin-bottom: 16px;
-}
-
-.not-found-code {
-  margin: 0 0 4px;
-  color: #2563eb;
-  font-size: 15px;
-  font-weight: 900;
-  letter-spacing: 0;
-}
-
-.not-found-header h1 {
-  margin: 0;
-  color: #111827;
-  font-size: 42px;
-  line-height: 1.12;
-}
-
-.score-panel {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: #475569;
-  font-size: 15px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.score-panel strong {
-  color: #111827;
-}
-
-.game-stage {
+.chrome-dino-stage {
   position: relative;
+  width: min(600px, 100%);
   overflow: hidden;
-  border: 1px solid #d9e2ec;
-  border-radius: 8px;
-  background: #fff;
-  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.1);
+  background: #202124;
   cursor: pointer;
+  outline: none;
+  user-select: none;
+}
+
+.chrome-dino-stage:focus {
   outline: none;
 }
 
-.game-stage:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.13), 0 20px 60px rgba(15, 23, 42, 0.1);
+.chrome-dino-score {
+  position: absolute;
+  top: 8px;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  gap: 12px;
+  color: rgba(189, 193, 198, 0.78);
+  font-family: "Courier New", monospace;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  pointer-events: none;
 }
 
 .dino-canvas {
   display: block;
   width: 100%;
-  height: 320px;
+  height: 190px;
+  image-rendering: pixelated;
   touch-action: manipulation;
 }
 
 .game-overlay {
   position: absolute;
-  inset: 0;
+  top: 148px;
+  left: 0;
+  right: 0;
+  z-index: 3;
   display: grid;
-  place-content: center;
-  gap: 10px;
-  background: rgba(248, 250, 252, 0.64);
-  color: #111827;
-  text-align: center;
+  justify-items: center;
+  gap: 4px;
+  color: rgba(189, 193, 198, 0.86);
+  font-family: "Courier New", monospace;
   pointer-events: none;
 }
 
 .game-overlay strong {
-  font-size: 24px;
-  letter-spacing: 0;
+  font-size: 14px;
+  letter-spacing: 1px;
 }
 
 .game-overlay span {
-  color: #475569;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.game-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  margin-top: 16px;
-}
-
-.game-toolbar button {
-  min-width: 108px;
-  min-height: 38px;
-  padding: 0 18px;
-  border: 1px solid #111827;
-  border-radius: 8px;
-  background: #111827;
-  color: #fff;
-  cursor: pointer;
-  font: inherit;
-  font-weight: 800;
-}
-
-.game-toolbar button:hover {
-  background: #2563eb;
-  border-color: #2563eb;
-}
-
-.control-hints {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-  color: #475569;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.control-hints span {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-kbd {
-  min-width: 26px;
-  padding: 4px 7px;
-  border: 1px solid #cbd5e1;
-  border-bottom-width: 2px;
-  border-radius: 6px;
-  background: #fff;
-  color: #111827;
-  font: inherit;
   font-size: 12px;
-  line-height: 1;
-  text-align: center;
+  letter-spacing: 0;
+}
+
+.offline-copy {
+  margin-top: 8px;
+}
+
+.offline-copy h1 {
+  margin: 0 0 18px;
+  color: #bdc1c6;
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1.25;
+}
+
+.offline-copy p {
+  margin: 0 0 8px;
+  color: #bdc1c6;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.offline-copy ul {
+  margin: 0 0 14px;
+  padding-left: 22px;
+  color: #bdc1c6;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.offline-error {
+  color: #9aa0a6;
+  font-size: 12px;
 }
 
 @media (max-width: 640px) {
   .not-found-page {
-    align-items: flex-start;
-    padding: 22px 12px;
-  }
-
-  .not-found-header,
-  .game-toolbar {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .not-found-header h1 {
-    font-size: 32px;
-  }
-
-  .score-panel {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .game-toolbar button {
-    width: 100%;
-  }
-
-  .control-hints {
+    min-height: calc(100vh - 104px);
     justify-content: flex-start;
+    padding: 28px 20px 24px;
   }
 
-  .dino-canvas {
-    height: 260px;
+  .chrome-dino-score {
+    font-size: 11px;
+  }
+
+  .offline-copy h1 {
+    font-size: 26px;
   }
 }
 </style>

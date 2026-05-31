@@ -1440,6 +1440,9 @@ export default {
     },
   },
   watch: {
+    "$route.query.phoneModel"() {
+      this.openRoutePhoneDetail();
+    },
     modelKeyword() {
       this.resetModelPage();
     },
@@ -1539,6 +1542,35 @@ export default {
 
       return this.phoneModels.find((phone) => phone.model === model) || null;
     },
+    async openRoutePhoneDetail() {
+      const queryModel = this.$route.query.phoneModel;
+      const targetModel = Array.isArray(queryModel) ? queryModel[0] : queryModel;
+
+      if (!targetModel || !this.phoneModels.length) {
+        return;
+      }
+
+      const normalizedTarget = String(targetModel).trim().toLowerCase();
+      const phone = this.phoneModels.find((item) => (
+        String(item.model || "").trim().toLowerCase() === normalizedTarget
+      ));
+
+      if (!phone) {
+        this.$message.warning(`未找到 ${targetModel} 的手机信息`);
+        return;
+      }
+
+      await this.$nextTick();
+
+      if (this.$refs.modelSection) {
+        this.$refs.modelSection.scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
+      }
+
+      this.openPhoneDetail(phone);
+    },
     getComparePhoneLabel(index) {
       return `手机 ${String.fromCharCode(65 + index)}`;
     },
@@ -1590,6 +1622,8 @@ export default {
         this.$message.error("获取后端手机数据失败，已显示本地备用数据");
       } finally {
         this.phoneModelsLoading = false;
+        await this.$nextTick();
+        this.openRoutePhoneDetail();
       }
     },
     getUsername() {
