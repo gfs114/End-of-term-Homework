@@ -1,7 +1,7 @@
 <template>
   <div class="ai-assistant">
     <transition name="assistant-panel">
-      <section v-if="opened" class="assistant-panel" aria-label="AI 助手">
+      <section v-if="opened" class="assistant-panel" style="border-radius: 10px;" aria-label="AI 助手">
         <header class="assistant-head">
           <h2>AI 助手</h2>
           <div class="assistant-head-actions">
