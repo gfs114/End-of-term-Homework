@@ -120,8 +120,8 @@ const router = createRouter({
             component: ArticleDetail
         },
         {
-            name:'404',
-            path:'/:catchAll(.*)',
+            name: '404',
+            path: '/:catchAll(.*)',
             component: () => import('@/components/NotFound.vue')
         }
     ]

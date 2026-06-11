@@ -1,37 +1,13 @@
 <template>
-  <header
-    ref="navbar"
-    class="liquid-navbar"
-    :style="navbarVars"
-  >
+  <header ref="navbar" class="liquid-navbar" :style="navbarVars">
     <svg class="liquid-filter-svg" aria-hidden="true" focusable="false">
       <defs>
-        <filter
-          :id="filterId"
-          filterUnits="userSpaceOnUse"
-          x="0"
-          y="0"
-          :width="filterWidth"
-          :height="filterHeight"
-          color-interpolation-filters="sRGB"
-        >
-          <feImage
-            v-if="displacementMap"
-            x="0"
-            y="0"
-            :width="filterWidth"
-            :height="filterHeight"
-            preserveAspectRatio="none"
-            :href="displacementMap"
-            result="displacementMap"
-          />
-          <feDisplacementMap
-            in="SourceGraphic"
-            in2="displacementMap"
-            :scale="displacementScale"
-            xChannelSelector="R"
-            yChannelSelector="G"
-          />
+        <filter :id="filterId" filterUnits="userSpaceOnUse" x="0" y="0" :width="filterWidth" :height="filterHeight"
+          color-interpolation-filters="sRGB">
+          <feImage v-if="displacementMap" x="0" y="0" :width="filterWidth" :height="filterHeight"
+            preserveAspectRatio="none" :href="displacementMap" result="displacementMap" />
+          <feDisplacementMap in="SourceGraphic" in2="displacementMap" :scale="displacementScale" xChannelSelector="R"
+            yChannelSelector="G" />
         </filter>
       </defs>
     </svg>
@@ -40,6 +16,9 @@
 
     <nav class="nav-content" aria-label="主导航">
       <div class="nav-group nav-main">
+        <button type="button" class="nav-link nav-theme-btn" :title="isDark ? '切换白天模式' : '切换夜间模式'" @click="toggleTheme">
+          <span class="theme-icon">{{ isDark ? '☀' : '☾' }}</span>
+        </button>
         <router-link to="/hello" class="nav-link">首页</router-link>
         <router-link to="/phone" class="nav-link">手机专区</router-link>
         <router-link to="/computer" class="nav-link">电脑专区</router-link>
@@ -47,6 +26,7 @@
       </div>
 
       <div class="nav-group nav-auth">
+        <!-- <router-link v-if="loginUsername || adminUsername" to="/submit" class="nav-link nav-submit">投稿</router-link> -->
         <template v-if="adminUsername">
           <span class="nav-greeting">{{ adminUsername }}</span>
           <router-link to="/alogin/admin" class="nav-link nav-admin-back">返回后台</router-link>
@@ -98,7 +78,8 @@ export default {
       resizeHandler: null,
       resizeFrame: null,
       loginUsername: '',
-      adminUsername: ''
+      adminUsername: '',
+      isDark: true
     }
   },
   computed: {
@@ -115,6 +96,7 @@ export default {
   },
   mounted() {
     this.loadLoginUsername()
+    this.initTheme()
     this.updateFilterSize()
     this.resizeHandler = () => this.scheduleFilterUpdate()
     window.addEventListener('resize', this.resizeHandler)
@@ -141,6 +123,20 @@ export default {
       this.loginUsername = ''
       this.adminUsername = ''
       this.$router.push('/login')
+    },
+    initTheme() {
+      const saved = localStorage.getItem('theme')
+      this.isDark = saved !== 'light'
+      this.applyTheme()
+    },
+    toggleTheme() {
+      this.isDark = !this.isDark
+      this.applyTheme()
+    },
+    applyTheme() {
+      const theme = this.isDark ? 'dark' : 'light'
+      localStorage.setItem('theme', theme)
+      document.documentElement.setAttribute('data-theme', theme)
     },
     scheduleFilterUpdate() {
       if (this.resizeFrame) {
@@ -258,18 +254,11 @@ export default {
     inset 0 1px 1px rgba(255, 255, 255, 0.42),
     inset 0 -16px 30px rgba(255, 255, 255, 0.08);
   backdrop-filter:
-    var(--liquid-filter)
-    blur(2px)
-    saturate(155%)
-    contrast(1.08)
-    brightness(1.04);
+    var(--liquid-filter) blur(2px) saturate(155%) contrast(1.08) brightness(1.04);
   -webkit-backdrop-filter:
     var(--liquid-filter)
     /* 调整模糊 */
-    blur(4px)
-    saturate(155%)
-    contrast(1.08)
-    brightness(1.04);
+    blur(4px) saturate(155%) contrast(1.08) brightness(1.04);
 }
 
 .nav-content {
@@ -293,6 +282,19 @@ export default {
 
 .nav-auth {
   margin-left: auto;
+}
+
+.nav-submit {
+  border-color: rgba(255, 59, 48, 0.55);
+  background: linear-gradient(180deg, rgba(255, 59, 48, 0.22), rgba(255, 59, 48, 0.06)), rgba(19, 20, 24, 0.58);
+  color: #fff;
+  font-weight: 700;
+}
+
+.nav-submit:hover {
+  border-color: rgba(255, 59, 48, 0.8);
+  background: linear-gradient(180deg, rgba(255, 59, 48, 0.32), rgba(255, 59, 48, 0.1)), rgba(19, 20, 24, 0.68);
+  box-shadow: 0 0 16px rgba(255, 59, 48, 0.2);
 }
 
 .nav-link {
@@ -327,12 +329,10 @@ export default {
   inset: 1px;
   border-radius: inherit;
   background:
-    linear-gradient(
-      145deg,
+    linear-gradient(145deg,
       rgba(255, 255, 255, 0.38),
       rgba(255, 255, 255, 0.05) 44%,
-      rgba(255, 255, 255, 0.2)
-    );
+      rgba(255, 255, 255, 0.2));
   opacity: 0.5;
   pointer-events: none;
 }
@@ -391,5 +391,22 @@ export default {
     padding: 0 12px;
     font-size: 14px;
   }
+}
+
+/* ===== THEME BUTTON ===== */
+.nav-theme-btn {
+  min-width: 40px !important;
+  padding: 0 !important;
+  border: 1px solid rgba(245, 245, 247, 0.16);
+  cursor: pointer;
+}
+
+.nav-theme-btn::before {
+  display: none;
+}
+
+.theme-icon {
+  font-size: 18px;
+  line-height: 1;
 }
 </style>

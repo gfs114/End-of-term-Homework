@@ -82,10 +82,21 @@ export default {
             username: localStorage.getItem('loginUsername') || localStorage.getItem('adminUsername') || '',
             myArticles: [],
             creatorChart: null,
-            creatorResizeHandler: null
+            creatorResizeHandler: null,
+            chartTheme: localStorage.getItem('theme') !== 'light' ? 'dark' : 'light'
         }
     },
     computed: {
+        chartColors() {
+            const dark = this.chartTheme === 'dark'
+            return {
+                textColor: dark ? '#8b949e' : '#687386',
+                axisColor: dark ? '#30363d' : '#e2e8f0',
+                bgColor: dark ? '#161b22' : '#ffffff',
+                legendColor: dark ? '#e6edf3' : '#1f2937',
+                titleColor: dark ? '#f0f0f0' : '#1f2937'
+            }
+        },
         creatorTotalViews() {
             return this.myArticles.reduce((total, article) => total + article.views, 0)
         },
@@ -116,12 +127,21 @@ export default {
         this.creatorResizeHandler = () => this.resizeCreatorChart()
         window.addEventListener('resize', this.creatorResizeHandler)
         this.fetchCreatorArticles()
+        this.chartThemeObserver = new MutationObserver(() => {
+            this.syncChartTheme()
+        })
+        this.chartThemeObserver.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['data-theme']
+        })
     },
     beforeUnmount() {
         if (this.creatorResizeHandler) {
             window.removeEventListener('resize', this.creatorResizeHandler)
         }
-
+        if (this.chartThemeObserver) {
+            this.chartThemeObserver.disconnect()
+        }
         if (this.creatorChart) {
             this.creatorChart.dispose()
             this.creatorChart = null
@@ -175,14 +195,19 @@ export default {
                 this.creatorChart = echarts.init(this.$refs.creatorChart)
             }
 
+            const colors = this.chartColors
             this.creatorChart.setOption({
                 tooltip: {
-                    trigger: 'axis'
+                    trigger: 'axis',
+                    backgroundColor: colors.bgColor,
+                    borderColor: colors.axisColor,
+                    textStyle: { color: colors.legendColor }
                 },
                 legend: {
                     top: 0,
                     right: 0,
-                    data: ['文章总浏览次数', '收藏人数']
+                    data: ['文章总浏览次数', '收藏人数'],
+                    textStyle: { color: colors.legendColor }
                 },
                 grid: {
                     top: 44,
@@ -196,12 +221,17 @@ export default {
                     axisLabel: {
                         interval: 0,
                         overflow: 'truncate',
-                        width: 88
-                    }
+                        width: 88,
+                        color: colors.textColor
+                    },
+                    axisLine: { lineStyle: { color: colors.axisColor } },
+                    axisTick: { lineStyle: { color: colors.axisColor } }
                 },
                 yAxis: {
                     type: 'value',
-                    minInterval: 1
+                    minInterval: 1,
+                    axisLabel: { color: colors.textColor },
+                    splitLine: { lineStyle: { color: colors.axisColor } }
                 },
                 series: [
                     {
@@ -231,8 +261,18 @@ export default {
             if (this.creatorChart) {
                 this.creatorChart.resize()
             }
+        },
+        syncChartTheme() {
+            const theme = localStorage.getItem('theme') || 'dark'
+            const isDark = theme !== 'light'
+            this.chartTheme = isDark ? 'dark' : 'light'
+            if (this.creatorChart) {
+                this.creatorChart.dispose()
+                this.creatorChart = null
+            }
+            this.renderCreatorChart()
         }
-    }
+    },
 }
 </script>
 
@@ -262,7 +302,7 @@ export default {
 
 .articles-head p {
     margin: 0 0 6px;
-    color: #2563eb;
+    color: #687386;
     font-size: 13px;
     font-weight: 700;
 }
@@ -332,7 +372,7 @@ export default {
 }
 
 .creator-metric strong {
-    color: #00a4e8;
+    color: #253247;
     font-size: 38px;
     font-weight: 700;
     line-height: 1.1;

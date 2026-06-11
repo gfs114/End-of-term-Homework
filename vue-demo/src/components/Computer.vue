@@ -2179,7 +2179,7 @@ export default {
   place-items: center;
   min-height: 170px;
   border-radius: 8px;
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(15, 23, 42, 0.08));
+  background: rgba(15, 23, 42, 0.06);
 }
 
 .screen {
@@ -2187,8 +2187,7 @@ export default {
   aspect-ratio: 16 / 10;
   border: 8px solid #172033;
   border-radius: 8px;
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--accent-color) 74%, #fff), #0f172a);
+  background: #0f172a;
   box-shadow: 0 18px 28px rgba(15, 23, 42, 0.18);
 }
 

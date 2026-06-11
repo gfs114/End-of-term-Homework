@@ -1,68 +1,59 @@
 <template>
-  <section class="submit-page">
-    <div class="noise-layer"></div>
-
-    <main class="submit-wrap">
-      <router-link to="/hello" class="back-link">
-        <el-icon><ArrowLeft /></el-icon>
-        返回首页
-      </router-link>
-
-      <section class="submit-hero">
-        <div>
-          <p class="eyebrow">Contribute</p>
-          <h1>{{ isEditMode ? '编辑文章' : '投稿' }}</h1>
-        </div>
-      </section>
-
-      <section class="submit-panel">
-        <el-form
-          ref="submitForm"
-          :model="form"
-          :rules="rules"
-          label-position="top"
-          class="article-form"
-        >
-          <div class="form-grid">
-            <el-form-item label="文章标题" prop="title">
-              <el-input v-model.trim="form.title" maxlength="80" placeholder="请输入文章标题" />
-            </el-form-item>
-          </div>
-
-          <div class="form-grid">
-            <el-form-item label="分类" prop="category">
-              <el-select v-model="form.category" placeholder="请选择分类">
-                <el-option v-for="item in categories" :key="item" :label="item" :value="item" />
-              </el-select>
-            </el-form-item>
-          </div>
-
-          <el-form-item label="文章正文" prop="content">
-            <el-input
-              v-model.trim="form.content"
-              type="textarea"
-              :rows="12"
-              maxlength="5000"
-              show-word-limit
-              placeholder="请输入文章正文"
-            />
+  <div class="editor-app">
+    <main class="editor-body">
+      <div class="editor-container">
+        <el-form ref="submitForm" :model="form" :rules="rules" class="editor-form">
+          <!-- Giant title -->
+          <el-form-item prop="title" class="title-group">
+            <textarea ref="titleInput" v-model="form.title" class="title-input" placeholder="请输入标题（建议 30 字以内）"
+              maxlength="80" rows="1" @input="autoResizeTitle"></textarea>
           </el-form-item>
 
-          <div class="form-actions">
-            <el-form-item class="status-action" label="发布状态" prop="status">
-              <el-segmented v-model="form.status" :options="statusOptions" />
-            </el-form-item>
-            <div class="submit-buttons">
-              <el-button @click="resetForm">重置</el-button>
-              <el-button type="primary" :loading="loading" @click="submitArticle">
-                {{ isEditMode ? '保存修改' : '提交投稿' }}
-              </el-button>
+          <el-form-item prop="content" class="content-group">
+            <div class="content-wrapper">
+              <textarea ref="contentInput" v-model="form.content" class="content-input" placeholder="开始书写..."
+                maxlength="100000"></textarea>
             </div>
-          </div>
+          </el-form-item>
         </el-form>
-      </section>
+      </div>
     </main>
-  </section>
+
+    <div v-if="lastSaveTime" class="save-indicator">
+      <el-icon class="save-icon">
+        <CircleCheck />
+      </el-icon>
+      <span>{{ lastSaveTime }} 已自动保存</span>
+      <span class="save-divider">·</span>
+      <span>{{ contentCharCount }} / 100000 字</span>
+    </div>
+
+    <footer class="bottom-bar">
+      <div class="bottom-bar-inner">
+        <div class="bottom-left">
+          <router-link to="/hello" class="bottom-back-link">
+            <el-icon>
+              <ArrowLeft />
+            </el-icon>
+          </router-link>
+          <el-select v-model="form.category" class="category-select" placeholder="选择分类">
+            <el-option v-for="item in categories" :key="item" :label="item" :value="item" />
+          </el-select>
+        </div>
+        <div class="bottom-right">
+          <button type="button" class="btn btn-draft" :disabled="draftLoading || publishLoading" @click="submitAsDraft">
+            <span v-if="draftLoading" class="btn-spinner"></span>
+            保存草稿
+          </button>
+          <button type="button" class="btn btn-publish" :disabled="draftLoading || publishLoading"
+            @click="submitAsPublished">
+            <span v-if="publishLoading" class="btn-spinner"></span>
+            {{ isEditMode ? '保存修改' : '发布文章' }}
+          </button>
+        </div>
+      </div>
+    </footer>
+  </div>
 </template>
 
 <script>
@@ -87,6 +78,11 @@ function pickArticle(payload) {
   return null
 }
 
+function formatSaveTime() {
+  const now = new Date()
+  return now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+}
+
 export default {
   name: 'ArticleSubmit',
   data() {
@@ -94,16 +90,15 @@ export default {
 
     return {
       loading: false,
+      draftLoading: false,
+      publishLoading: false,
       categories: ['业界', '手机', '电脑', '测评', '视频', 'AI', '苹果', '软件'],
-      statusOptions: [
-        { label: '草稿', value: 'draft' },
-        { label: '已发表', value: 'published' }
-      ],
+      lastSaveTime: '',
+      autoSaveTimer: null,
       form: {
         title: '',
         author: loginUsername,
         category: '业界',
-        status: 'draft',
         content: ''
       },
       rules: {
@@ -114,13 +109,7 @@ export default {
         category: [
           { required: true, message: '请选择分类', trigger: 'change' }
         ],
-        status: [
-          { required: true, message: '请选择发布状态', trigger: 'change' }
-        ],
-        content: [
-          { required: true, message: '请输入文章正文', trigger: 'blur' },
-          { min: 10, message: '正文至少 10 个字符', trigger: 'blur' }
-        ]
+        content: []
       }
     }
   },
@@ -134,6 +123,9 @@ export default {
     },
     isEditMode() {
       return Boolean(this.editArticleId)
+    },
+    contentCharCount() {
+      return String(this.form.content || '').length
     }
   },
   watch: {
@@ -149,6 +141,13 @@ export default {
     if (this.requireLogin() && this.isEditMode) {
       this.loadEditArticle()
     }
+  },
+  mounted() {
+    this.autoResizeTitle()
+    this.startAutoSave()
+  },
+  beforeUnmount() {
+    this.stopAutoSave()
   },
   methods: {
     requireLogin() {
@@ -190,9 +189,9 @@ export default {
         title: article.title || '',
         author: article.author || this.currentUsername,
         category: article.category || '业界',
-        status: article.status || 'draft',
         content: article.content || ''
       }
+      this.$nextTick(() => this.autoResizeTitle())
     },
     readCachedEditArticle() {
       try {
@@ -212,7 +211,7 @@ export default {
         const article = pickArticle(data)
         if (article) return article
       } catch (error) {
-        // Fall back to the list endpoint for APIs that do not expose article detail.
+
       }
 
       const { data } = await http.get('/articles')
@@ -220,12 +219,12 @@ export default {
       if (!article) throw new Error('Article not found')
       return article
     },
-    buildArticlePayload() {
+    buildArticlePayload(status) {
       const payload = {
         title: this.form.title,
         author: this.form.author || this.currentUsername,
         category: this.form.category,
-        status: this.form.status,
+        status,
         content: this.form.content
       }
 
@@ -241,15 +240,26 @@ export default {
         last_editor: this.currentUsername
       }
     },
-    submitArticle() {
+    submitAsDraft() {
       if (!this.requireLogin()) return
-
+      this.doSubmit('draft', 'draftLoading', '草稿保存成功', '草稿保存失败，请稍后再试')
+    },
+    submitAsPublished() {
+      if (!this.requireLogin()) return
+      this.doSubmit('published', 'publishLoading', '投稿提交成功', '投稿提交失败，请稍后再试')
+    },
+    doSubmit(status, loadingRef, successMsg, failMsg) {
+      if (!this.form.title || !this.form.title.trim()) {
+        this.$message.warning({ message: '请输入标题', center: true })
+        return
+      }
       this.$refs.submitForm.validate(async (valid) => {
         if (!valid || this.loading) return
 
         this.loading = true
+        this[loadingRef] = true
         try {
-          const payload = this.buildArticlePayload()
+          const payload = this.buildArticlePayload(status)
           const { data } = this.isEditMode
             ? await http.put(`/articles/${this.editArticleId}`, payload)
             : await http.post('/articles', payload)
@@ -259,13 +269,14 @@ export default {
             this.rememberArticleEditor(articleId)
           }
 
-          this.$message.success(this.isEditMode ? '文章修改成功' : '投稿提交成功')
+          this.$message.success(this.isEditMode ? '文章修改成功' : successMsg)
           this.$router.push(articleId ? `/article/${articleId}` : '/hello')
         } catch (error) {
           const data = error.response && error.response.data
-          this.$message.error((data && (data.message || data.msg)) || (this.isEditMode ? '文章修改失败，请稍后再试' : '投稿提交失败，请稍后再试'))
+          this.$message.error((data && (data.message || data.msg)) || (this.isEditMode ? '文章修改失败，请稍后再试' : failMsg))
         } finally {
           this.loading = false
+          this[loadingRef] = false
         }
       })
     },
@@ -292,180 +303,395 @@ export default {
 
       this.$refs.submitForm.resetFields()
       this.form.author = this.currentUsername
+    },
+    /* ---- Auto-save ---- */
+    startAutoSave() {
+      this.autoSaveTimer = setInterval(() => {
+        this.autoSaveDraft()
+      }, 8000)
+    },
+    stopAutoSave() {
+      if (this.autoSaveTimer) {
+        clearInterval(this.autoSaveTimer)
+        this.autoSaveTimer = null
+      }
+    },
+    autoSaveDraft() {
+      if (!this.form.title && !this.form.content) return
+      try {
+        const draft = {
+          title: this.form.title,
+          author: this.form.author,
+          category: this.form.category,
+          content: this.form.content
+        }
+        sessionStorage.setItem('articleAutoDraft', JSON.stringify(draft))
+        this.lastSaveTime = formatSaveTime()
+      } catch (error) {
+        // Silently fail — auto-save is optional
+      }
+    },
+    /* ---- Title auto-resize ---- */
+    autoResizeTitle() {
+      this.$nextTick(() => {
+        const el = this.$refs.titleInput
+        if (!el) return
+        el.style.height = 'auto'
+        el.style.height = el.scrollHeight + 'px'
+      })
     }
   }
 }
 </script>
+
 <style scoped>
-* {
-  box-sizing: border-box;
-}
+/* ===== RESET ===== */
+.editor-app {
+  --bg-primary: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-tertiary: #21262d;
+  --border-default: #30363d;
+  --border-muted: #21262d;
+  --text-primary: #e6edf3;
+  --text-secondary: #c9d1d9;
+  --text-muted: #8b949e;
+  --text-placeholder: #6e7681;
+  --accent: #58a6ff;
+  --accent-emphasis: #388bfd;
+  --green: #238636;
+  --green-hover: #2ea043;
+  --red: #da3633;
+  --font-mono: "SF Mono", "Fira Code", "Cascadia Code", monospace;
+  --font-sans: "SF Pro Display", "SF Pro Text", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
 
-.submit-page {
-  position: relative;
-  min-height: 100vh;
-  margin: -96px -24px -24px;
-  overflow: hidden;
-  color: #f5f5f7;
-  background:
-    radial-gradient(circle at 18% 8%, rgba(22, 99, 226, 0.22), transparent 28%),
-    radial-gradient(circle at 86% 14%, rgba(255, 69, 58, 0.16), transparent 24%),
-    linear-gradient(180deg, #171719 0%, #0b0b0d 44%, #111113 100%);
-  font-family: "SF Pro Display", "SF Pro Text", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
-}
-
-.noise-layer {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  pointer-events: none;
-  opacity: 0.45;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
-  background-size: 56px 56px;
-}
-
-.submit-wrap {
-  position: relative;
-  z-index: 1;
-  width: min(980px, calc(100% - 40px));
-  margin: 0 auto;
-  padding: 120px 0 72px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .back-link {
-  display: inline-flex;
-  gap: 8px;
+  display: flex;
   align-items: center;
-  margin-bottom: 28px;
-  color: rgba(245, 245, 247, 0.76);
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
   text-decoration: none;
-  font-weight: 700;
+  transition: all 0.2s ease;
 }
 
 .back-link:hover {
-  color: #fff;
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.06);
 }
 
-.submit-hero,
-.submit-panel {
-  border: 1px solid rgba(245, 245, 247, 0.09);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.07);
-  box-shadow: 0 34px 120px rgba(0, 0, 0, 0.34);
-  backdrop-filter: blur(30px) saturate(160%);
-  -webkit-backdrop-filter: blur(30px) saturate(160%);
+.category-select {
+  width: 140px;
 }
 
-.submit-hero {
-  margin-bottom: 24px;
-  padding: clamp(28px, 5vw, 50px);
+/* ===== EDITOR BODY ===== */
+.editor-body {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 160px;
 }
 
-.eyebrow {
-  margin: 0 0 10px;
-  color: #2997ff;
-  font-size: 15px;
-  font-weight: 800;
+.editor-container {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 120px 40px 0;
 }
 
-.submit-hero h1 {
-  margin: 0;
-  color: #fff;
-  font-size: clamp(42px, 7vw, 86px);
-  line-height: 1;
+.editor-form {
+  width: 100%;
 }
 
-.submit-hero p:last-child {
-  max-width: 720px;
-  margin: 18px 0 0;
-  color: rgba(245, 245, 247, 0.72);
-  font-size: 18px;
-  line-height: 1.7;
-}
-
-.submit-panel {
-  padding: clamp(24px, 5vw, 42px);
-}
-
-.article-form :deep(.el-form-item__label) {
-  color: rgba(245, 245, 247, 0.82);
-  font-weight: 700;
-}
-
-.article-form :deep(.el-input__wrapper),
-.article-form :deep(.el-textarea__inner),
-.article-form :deep(.el-select__wrapper) {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(245, 245, 247, 0.14);
-  box-shadow: none;
-}
-
-.article-form :deep(.el-input__inner),
-.article-form :deep(.el-textarea__inner) {
-  color: #f5f5f7;
-}
-
-.article-form :deep(.el-textarea__inner::placeholder),
-.article-form :deep(.el-input__inner::placeholder) {
-  color: rgba(245, 245, 247, 0.42);
-}
-
-.article-form :deep(.el-input__count) {
-  background: transparent;
-  color: rgba(245, 245, 247, 0.46);
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
-}
-
-.form-grid > :only-child {
-  grid-column: 1 / -1;
-}
-
-.form-actions {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 8px;
-}
-
-.status-action {
+.editor-form :deep(.el-form-item) {
   margin-bottom: 0;
 }
 
-.status-action :deep(.el-segmented) {
-  min-width: 96px;
+.editor-form :deep(.el-form-item__error) {
+  color: var(--red);
+  font-size: 13px;
+  padding-left: 4px;
 }
 
-.submit-buttons {
+/* ===== TITLE INPUT ===== */
+.title-group {
+  margin-bottom: 48px !important;
+}
+
+.title-input {
+  display: block;
+  width: 100%;
+  padding: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #ffffff;
+  font-size: 42px;
+  font-weight: 700;
+  font-family: var(--font-sans);
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+  resize: none;
+  overflow: hidden;
+  caret-color: var(--accent);
+}
+
+.title-input::placeholder {
+  color: var(--text-placeholder);
+}
+
+/* ===== CONTENT AREA ===== */
+.content-group {
+  margin-bottom: 0 !important;
+}
+
+.content-wrapper {
+  position: relative;
+}
+
+.content-input {
+  display: block;
+  width: 100%;
+  min-height: 640px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 18px;
+  font-family: var(--font-sans);
+  line-height: 2;
+  letter-spacing: 0.01em;
+  resize: none;
+  caret-color: var(--accent);
+}
+
+.content-input::placeholder {
+  color: var(--text-muted);
+}
+
+.content-input::selection {
+  background: rgba(88, 166, 255, 0.25);
+}
+
+/* ===== FLOATING SAVE INDICATOR ===== */
+.save-indicator {
+  position: fixed;
+  right: 28px;
+  bottom: 104px;
+  z-index: 80;
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 999px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  pointer-events: none;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28);
+  transition: opacity 0.3s ease;
+}
+
+.save-icon {
+  color: var(--green);
+  font-size: 14px;
+}
+
+.save-divider {
+  color: var(--border-default);
+}
+
+/* ===== FIXED BOTTOM BAR ===== */
+.bottom-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 90;
+  height: 80px;
+  background: rgba(22, 27, 34, 0.92);
+  border-top: 1px solid var(--border-default);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.bottom-bar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 860px;
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 40px;
+}
+
+.bottom-left {
+  display: flex;
+  align-items: center;
   gap: 12px;
 }
 
-@media (max-width: 720px) {
-  .submit-wrap {
-    width: min(100% - 24px, 520px);
-    padding-top: 104px;
+.bottom-back-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.bottom-back-link:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.bottom-hint {
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.bottom-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
+/* ===== BUTTONS ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 48px;
+  padding: 0 28px;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  letter-spacing: 0.01em;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-draft {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+}
+
+.btn-draft:hover:not(:disabled) {
+  background: #30363d;
+  border-color: #484f58;
+}
+
+.btn-publish {
+  background: var(--accent);
+  color: #ffffff;
+  border: 1px solid rgba(240, 246, 252, 0.1);
+}
+
+.btn-publish:hover:not(:disabled) {
+  background: var(--accent-emphasis);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(88, 166, 255, 0.25);
+}
+
+.btn-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(0, 0, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ===== ELEMENT PLUS OVERRIDES ===== */
+:deep(.el-select) {
+  --el-fill-color-blank: transparent;
+}
+
+:deep(.el-select .el-input__wrapper) {
+  background: transparent;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  box-shadow: none;
+  transition: all 0.2s ease;
+}
+
+:deep(.el-select .el-input__wrapper:hover) {
+  border-color: #484f58;
+}
+
+:deep(.el-select .el-input__inner) {
+  color: var(--text-secondary);
+}
+
+:deep(.el-select .el-input.is-focus .el-input__wrapper) {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.15);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .editor-container {
+    padding: 80px 20px 0;
   }
 
-  .form-grid {
-    grid-template-columns: 1fr;
-    gap: 0;
+  .bottom-bar-inner {
+    padding: 0 20px;
   }
 
-  .form-actions {
-    align-items: stretch;
-    flex-direction: column;
+  .title-input {
+    font-size: 30px;
   }
 
-  .submit-buttons {
-    justify-content: flex-end;
+  .content-input {
+    font-size: 16px;
+    min-height: 480px;
+  }
+
+  .save-indicator {
+    right: 16px;
+    bottom: 96px;
+  }
+
+  .category-select {
+    width: 110px;
   }
 }
 </style>

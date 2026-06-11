@@ -238,10 +238,7 @@ export default {
   margin: -96px -24px -24px;
   overflow: hidden;
   color: #f5f5f7;
-  background:
-    radial-gradient(circle at 18% 8%, rgba(22, 99, 226, 0.22), transparent 28%),
-    radial-gradient(circle at 86% 14%, rgba(255, 69, 58, 0.16), transparent 24%),
-    linear-gradient(180deg, #171719 0%, #0b0b0d 44%, #111113 100%);
+  background: #0b0b0d;
   font-family: "SF Pro Display", "SF Pro Text", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
 }
 
