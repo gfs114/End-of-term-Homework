@@ -41,6 +41,22 @@ body {
   overflow-x: hidden;
 }
 
+:root {
+  --input-title-color: #ffffff;
+  --input-content-color: #e6edf3;
+  --input-title-placeholder: #6e7681;
+  --input-content-placeholder: #8b949e;
+  --input-selection-bg: rgba(88, 166, 255, 0.25);
+}
+
+html[data-theme="light"] {
+  --input-title-color: #1a1a2e;
+  --input-content-color: #374151;
+  --input-title-placeholder: #9ca3af;
+  --input-content-placeholder: #6b7280;
+  --input-selection-bg: rgba(37, 99, 235, 0.2);
+}
+
 [data-theme="light"] body {
   background: #f5f5f7;
 }
@@ -180,6 +196,72 @@ body {
 [data-theme="dark"] .phone-zone .compare-cell--label,
 [data-theme="dark"] .computer-zone .compare-cell--label {
   color: #8b949e !important;
+}
+
+/* ---- computer-compare-section / phone-compare-section (PK 区) ---- */
+[data-theme="dark"] .computer-compare-section,
+[data-theme="dark"] .phone-compare-section {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28) !important;
+}
+
+[data-theme="dark"] .computer-compare-section .compare-head p,
+[data-theme="dark"] .phone-compare-section .compare-head p {
+  color: #8b949e !important;
+}
+
+[data-theme="dark"] .computer-compare-section .compare-head h2,
+[data-theme="dark"] .phone-compare-section .compare-head h2 {
+  color: #f0f0f0 !important;
+}
+
+[data-theme="dark"] .computer-compare-section .compare-actions button,
+[data-theme="dark"] .phone-compare-section .compare-actions button {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #8b949e !important;
+}
+
+[data-theme="dark"] .computer-compare-section .compare-actions button:hover:not(:disabled),
+[data-theme="dark"] .phone-compare-section .compare-actions button:hover:not(:disabled) {
+  border-color: #58a6ff !important;
+  color: #58a6ff !important;
+}
+
+[data-theme="dark"] .computer-compare-section .compare-actions .compare-add-button,
+[data-theme="dark"] .phone-compare-section .compare-actions .compare-add-button {
+  background: #2563eb !important;
+  border-color: #388bfd !important;
+  color: #fff !important;
+}
+
+[data-theme="dark"] .computer-compare-section .compare-actions .compare-add-button:hover:not(:disabled),
+[data-theme="dark"] .phone-compare-section .compare-actions .compare-add-button:hover:not(:disabled) {
+  background: #388bfd !important;
+  color: #fff !important;
+}
+
+[data-theme="dark"] .computer-compare-section .compare-select,
+[data-theme="dark"] .phone-compare-section .compare-select {
+  color: #8b949e !important;
+}
+
+[data-theme="dark"] .computer-compare-section .compare-select select,
+[data-theme="dark"] .phone-compare-section .compare-select select {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #e6edf3 !important;
+}
+
+[data-theme="dark"] .computer-compare-section .compare-empty,
+[data-theme="dark"] .phone-compare-section .compare-empty {
+  color: #8b949e !important;
+}
+
+[data-theme="dark"] .computer-compare-section .compare-phone-titles,
+[data-theme="dark"] .phone-compare-section .compare-phone-titles {
+  color: #e6edf3 !important;
 }
 
 /* ---- model-section / control-panel / filters ---- */
@@ -543,6 +625,11 @@ body {
   --text-secondary: #374151;
   --text-muted: #6b7280;
   --text-placeholder: #9ca3af;
+  --input-title-color: #1a1a2e;
+  --input-content-color: #374151;
+  --input-title-placeholder: #9ca3af;
+  --input-content-placeholder: #6b7280;
+  --input-selection-bg: rgba(37, 99, 235, 0.2);
 }
 
 [data-theme="light"] .editor-app .title-input {
@@ -553,8 +640,68 @@ body {
   color: #374151 !important;
 }
 
+[data-theme="light"] .editor-app .title-input::placeholder {
+  color: #9ca3af !important;
+}
+
+[data-theme="light"] .editor-app .content-input::placeholder {
+  color: #6b7280 !important;
+}
+
+[data-theme="light"] .editor-app .content-input::selection {
+  background: rgba(37, 99, 235, 0.2) !important;
+}
+
+[data-theme="light"] .bottom-bar {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-top-color: #d0d7de !important;
+}
+
+[data-theme="light"] .save-indicator {
+  background: #ffffff !important;
+  border-color: #d0d7de !important;
+  color: #6b7280 !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
+}
+
 [data-theme="light"] .submit-page {
   background: #f5f5f7 !important;
+}
+
+/* ---- ArticleDetail.vue (light mode extras) ---- */
+[data-theme="light"] .article-detail-page .detail-article {
+  background: rgba(255, 255, 255, 0.85) !important;
+  border-color: rgba(0, 0, 0, 0.06) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
+}
+
+[data-theme="light"] .article-detail-page .detail-article h1 {
+  color: #111827 !important;
+}
+
+[data-theme="light"] .article-detail-page .favorite-button {
+  color: #374151 !important;
+  background: rgba(255, 255, 255, 0.85) !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-theme="light"] .article-detail-page .favorite-button:hover {
+  color: #111827 !important;
+  border-color: rgba(255, 204, 0, 0.6) !important;
+}
+
+[data-theme="light"] .article-detail-page .favorite-button.active {
+  color: #111113 !important;
+  background: #ffd60a !important;
+  border-color: #ffd60a !important;
+}
+
+[data-theme="light"] .article-detail-page .detail-article,
+[data-theme="light"] .article-detail-page .detail-state {
+  background: rgba(255, 255, 255, 0.85) !important;
+  border-color: rgba(0, 0, 0, 0.06) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
 }
 
 [data-theme="light"] .noise-layer {

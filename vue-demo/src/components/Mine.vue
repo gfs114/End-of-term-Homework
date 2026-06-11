@@ -2,9 +2,6 @@
     <section :class="['mine-page', { 'dark-mode': isDarkMode }]">
         <header class="profile-card" aria-label="个人资料">
             <div class="profile-main">
-                <div class="profile-avatar" aria-hidden="true">
-                    <span>{{ username.slice(0, 1) }}</span>
-                </div>
                 <div class="profile-copy">
                     <h1>{{ username }}</h1>
                     <div class="profile-info">
@@ -22,17 +19,20 @@
                 </div>
             </div>
 
-            <div class="profile-art" aria-hidden="true">
+            <!-- <div class="profile-art" aria-hidden="true">
                 <span></span>
                 <span></span>
-            </div>
+            </div> -->
 
             <div class="profile-actions">
                 <!-- <button type="button" class="theme-toggle" @click="toggleMineTheme">
                     {{ themeButtonText }}
                 </button> -->
-                <el-button type="primary" class="change-button" @click="openPasswordDialog">
+                <el-button type="primary" class="change-button" @click="openProfileDialog">
                     编辑资料
+                </el-button>
+                <el-button class="change-button" @click="openPasswordOnlyDialog">
+                    修改密码
                 </el-button>
             </div>
         </header>
@@ -53,8 +53,7 @@
                 <section id="my-articles" class="my-articles-card">
                     <div class="articles-head">
                         <div>
-                            <p>我的内容</p>
-                            <h2>我的文章管理</h2>
+                            <h2>文章管理</h2>
                         </div>
                         <el-button type="primary" plain @click="openArticleDialog('create')">新增文章</el-button>
                     </div>
@@ -65,9 +64,6 @@
 
                     <div v-else class="article-manage-list">
                         <article v-for="article in myArticles" :key="article.id" class="article-manage-row">
-                            <div class="post-avatar" aria-hidden="true">
-                                <span>{{ username.slice(0, 1) }}</span>
-                            </div>
                             <div class="post-body">
                                 <div class="post-author">
                                     <strong>{{ username }}</strong>
@@ -104,8 +100,7 @@
                 <section id="favorite-articles" class="my-articles-card">
                     <div class="articles-head">
                         <div>
-                            <p>我的收藏</p>
-                            <h2>收藏文章</h2>
+                            <h2>我的收藏</h2>
                         </div>
                     </div>
 
@@ -131,8 +126,7 @@
                 <section id="favorite-devices" class="my-articles-card">
                     <div class="articles-head">
                         <div>
-                            <p>我的设备</p>
-                            <h2>我喜欢的设备</h2>
+                            <h2>喜欢设备</h2>
                         </div>
                     </div>
 
@@ -164,29 +158,21 @@
                     <p>生动有趣的个人简介更容易受到关注</p>
                 </section>
 
-                <section class="side-card">
-                    <h2>我的印记</h2>
-                    <p>你暂时还没有获得印记</p>
-                </section>
 
-                <section class="side-card utility-card">
+                <!-- <section class="side-card utility-card">
                     <h2>常用功能</h2>
                     <button type="button" @click="goSubmit">
-                        <span class="utility-icon blue">帖</span>
                         <strong>帖子管理</strong>
-                        <small>发布和管理我的文章</small>
                     </button>
                     <button type="button" @click="openPasswordDialog">
-                        <span class="utility-icon violet">锁</span>
                         <strong>隐私设置</strong>
                         <small>管理账号密码</small>
                     </button>
                     <button type="button" @click="openEmailDialog">
-                        <span class="utility-icon cyan">邮</span>
                         <strong>账号设置</strong>
                         <small>管理我的账号信息</small>
                     </button>
-                </section>
+                </section> -->
             </aside>
         </div>
 
@@ -194,30 +180,38 @@
             <div v-if="passwordDialogVisible" class="password-overlay" @click.self="closePasswordDialog">
                 <div class="password-dialog">
                     <div class="dialog-head">
-                        <h2>修改密码</h2>
+                        <h2>{{ dialogMode === 'profile' ? '编辑资料' : '修改密码' }}</h2>
                         <button type="button" class="dialog-close" @click="closePasswordDialog">×</button>
                     </div>
 
                     <el-form ref="passwordForm" :model="passwordForm" :rules="rules" label-position="top"
                         class="password-form">
-                        <el-form-item label="原密码" prop="oldPassword">
-                            <el-input v-model="passwordForm.oldPassword" type="password" show-password
-                                placeholder="请输入原密码" />
-                        </el-form-item>
+                        <template v-if="dialogMode === 'profile'">
+                            <el-form-item label="用户名" prop="username">
+                                <el-input v-model.trim="passwordForm.username" placeholder="请输入新用户名" maxlength="16" />
+                            </el-form-item>
+                        </template>
 
-                        <el-form-item label="新密码" prop="newPassword">
-                            <el-input v-model="passwordForm.newPassword" type="password" show-password
-                                placeholder="请输入新密码" />
-                        </el-form-item>
+                        <template v-if="dialogMode === 'password'">
+                            <el-form-item label="原密码" prop="oldPassword">
+                                <el-input v-model="passwordForm.oldPassword" type="password" show-password
+                                    placeholder="请输入原密码" />
+                            </el-form-item>
 
-                        <el-form-item label="确认新密码" prop="confirmPassword">
-                            <el-input v-model="passwordForm.confirmPassword" type="password" show-password
-                                placeholder="请再次输入新密码" />
-                        </el-form-item>
+                            <el-form-item label="新密码" prop="newPassword">
+                                <el-input v-model="passwordForm.newPassword" type="password" show-password
+                                    placeholder="请输入新密码" />
+                            </el-form-item>
+
+                            <el-form-item label="确认新密码" prop="confirmPassword">
+                                <el-input v-model="passwordForm.confirmPassword" type="password" show-password
+                                    placeholder="请再次输入新密码" />
+                            </el-form-item>
+                        </template>
 
                         <el-button type="primary" class="submit-button" :loading="loading"
                             @click="handleChangePassword">
-                            保存新密码
+                            {{ dialogMode === 'profile' ? '保存修改' : '修改密码' }}
                         </el-button>
                     </el-form>
                 </div>
@@ -369,6 +363,7 @@ export default {
             articlesError: '',
             devicesError: '',
             passwordDialogVisible: false,
+            dialogMode: 'profile',
             emailDialogVisible: false,
             articleDialogVisible: false,
             articleDialogMode: 'create',
@@ -390,6 +385,7 @@ export default {
                 email: ''
             },
             passwordForm: {
+                username: '',
                 oldPassword: '',
                 newPassword: '',
                 confirmPassword: ''
@@ -414,6 +410,9 @@ export default {
                 ]
             },
             rules: {
+                username: [
+                    { min: 2, max: 16, message: '用户名长度为 2 到 16 个字符', trigger: 'blur' }
+                ],
                 oldPassword: [
                     { required: true, message: '请输入原密码', trigger: 'blur' }
                 ],
@@ -434,7 +433,6 @@ export default {
         },
         profileFields() {
             return [
-                { label: '用户名', value: this.username },
                 {
                     label: '邮箱',
                     value: this.hasEmail ? this.email : '暂未绑定邮箱',
@@ -793,7 +791,13 @@ export default {
                 this.devicesLoading = false
             }
         },
-        openPasswordDialog() {
+        openProfileDialog() {
+            this.dialogMode = 'profile'
+            this.passwordForm.username = this.username
+            this.passwordDialogVisible = true
+        },
+        openPasswordOnlyDialog() {
+            this.dialogMode = 'password'
             this.passwordDialogVisible = true
         },
         openEmailDialog() {
@@ -825,31 +829,62 @@ export default {
             callback()
         },
         handleChangePassword() {
-            this.$refs.passwordForm.validate(async (valid) => {
-                if (!valid || this.loading) {
-                    return
-                }
+            const formRef = this.$refs.passwordForm
+            if (!formRef || this.loading) return
 
-                this.loading = true
+            formRef.validate(async (valid) => {
+                if (!valid) return
 
-                try {
-                    const response = await http.post('/users/password', this.passwordPayload)
-                    const result = response.data || response
-
-                    if (result.code === '200' || result.code === 200) {
-                        this.$message.success(result.message || result.msg || '密码修改成功')
-                        this.closePasswordDialog()
-                    } else {
-                        this.$message.error(result.message || result.msg || '密码修改失败')
-                    }
-                } catch (error) {
-                    const data = error.response && error.response.data
-                    this.$message.error((data && (data.message || data.msg)) || '密码修改失败')
-                    console.log(error)
-                } finally {
-                    this.loading = false
+                if (this.dialogMode === 'profile') {
+                    this.doUpdateProfile()
+                } else {
+                    this.doChangePassword()
                 }
             })
+        },
+        async doUpdateProfile() {
+            this.loading = true
+            try {
+                const user = await this.findCurrentUser()
+                if (!user) {
+                    this.$message.error('未找到当前用户')
+                    return
+                }
+                const newUsername = this.passwordForm.username.trim()
+                if (newUsername && newUsername !== user.username) {
+                    await http.put(`/users/${user.id}`, {
+                        username: newUsername,
+                        email: this.email || ''
+                    })
+                    localStorage.setItem('loginUsername', newUsername)
+                    this.username = newUsername
+                }
+                this.$message.success('资料修改成功')
+                this.closePasswordDialog()
+            } catch (error) {
+                const data = error.response && error.response.data
+                this.$message.error((data && (data.message || data.msg)) || '资料修改失败')
+            } finally {
+                this.loading = false
+            }
+        },
+        async doChangePassword() {
+            this.loading = true
+            try {
+                const response = await http.post('/users/password', this.passwordPayload)
+                const result = response.data || response
+                if (result.code !== '200' && result.code !== 200) {
+                    this.$message.error(result.message || result.msg || '密码修改失败')
+                    return
+                }
+                this.$message.success('密码修改成功')
+                this.closePasswordDialog()
+            } catch (error) {
+                const data = error.response && error.response.data
+                this.$message.error((data && (data.message || data.msg)) || '密码修改失败')
+            } finally {
+                this.loading = false
+            }
         },
         async findCurrentUser() {
             const username = this.getCurrentUsername()
@@ -901,6 +936,7 @@ export default {
         },
         resetPasswordForm() {
             this.passwordForm = {
+                username: this.username,
                 oldPassword: '',
                 newPassword: '',
                 confirmPassword: ''
@@ -974,29 +1010,6 @@ export default {
     align-items: center;
     gap: 22px;
     min-width: 0;
-}
-
-.profile-avatar,
-.post-avatar {
-    display: grid;
-    place-items: center;
-    flex: 0 0 auto;
-    color: #fff;
-    border-radius: 50%;
-    font-weight: 900;
-    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.18), 0 10px 28px rgba(0, 0, 0, 0.35);
-}
-
-.profile-avatar {
-    width: 96px;
-    height: 96px;
-    font-size: 34px;
-}
-
-.post-avatar {
-    width: 48px;
-    height: 48px;
-    font-size: 17px;
 }
 
 .profile-copy {
@@ -1138,8 +1151,6 @@ export default {
 }
 
 .mine-sidebar {
-    position: sticky;
-    top: 24px;
     display: grid;
     gap: 24px;
 }
@@ -1167,7 +1178,7 @@ export default {
 
 .utility-card {
     display: grid;
-    gap: 18px;
+    gap: 20px;
 }
 
 .utility-card button {
@@ -1264,7 +1275,6 @@ export default {
 
 .article-manage-row {
     display: grid;
-    grid-template-columns: 48px minmax(0, 1fr);
     gap: 14px;
     align-items: start;
     padding: 14px 0 20px;
@@ -1541,12 +1551,6 @@ export default {
         align-items: flex-start;
     }
 
-    .profile-avatar {
-        width: 70px;
-        height: 70px;
-        font-size: 24px;
-    }
-
     .profile-art {
         opacity: 0.3;
     }
@@ -1578,10 +1582,6 @@ export default {
 
     .article-manage-row {
         grid-template-columns: 1fr;
-    }
-
-    .post-avatar {
-        display: none;
     }
 
     .article-meta,

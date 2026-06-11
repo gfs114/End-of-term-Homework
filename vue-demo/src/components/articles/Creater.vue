@@ -279,7 +279,6 @@ export default {
 <style scoped>
 .my-articles-card {
     margin-top: 22px;
-    padding: 24px;
     border: 1px solid #dbe7f3;
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.92);

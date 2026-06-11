@@ -473,3 +473,66 @@ export default {
   }
 }
 </style>
+
+<style>
+/* ===== DARK MODE OVERRIDES ===== */
+[data-theme="dark"] .assistant-panel {
+  border-color: #30363d;
+  background: #161b22;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .assistant-head {
+  background: #1f6feb;
+}
+
+[data-theme="dark"] .assistant-messages {
+  background: #161b22;
+}
+
+[data-theme="dark"] .assistant-welcome h3 {
+  color: #58a6ff;
+}
+
+[data-theme="dark"] .assistant-welcome p {
+  color: #8b949e;
+}
+
+[data-theme="dark"] .assistant-message--assistant {
+  color: #e6edf3;
+  background: #21262d;
+  border-color: #30363d;
+}
+
+[data-theme="dark"] .assistant-message--user {
+  color: #fff;
+  background: #2563eb;
+}
+
+[data-theme="dark"] .assistant-suggestions button {
+  color: #8b949e;
+  background: #21262d;
+}
+
+[data-theme="dark"] .assistant-suggestions button:hover {
+  color: #58a6ff;
+  background: #1a2332;
+}
+
+[data-theme="dark"] .assistant-input {
+  border-top-color: #30363d;
+  background: #0d1117;
+}
+
+[data-theme="dark"] .assistant-input input {
+  color: #e6edf3;
+}
+
+[data-theme="dark"] .assistant-input input::placeholder {
+  color: #484f58;
+}
+
+[data-theme="dark"] .assistant-typing-dots i {
+  background: #8b949e;
+}
+</style>

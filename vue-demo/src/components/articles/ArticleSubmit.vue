@@ -3,7 +3,6 @@
     <main class="editor-body">
       <div class="editor-container">
         <el-form ref="submitForm" :model="form" :rules="rules" class="editor-form">
-          <!-- Giant title -->
           <el-form-item prop="title" class="title-group">
             <textarea ref="titleInput" v-model="form.title" class="title-input" placeholder="请输入标题（建议 30 字以内）"
               maxlength="80" rows="1" @input="autoResizeTitle"></textarea>
@@ -20,9 +19,7 @@
     </main>
 
     <div v-if="lastSaveTime" class="save-indicator">
-      <el-icon class="save-icon">
-        <CircleCheck />
-      </el-icon>
+      <el-icon class="save-icon"><CircleCheck /></el-icon>
       <span>{{ lastSaveTime }} 已自动保存</span>
       <span class="save-divider">·</span>
       <span>{{ contentCharCount }} / 100000 字</span>
@@ -32,9 +29,7 @@
       <div class="bottom-bar-inner">
         <div class="bottom-left">
           <router-link to="/hello" class="bottom-back-link">
-            <el-icon>
-              <ArrowLeft />
-            </el-icon>
+            <el-icon><ArrowLeft /></el-icon>
           </router-link>
           <el-select v-model="form.category" class="category-select" placeholder="选择分类">
             <el-option v-for="item in categories" :key="item" :label="item" :value="item" />
@@ -87,7 +82,6 @@ export default {
   name: 'ArticleSubmit',
   data() {
     const loginUsername = localStorage.getItem('loginUsername') || ''
-
     return {
       loading: false,
       draftLoading: false,
@@ -155,7 +149,6 @@ export default {
         this.form.author = this.currentUsername
         return true
       }
-
       this.$message.warning('请先登录后再投稿')
       this.$router.replace({
         path: '/login',
@@ -165,12 +158,10 @@ export default {
     },
     async loadEditArticle() {
       if (!this.editArticleId) return
-
       const cachedArticle = this.readCachedEditArticle()
       if (cachedArticle) {
         this.fillArticleForm(cachedArticle)
       }
-
       this.loading = true
       try {
         const article = await this.fetchEditArticleById()
@@ -199,7 +190,6 @@ export default {
         if (String(cached?.articleId) !== String(this.editArticleId)) {
           return null
         }
-
         return cached.article || null
       } catch (error) {
         return null
@@ -210,10 +200,7 @@ export default {
         const { data } = await http.get(`/articles/${this.editArticleId}`)
         const article = pickArticle(data)
         if (article) return article
-      } catch (error) {
-
-      }
-
+      } catch (error) {}
       const { data } = await http.get('/articles')
       const article = pickList(data).find((item) => String(item.id) === String(this.editArticleId))
       if (!article) throw new Error('Article not found')
@@ -227,11 +214,7 @@ export default {
         status,
         content: this.form.content
       }
-
-      if (!this.isEditMode) {
-        return payload
-      }
-
+      if (!this.isEditMode) return payload
       return {
         ...payload,
         editor: this.currentUsername,
@@ -255,7 +238,6 @@ export default {
       }
       this.$refs.submitForm.validate(async (valid) => {
         if (!valid || this.loading) return
-
         this.loading = true
         this[loadingRef] = true
         try {
@@ -264,11 +246,9 @@ export default {
             ? await http.put(`/articles/${this.editArticleId}`, payload)
             : await http.post('/articles', payload)
           const articleId = this.isEditMode ? this.editArticleId : pickCreatedId(data)
-
           if (this.isEditMode) {
             this.rememberArticleEditor(articleId)
           }
-
           this.$message.success(this.isEditMode ? '文章修改成功' : successMsg)
           this.$router.push(articleId ? `/article/${articleId}` : '/hello')
         } catch (error) {
@@ -282,7 +262,6 @@ export default {
     },
     rememberArticleEditor(articleId) {
       if (!articleId || !this.currentUsername) return
-
       try {
         const storageKey = 'articleEditorMeta'
         const meta = JSON.parse(localStorage.getItem(storageKey) || '{}')
@@ -291,20 +270,16 @@ export default {
           updatedAt: new Date().toISOString()
         }
         localStorage.setItem(storageKey, JSON.stringify(meta))
-      } catch (error) {
-        // Local edit metadata is only a display fallback.
-      }
+      } catch (error) {}
     },
     resetForm() {
       if (this.isEditMode) {
         this.loadEditArticle()
         return
       }
-
       this.$refs.submitForm.resetFields()
       this.form.author = this.currentUsername
     },
-    /* ---- Auto-save ---- */
     startAutoSave() {
       this.autoSaveTimer = setInterval(() => {
         this.autoSaveDraft()
@@ -327,11 +302,8 @@ export default {
         }
         sessionStorage.setItem('articleAutoDraft', JSON.stringify(draft))
         this.lastSaveTime = formatSaveTime()
-      } catch (error) {
-        // Silently fail — auto-save is optional
-      }
+      } catch (error) {}
     },
-    /* ---- Title auto-resize ---- */
     autoResizeTitle() {
       this.$nextTick(() => {
         const el = this.$refs.titleInput
@@ -344,37 +316,64 @@ export default {
 }
 </script>
 
-<style scoped>
-/* ===== RESET ===== */
-.editor-app {
-  --bg-primary: #0d1117;
-  --bg-secondary: #161b22;
-  --bg-tertiary: #21262d;
-  --border-default: #30363d;
-  --border-muted: #21262d;
-  --text-primary: #e6edf3;
-  --text-secondary: #c9d1d9;
-  --text-muted: #8b949e;
-  --text-placeholder: #6e7681;
-  --accent: #58a6ff;
-  --accent-emphasis: #388bfd;
-  --green: #238636;
-  --green-hover: #2ea043;
-  --red: #da3633;
-  --font-mono: "SF Mono", "Fira Code", "Cascadia Code", monospace;
-  --font-sans: "SF Pro Display", "SF Pro Text", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
+<style>
+/* ===== THEME CSS VARIABLES — global (non-scoped), survives scoped boundaries ===== */
+:root {
+  --edit-bg-primary: #0d1117;
+  --edit-bg-secondary: #161b22;
+  --edit-bg-tertiary: #21262d;
+  --edit-border-default: #30363d;
+  --edit-text-primary: #e6edf3;
+  --edit-text-secondary: #c9d1d9;
+  --edit-text-muted: #8b949e;
+  --edit-text-placeholder: #6e7681;
+  --edit-input-title-color: #ffffff;
+  --edit-input-content-color: #e6edf3;
+  --edit-input-title-placeholder: #6e7681;
+  --edit-input-content-placeholder: #8b949e;
+  --edit-input-selection-bg: rgba(88, 166, 255, 0.25);
+  --edit-accent: #58a6ff;
+  --edit-accent-emphasis: #388bfd;
+  --edit-green: #238636;
+  --edit-green-hover: #2ea043;
+  --edit-red: #da3633;
+  --edit-bottom-bar-bg: rgba(22, 27, 34, 0.92);
+}
 
+html[data-theme="light"] {
+  --edit-bg-primary: #f5f5f7;
+  --edit-bg-secondary: #ffffff;
+  --edit-bg-tertiary: #e8ecf1;
+  --edit-border-default: #d0d7de;
+  --edit-text-primary: #1a1a2e;
+  --edit-text-secondary: #374151;
+  --edit-text-muted: #6b7280;
+  --edit-text-placeholder: #9ca3af;
+  --edit-input-title-color: #1a1a2e;
+  --edit-input-content-color: #374151;
+  --edit-input-title-placeholder: #9ca3af;
+  --edit-input-content-placeholder: #6b7280;
+  --edit-input-selection-bg: rgba(37, 99, 235, 0.2);
+  --edit-accent: #2563eb;
+  --edit-accent-emphasis: #1d4ed8;
+  --edit-green: #238636;
+  --edit-green-hover: #2ea043;
+  --edit-red: #da3633;
+  --edit-bottom-bar-bg: rgba(255, 255, 255, 0.92);
+}
+</style>
+
+<style scoped>
+/* ===== RESET & LAYOUT ===== */
+.editor-app {
   position: fixed;
   inset: 0;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  font-family: var(--font-sans);
+  background: var(--edit-bg-primary);
+  color: var(--edit-text-primary);
+  font-family: "SF Pro Display", "SF Pro Text", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -385,22 +384,21 @@ export default {
   justify-content: center;
   width: 36px;
   height: 36px;
-  color: var(--text-muted);
-  border-radius: var(--radius-sm);
+  color: var(--edit-text-muted);
+  border-radius: 8px;
   text-decoration: none;
   transition: all 0.2s ease;
 }
 
 .back-link:hover {
-  color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.06);
+  color: var(--edit-text-primary);
+  background: rgba(128, 128, 128, 0.1);
 }
 
 .category-select {
   width: 140px;
 }
 
-/* ===== EDITOR BODY ===== */
 .editor-body {
   flex: 1;
   overflow-y: auto;
@@ -422,7 +420,7 @@ export default {
 }
 
 .editor-form :deep(.el-form-item__error) {
-  color: var(--red);
+  color: var(--edit-red);
   font-size: 13px;
   padding-left: 4px;
 }
@@ -439,22 +437,22 @@ export default {
   background: transparent;
   border: none;
   outline: none;
-  color: #ffffff;
+  color: var(--edit-input-title-color);
   font-size: 42px;
   font-weight: 700;
-  font-family: var(--font-sans);
+  font-family: inherit;
   line-height: 1.25;
   letter-spacing: -0.025em;
   resize: none;
   overflow: hidden;
-  caret-color: var(--accent);
+  caret-color: var(--edit-accent);
 }
 
 .title-input::placeholder {
-  color: var(--text-placeholder);
+  color: var(--edit-input-title-placeholder);
 }
 
-/* ===== CONTENT AREA ===== */
+/* ===== CONTENT INPUT ===== */
 .content-group {
   margin-bottom: 0 !important;
 }
@@ -471,21 +469,21 @@ export default {
   background: transparent;
   border: none;
   outline: none;
-  color: var(--text-primary);
+  color: var(--edit-input-content-color);
   font-size: 18px;
-  font-family: var(--font-sans);
+  font-family: inherit;
   line-height: 2;
   letter-spacing: 0.01em;
   resize: none;
-  caret-color: var(--accent);
+  caret-color: var(--edit-accent);
 }
 
 .content-input::placeholder {
-  color: var(--text-muted);
+  color: var(--edit-input-content-placeholder);
 }
 
 .content-input::selection {
-  background: rgba(88, 166, 255, 0.25);
+  background: var(--edit-input-selection-bg);
 }
 
 /* ===== FLOATING SAVE INDICATOR ===== */
@@ -498,10 +496,10 @@ export default {
   align-items: center;
   gap: 8px;
   padding: 8px 16px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-default);
+  background: var(--edit-bg-secondary);
+  border: 1px solid var(--edit-border-default);
   border-radius: 999px;
-  color: var(--text-muted);
+  color: var(--edit-text-muted);
   font-size: 12px;
   font-weight: 500;
   pointer-events: none;
@@ -510,12 +508,12 @@ export default {
 }
 
 .save-icon {
-  color: var(--green);
+  color: var(--edit-green);
   font-size: 14px;
 }
 
 .save-divider {
-  color: var(--border-default);
+  color: var(--edit-border-default);
 }
 
 /* ===== FIXED BOTTOM BAR ===== */
@@ -526,8 +524,8 @@ export default {
   bottom: 0;
   z-index: 90;
   height: 80px;
-  background: rgba(22, 27, 34, 0.92);
-  border-top: 1px solid var(--border-default);
+  background: var(--edit-bottom-bar-bg);
+  border-top: 1px solid var(--edit-border-default);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
@@ -554,22 +552,15 @@ export default {
   justify-content: center;
   width: 36px;
   height: 36px;
-  color: var(--text-muted);
-  border-radius: var(--radius-sm);
+  color: var(--edit-text-muted);
+  border-radius: 8px;
   text-decoration: none;
   transition: all 0.2s ease;
 }
 
 .bottom-back-link:hover {
-  color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.bottom-hint {
-  color: var(--text-muted);
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: 0.01em;
+  color: var(--edit-text-primary);
+  background: rgba(128, 128, 128, 0.1);
 }
 
 .bottom-right {
@@ -591,7 +582,7 @@ export default {
   border-radius: 10px;
   font-size: 15px;
   font-weight: 600;
-  font-family: var(--font-sans);
+  font-family: inherit;
   cursor: pointer;
   transition: all 0.25s ease;
   letter-spacing: 0.01em;
@@ -603,24 +594,23 @@ export default {
 }
 
 .btn-draft {
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-default);
-  color: var(--text-secondary);
+  background: var(--edit-bg-tertiary);
+  border: 1px solid var(--edit-border-default);
+  color: var(--edit-text-secondary);
 }
 
 .btn-draft:hover:not(:disabled) {
-  background: #30363d;
-  border-color: #484f58;
+  background: var(--edit-border-default);
 }
 
 .btn-publish {
-  background: var(--accent);
+  background: var(--edit-accent);
   color: #ffffff;
   border: 1px solid rgba(240, 246, 252, 0.1);
 }
 
 .btn-publish:hover:not(:disabled) {
-  background: var(--accent-emphasis);
+  background: var(--edit-accent-emphasis);
   transform: translateY(-1px);
   box-shadow: 0 4px 14px rgba(88, 166, 255, 0.25);
 }
@@ -628,16 +618,14 @@ export default {
 .btn-spinner {
   width: 16px;
   height: 16px;
-  border: 2px solid rgba(0, 0, 255, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.3);
   border-top-color: #fff;
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
 }
 
 @keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+  to { transform: rotate(360deg); }
 }
 
 /* ===== ELEMENT PLUS OVERRIDES ===== */
@@ -646,23 +634,23 @@ export default {
 }
 
 :deep(.el-select .el-input__wrapper) {
-  background: transparent;
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-sm);
+  background: var(--edit-bg-tertiary);
+  border: 1px solid var(--edit-border-default);
+  border-radius: 8px;
   box-shadow: none;
   transition: all 0.2s ease;
 }
 
 :deep(.el-select .el-input__wrapper:hover) {
-  border-color: #484f58;
+  border-color: var(--edit-text-muted);
 }
 
 :deep(.el-select .el-input__inner) {
-  color: var(--text-secondary);
+  color: var(--edit-text-secondary);
 }
 
 :deep(.el-select .el-input.is-focus .el-input__wrapper) {
-  border-color: var(--accent);
+  border-color: var(--edit-accent);
   box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.15);
 }
 

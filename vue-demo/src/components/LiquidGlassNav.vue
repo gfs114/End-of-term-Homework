@@ -16,9 +16,6 @@
 
     <nav class="nav-content" aria-label="主导航">
       <div class="nav-group nav-main">
-        <button type="button" class="nav-link nav-theme-btn" :title="isDark ? '切换白天模式' : '切换夜间模式'" @click="toggleTheme">
-          <span class="theme-icon">{{ isDark ? '☀' : '☾' }}</span>
-        </button>
         <router-link to="/hello" class="nav-link">首页</router-link>
         <router-link to="/phone" class="nav-link">手机专区</router-link>
         <router-link to="/computer" class="nav-link">电脑专区</router-link>
@@ -28,15 +25,24 @@
       <div class="nav-group nav-auth">
         <!-- <router-link v-if="loginUsername || adminUsername" to="/submit" class="nav-link nav-submit">投稿</router-link> -->
         <template v-if="adminUsername">
+          <button type="button" class="nav-link nav-theme-btn" :title="isDark ? '切换白天模式' : '切换夜间模式'" @click="toggleTheme">
+            <span class="theme-icon">{{ isDark ? '☀' : '☾' }}</span>
+          </button>
           <span class="nav-greeting">{{ adminUsername }}</span>
           <router-link to="/alogin/admin" class="nav-link nav-admin-back">返回后台</router-link>
           <button type="button" class="nav-link nav-button" @click="handleLogout">登出</button>
         </template>
         <template v-if="loginUsername">
+          <button type="button" class="nav-link nav-theme-btn" :title="isDark ? '切换白天模式' : '切换夜间模式'" @click="toggleTheme">
+            <span class="theme-icon">{{ isDark ? '☀' : '☾' }}</span>
+          </button>
           <span class="nav-greeting">你好，{{ loginUsername }}</span>
           <button type="button" class="nav-link nav-button" @click="handleLogout">登出</button>
         </template>
         <template v-if="!loginUsername && !adminUsername">
+          <button type="button" class="nav-link nav-theme-btn" :title="isDark ? '切换白天模式' : '切换夜间模式'" @click="toggleTheme">
+            <span class="theme-icon">{{ isDark ? '☀' : '☾' }}</span>
+          </button>
           <router-link to="/login" class="nav-link">登录</router-link>
           <router-link to="/register" class="nav-link">注册</router-link>
         </template>
