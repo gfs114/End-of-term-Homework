@@ -154,8 +154,11 @@
 
             <aside class="mine-sidebar" aria-label="个人侧栏">
                 <section class="side-card">
-                    <h2>我的简介</h2>
-                    <p>生动有趣的个人简介更容易受到关注</p>
+                    <div class="bio-header">
+                        <h2>我的简介</h2>
+                        <button type="button" class="bio-edit-btn" @click="openBioEdit">编辑</button>
+                    </div>
+                    <p>{{ bio || '生动有趣的个人简介更容易受到关注' }}</p>
                 </section>
 
 
@@ -278,6 +281,25 @@
                 </div>
             </div>
         </transition>
+
+        <transition name="password-modal">
+            <div v-if="bioDialogVisible" class="password-overlay" @click.self="closeBioEdit">
+                <div class="password-dialog">
+                    <div class="dialog-head">
+                        <h2>编辑简介</h2>
+                        <button type="button" class="dialog-close" @click="closeBioEdit">×</button>
+                    </div>
+
+                    <div class="bio-edit-form">
+                        <textarea v-model.trim="bioForm" class="bio-textarea" placeholder="写一段个人简介..." maxlength="200" rows="4"></textarea>
+                        <div class="bio-char-count">{{ bioForm.length }} / 200</div>
+                        <el-button type="primary" class="submit-button" :loading="loading" @click="handleSaveBio">
+                            保存简介
+                        </el-button>
+                    </div>
+                </div>
+            </div>
+        </transition>
     </section>
 </template>
 
@@ -375,6 +397,9 @@ export default {
             theme: localStorage.getItem('theme') || 'dark',
             username: currentUsername || '未登录用户',
             email: '',
+            bio: '',
+            bioForm: '',
+            bioDialogVisible: false,
             currentTab: 'articles',
             allArticles: [],
             myArticles: [],
@@ -666,6 +691,7 @@ export default {
             try {
                 const user = await this.findCurrentUser()
                 this.syncEmailFromProfile(user)
+                this.bio = String((user && user.bio) || '').trim()
             } catch (error) {
                 console.log(error)
             }
@@ -820,6 +846,38 @@ export default {
             this.emailDialogVisible = false
             this.resetEmailForm()
         },
+        openBioEdit() {
+            this.bioForm = this.bio
+            this.bioDialogVisible = true
+        },
+        closeBioEdit() {
+            if (this.loading) return
+            this.bioDialogVisible = false
+        },
+        async handleSaveBio() {
+            this.loading = true
+            try {
+                const user = await this.findCurrentUser()
+                if (!user) {
+                    this.$message.error('未找到当前用户')
+                    return
+                }
+                const bio = this.bioForm.trim()
+                await http.put(`/users/${user.id}`, {
+                    username: user.username,
+                    email: this.email || '',
+                    bio
+                })
+                this.bio = bio
+                this.$message.success('简介修改成功')
+                this.closeBioEdit()
+            } catch (error) {
+                const data = error.response && error.response.data
+                this.$message.error((data && (data.message || data.msg)) || '简介保存失败')
+            } finally {
+                this.loading = false
+            }
+        },
         validateConfirmPassword(rule, value, callback) {
             if (value !== this.passwordForm.newPassword) {
                 callback(new Error('两次输入的新密码不一致'))
@@ -854,10 +912,17 @@ export default {
                 if (newUsername && newUsername !== user.username) {
                     await http.put(`/users/${user.id}`, {
                         username: newUsername,
-                        email: this.email || ''
+                        email: this.email || '',
+                        bio: this.bio
                     })
                     localStorage.setItem('loginUsername', newUsername)
                     this.username = newUsername
+                } else {
+                    await http.put(`/users/${user.id}`, {
+                        username: user.username,
+                        email: this.email || '',
+                        bio: this.bio
+                    })
                 }
                 this.$message.success('资料修改成功')
                 this.closePasswordDialog()
@@ -1174,6 +1239,69 @@ export default {
     font-size: 15px;
     font-weight: 700;
     line-height: 1.6;
+}
+
+.bio-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.bio-header h2 {
+    margin: 0 !important;
+}
+
+.bio-edit-btn {
+    height: 28px;
+    padding: 0 12px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    background: transparent;
+    color: #8d929c;
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    transition: all 0.2s ease;
+}
+
+.bio-edit-btn:hover {
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.bio-textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    color: #000000;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.6;
+    resize: vertical;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.bio-textarea:focus {
+    border-color: #58a6ff;
+    box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
+}
+
+.bio-edit-form {
+    display: grid;
+    gap: 12px;
+}
+
+.bio-char-count {
+    text-align: right;
+    color: #5f6f86;
+    font-size: 12px;
 }
 
 .utility-card {
@@ -1816,6 +1944,16 @@ export default {
 .mine-page.dark-mode .password-dialog {
     border-color: rgba(255, 255, 255, 0.1);
     background: #161a20;
+}
+
+.mine-page.dark-mode .bio-textarea {
+    color: #e6edf3;
+    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.mine-page.dark-mode .bio-textarea:focus {
+    border-color: #58a6ff;
 }
 
 .mine-page.dark-mode .dialog-head h2,

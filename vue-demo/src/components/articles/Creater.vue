@@ -360,16 +360,6 @@ export default {
     line-height: 1;
 }
 
-.creator-metric span::before {
-    content: "";
-    width: 16px;
-    height: 16px;
-    flex: 0 0 auto;
-    border: 1.8px solid currentColor;
-    border-radius: 5px;
-    box-sizing: border-box;
-}
-
 .creator-metric strong {
     color: #253247;
     font-size: 38px;
