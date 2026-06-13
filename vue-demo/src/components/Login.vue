@@ -41,6 +41,7 @@ import http from '@/utils/http'
 export default {
   name: 'LoginPage',
   data() {
+    // 校验用户名或邮箱，支持普通账号和邮箱两种登录方式。
     const validateUsername = (rule, value, callback) => {
       const usernameRegex = /^[a-zA-Z0-9_]{3,16}$/
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -54,6 +55,7 @@ export default {
       }
     }
 
+    // 校验登录密码格式，提前拦截明显不合法的输入。
     const validatePassword = (rule, value, callback) => {
       const passwordRegex = /^[a-zA-Z0-9_]{2,16}$/
 
@@ -85,6 +87,7 @@ export default {
     }
   },
   methods: {
+    // 提交用户登录请求，成功后保存登录态并跳转到原目标页或首页。
     handleLogin() {
       this.$refs.loginForm.validate(async (valid) => {
         if (!valid || this.loading) {

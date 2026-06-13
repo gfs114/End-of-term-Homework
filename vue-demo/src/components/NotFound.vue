@@ -51,10 +51,12 @@ const DARK_BG = "#202124"
 const DINO_FILL = "#bdc1c6"
 const DINO_STROKE = "#111315"
 
+// 在指定区间内生成障碍物间距和地面线段宽度。
 function getRandomNumber(min, max) {
   return Math.random() * (max - min) + min
 }
 
+// 判断两个碰撞盒是否相交。
 function boxesOverlap(boxA, boxB) {
   return (
     boxA.x < boxB.x + boxB.width &&
@@ -64,6 +66,7 @@ function boxesOverlap(boxA, boxB) {
   )
 }
 
+// 将分数格式化为 Chrome 小恐龙风格的五位数字。
 function padScore(value) {
   return String(Math.max(0, Math.floor(value))).padStart(5, "0")
 }
@@ -81,14 +84,17 @@ export default {
     }
   },
   computed: {
+    // 当前分数的五位展示文本。
     paddedScore() {
       return padScore(this.score)
     },
+    // 历史最高分的五位展示文本。
     paddedBestScore() {
       return padScore(this.bestScore)
     }
   },
   mounted() {
+    // 初始化画布、读取最高分并绑定键盘/窗口事件。
     this.animationFrame = null
     this.lastFrameTime = 0
     this.game = this.createGameState()
@@ -105,12 +111,14 @@ export default {
     }
   },
   beforeUnmount() {
+    // 离开页面时解除事件监听并停止动画循环。
     window.removeEventListener("keydown", this.handleKeyDown)
     window.removeEventListener("keyup", this.handleKeyUp)
     window.removeEventListener("resize", this.handleResize)
     this.stopLoop()
   },
   methods: {
+    // 创建一局游戏所需的基础状态。
     createGameState() {
       return {
         width: DINO_CANVAS_WIDTH,
@@ -146,6 +154,7 @@ export default {
         ]
       }
     },
+    // 从本地存储读取最高分。
     loadBestScore() {
       try {
         const savedScore = Number(window.localStorage.getItem(BEST_SCORE_KEY) || 0)
@@ -154,6 +163,7 @@ export default {
         this.bestScore = 0
       }
     },
+    // 当本局分数超过最高分时写入本地存储。
     saveBestScore() {
       if (this.score <= this.bestScore) {
         return
@@ -167,10 +177,12 @@ export default {
         // Keep the high score only in memory when localStorage is unavailable.
       }
     },
+    // 窗口尺寸变化后重设画布并重绘当前画面。
     handleResize() {
       this.resizeCanvas()
       this.drawScene()
     },
+    // 按容器宽度适配 canvas，同时保持内部逻辑坐标不变。
     resizeCanvas() {
       const canvas = this.$refs.gameCanvas
 
@@ -196,6 +208,7 @@ export default {
       this.game.groundY = GROUND_Y
       this.snapDinoToGround()
     },
+    // 根据站立/低头状态把恐龙贴回地面。
     snapDinoToGround() {
       if (!this.game || !this.game.dino) {
         return
@@ -211,6 +224,7 @@ export default {
         dino.y = this.game.groundY - dino.height
       }
     },
+    // 重置状态并启动一局新游戏。
     startGame() {
       this.stopLoop()
       this.score = 0
@@ -227,12 +241,14 @@ export default {
         this.$refs.gameStage.focus()
       }
     },
+    // 停止 requestAnimationFrame 循环。
     stopLoop() {
       if (this.animationFrame) {
         cancelAnimationFrame(this.animationFrame)
         this.animationFrame = null
       }
     },
+    // 游戏主循环：计算帧间隔、更新状态、绘制画面。
     gameLoop(timestamp) {
       if (!this.isPlaying || this.gameOver) {
         return
@@ -245,6 +261,7 @@ export default {
       this.drawScene()
       this.animationFrame = requestAnimationFrame(this.gameLoop)
     },
+    // 根据时间推进分数、速度、跳跃、障碍物和碰撞检测。
     updateGame(deltaTime) {
       const game = this.game
       const dino = game.dino
@@ -285,6 +302,7 @@ export default {
         this.endGame()
       }
     },
+    // 随机生成仙人掌或飞行动物障碍物。
     addObstacle() {
       const game = this.game
       const allowPterosaur = this.score > 180
@@ -317,6 +335,7 @@ export default {
         cluster: width > 24
       })
     },
+    // 移动障碍物并清理已经离开屏幕的项。
     updateObstacles(deltaTime) {
       const moveBy = this.game.speed * deltaTime
 
@@ -328,6 +347,7 @@ export default {
         return obstacle.x + obstacle.width > -20
       })
     },
+    // 移动地面装饰线段，形成奔跑视觉效果。
     updateGround(deltaTime) {
       const moveBy = this.game.speed * deltaTime
 
@@ -340,6 +360,7 @@ export default {
         }
       })
     },
+    // 让恐龙起跳，空中时不重复跳跃。
     jump() {
       const dino = this.game.dino
 
@@ -353,6 +374,7 @@ export default {
       dino.height = dino.normalHeight
       dino.width = dino.normalWidth
     },
+    // 设置恐龙低头状态，并同步碰撞盒尺寸。
     setDucking(value) {
       const dino = this.game.dino
 
@@ -366,6 +388,7 @@ export default {
       dino.width = this.isDucking ? dino.duckWidth : dino.normalWidth
       dino.y = this.game.groundY - dino.height
     },
+    // 处理键盘开始、跳跃和低头操作。
     handleKeyDown(event) {
       const key = event.key
       const isJumpKey = key === " " || key === "Spacebar" || key === "ArrowUp"
@@ -393,6 +416,7 @@ export default {
         this.setDucking(true)
       }
     },
+    // 松开下方向键后恢复站立状态。
     handleKeyUp(event) {
       if (event.key !== "ArrowDown") {
         return
@@ -410,6 +434,7 @@ export default {
         this.setDucking(false)
       }
     },
+    // 点击游戏区域：未开始时开局，进行中则跳跃。
     handleStageClick() {
       if (!this.isPlaying || this.gameOver) {
         this.startGame()
@@ -418,9 +443,11 @@ export default {
 
       this.jump()
     },
+    // 触屏操作复用点击逻辑。
     handleStageTouch() {
       this.handleStageClick()
     },
+    // 使用收缩后的碰撞盒检测恐龙是否撞到障碍物。
     hasCollision() {
       const dino = this.game.dino
       const dinoBox = this.isDucking
@@ -448,6 +475,7 @@ export default {
         return boxesOverlap(dinoBox, obstacleBox)
       })
     },
+    // 结束游戏、保存最高分并停在当前画面。
     endGame() {
       this.gameOver = true
       this.isPlaying = false
@@ -456,6 +484,7 @@ export default {
       this.stopLoop()
       this.drawScene()
     },
+    // 清空画布并按背景、月亮、地面、障碍物、恐龙顺序绘制。
     drawScene() {
       const canvas = this.$refs.gameCanvas
 
@@ -472,10 +501,12 @@ export default {
       this.drawObstacles(context)
       this.drawPixelDino(context)
     },
+    // 绘制深色背景。
     drawBackground(context) {
       context.fillStyle = DARK_BG
       context.fillRect(0, 0, this.game.width, this.game.height)
     },
+    // 绘制暗色月亮装饰。
     drawDarkMoon(context) {
       context.fillStyle = "#24272b"
       context.beginPath()
@@ -487,6 +518,7 @@ export default {
       context.arc(320, 22, 27, 0, Math.PI * 2)
       context.fill()
     },
+    // 绘制地面基线和移动的地面刻痕。
     drawGround(context) {
       context.fillStyle = DINO_FILL
       context.fillRect(0, this.game.groundY, this.game.width, 2)
@@ -495,6 +527,7 @@ export default {
         context.fillRect(Math.round(mark.x), this.game.groundY + 11, Math.round(mark.width), 2)
       })
     },
+    // 根据障碍物类型选择对应的像素绘制函数。
     drawObstacles(context) {
       this.game.obstacles.forEach((obstacle) => {
         if (obstacle.type === "pterosaur") {
@@ -505,6 +538,7 @@ export default {
         this.drawPixelCactus(context, obstacle)
       })
     },
+    // 绘制一个带描边的像素块，是所有像素角色的基础单元。
     drawBlock(context, x, y, width, height, fill = DINO_FILL) {
       context.fillStyle = DINO_STROKE
       context.fillRect(Math.round(x), Math.round(y), Math.round(width), Math.round(height))
@@ -516,6 +550,7 @@ export default {
         Math.max(1, Math.round(height - 4))
       )
     },
+    // 绘制仙人掌障碍物。
     drawPixelCactus(context, cactus) {
       const x = Math.round(cactus.x)
       const y = Math.round(cactus.y)
@@ -531,6 +566,7 @@ export default {
         this.drawBlock(context, x + 29, y + 22, 5, 6)
       }
     },
+    // 绘制飞行动物障碍物，并根据距离变化扇动翅膀。
     drawPixelPterosaur(context, bird) {
       const x = Math.round(bird.x)
       const y = Math.round(bird.y)
@@ -549,6 +585,7 @@ export default {
         this.drawBlock(context, x + 22, y + 17, 9, 6)
       }
     },
+    // 根据当前姿态选择站立奔跑或低头奔跑形态。
     drawPixelDino(context) {
       const dino = this.game.dino
 
@@ -562,6 +599,7 @@ export default {
 
       context.restore()
     },
+    // 绘制站立奔跑的恐龙像素图。
     drawRunningDino(context, dino) {
       const x = Math.round(dino.x)
       const y = Math.round(dino.y)
@@ -590,6 +628,7 @@ export default {
         context.fillRect(x + 35, y + 62, 14, 4)
       }
     },
+    // 绘制低头奔跑的恐龙像素图。
     drawDuckingDino(context, dino) {
       const x = Math.round(dino.x)
       const y = Math.round(dino.y)

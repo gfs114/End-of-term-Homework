@@ -41,6 +41,7 @@
 <script>
 import http from '@/utils/http'
 
+// 兼容列表接口的多种返回结构，统一提取文章数组。
 function pickList(payload) {
   if (Array.isArray(payload)) return payload
   if (Array.isArray(payload?.data)) return payload.data
@@ -49,6 +50,7 @@ function pickList(payload) {
   return []
 }
 
+// 兼容详情接口的多种返回结构，统一提取单篇文章。
 function pickArticle(payload) {
   if (payload?.data && !Array.isArray(payload.data)) return payload.data
   if (payload?.article) return payload.article
@@ -69,13 +71,16 @@ export default {
     }
   },
   computed: {
+    // 当前用户收藏文章在 localStorage 中的存储键。
     favoriteStorageKey() {
       const username = localStorage.getItem('loginUsername') || ''
       return username ? `favoriteArticles:${username}` : ''
     },
+    // 判断当前文章是否已经被当前用户收藏。
     isFavorite() {
       return this.article && this.favoriteIds.includes(String(this.article.id))
     },
+    // 格式化文章发布时间或更新时间。
     articleTime() {
       const value = this.article?.created_at || this.article?.updated_at
       if (!value) return ''
@@ -83,16 +88,19 @@ export default {
       if (Number.isNaN(date.getTime())) return value
       return date.toLocaleString('zh-CN')
     },
+    // 优先展示后端或本地缓存记录的编辑人。
     editedBy() {
       if (!this.article) return ''
       return this.getArticleEditor(this.article)
     }
   },
   created() {
+    // 进入详情页时同时加载本地收藏和文章详情。
     this.loadFavorites()
     this.fetchArticle()
   },
   methods: {
+    // 从本地存储恢复当前用户收藏过的文章 id。
     loadFavorites() {
       if (!this.favoriteStorageKey) {
         this.favoriteIds = []
@@ -106,6 +114,7 @@ export default {
         this.favoriteIds = []
       }
     },
+    // 从文章对象中提取可能的编辑人字段。
     getArticleEditor(article) {
       return String(
         article?.editor ||
@@ -116,6 +125,7 @@ export default {
         ''
       ).trim()
     },
+    // 当后端详情没有编辑人时，补充投稿页保存在本地的编辑记录。
     mergeLocalEditor(article) {
       if (!article || !article.id || this.getArticleEditor(article)) {
         return article
@@ -140,6 +150,7 @@ export default {
         return article
       }
     },
+    // 乐观更新收藏状态，同时调用后端接口同步收藏数量。
     toggleFavorite() {
       if (!localStorage.getItem('loginUsername')) {
         this.$message.warning('请先登录后再收藏')
@@ -193,6 +204,7 @@ export default {
           this.favoriteLoading = false
         })
     },
+    // 加载文章详情并初始化收藏数量。
     async fetchArticle() {
       this.loading = true
       this.errorMessage = ''
@@ -207,6 +219,7 @@ export default {
         this.loading = false
       }
     },
+    // 优先请求详情接口，失败后退回文章列表中按 id 查找。
     async fetchDetailById() {
       const id = String(this.$route.params.id)
 

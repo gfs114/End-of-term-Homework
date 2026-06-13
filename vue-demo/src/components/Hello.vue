@@ -138,6 +138,7 @@ import http from '@/utils/http'
 
 const imageClasses = ['thumb-keyboard', 'thumb-mouse', 'thumb-display', 'thumb-laptop']
 
+// 兼容后端不同返回结构，统一提取文章数组。
 function pickList(payload) {
   if (Array.isArray(payload)) return payload
   if (Array.isArray(payload?.data)) return payload.data
@@ -146,6 +147,7 @@ function pickList(payload) {
   return []
 }
 
+// 去掉 HTML 标签和多余空白，用于生成文章摘要。
 function plainText(value) {
   return String(value || '')
     .replace(/<[^>]+>/g, '')
@@ -153,6 +155,7 @@ function plainText(value) {
     .trim()
 }
 
+// 将接口时间格式化成列表上更短的展示时间。
 function formatTime(value) {
   if (!value) return '刚刚'
   const date = new Date(value)
@@ -184,12 +187,15 @@ export default {
     }
   },
   computed: {
+    // 当前分类来自路由 query，空值表示全部文章。
     activeCategory() {
       return this.$route.query.category || ''
     },
+    // 根据当前分类生成页面主标题。
     pageCategoryTitle() {
       return this.activeCategory || '全部文章'
     },
+    // 按分类和搜索关键词筛选资讯列表。
     filteredArticles() {
       const category = this.activeCategory.toLowerCase()
       const keyword = this.keyword.toLowerCase()
@@ -205,9 +211,11 @@ export default {
         return matchedCategory && matchedKeyword
       })
     },
+    // 首页顶部展示最新两条文章作为头条。
     headlines() {
       return this.articles.slice(0, 2)
     },
+    // 阅读榜按浏览量倒序取前 12 条。
     rankings() {
       return [...this.articles]//扩展运算符，创建this.articles的浅拷贝，避免直接修改原数组
         .sort((a, b) => b.views - a.views)//判断谁在前
@@ -215,9 +223,11 @@ export default {
     }
   },
   created() {
+    // 页面创建后立即加载文章列表。
     this.fetchArticles()
   },
   methods: {
+    // 进入投稿页前先检查登录状态，未登录则跳到登录页并携带回跳地址。
     goSubmit() {
       if (!localStorage.getItem('loginUsername')) {
         this.$message.warning('请先登录后再投稿')
@@ -230,6 +240,7 @@ export default {
 
       this.$router.push('/submit')
     },
+    // 生成分类链接，通过 query 保持在首页内筛选。
     getCategoryRoute(category) {
       return {
         path: '/hello',
@@ -238,6 +249,7 @@ export default {
         }
       }
     },
+    // 从接口获取已发布文章并标准化为首页列表结构。
     async fetchArticles() {
       this.loading = true
       this.errorMessage = ''
@@ -253,6 +265,7 @@ export default {
         this.loading = false
       }
     },
+    // 将接口文章字段整理成列表、榜单和头条都能直接使用的字段。
     normalizeArticle(item, index) {
       const title = item.title || '未命名文章'
       const summary = plainText(item.summary || item.description || item.content).slice(0, 110)

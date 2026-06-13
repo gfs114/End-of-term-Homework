@@ -54,10 +54,12 @@
 <script>
 import http from '@/utils/http'
 
+// 从新建文章接口返回中提取文章 id。
 function pickCreatedId(payload) {
   return payload?.data?.id || payload?.article?.id || payload?.id
 }
 
+// 兼容列表接口的多种返回结构。
 function pickList(payload) {
   if (Array.isArray(payload)) return payload
   if (Array.isArray(payload?.data)) return payload.data
@@ -66,6 +68,7 @@ function pickList(payload) {
   return []
 }
 
+// 兼容详情接口的多种返回结构。
 function pickArticle(payload) {
   if (payload?.data && !Array.isArray(payload.data)) return payload.data
   if (payload?.article) return payload.article
@@ -73,6 +76,7 @@ function pickArticle(payload) {
   return null
 }
 
+// 生成底部自动保存提示展示的时间。
 function formatSaveTime() {
   const now = new Date()
   return now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
@@ -108,21 +112,26 @@ export default {
     }
   },
   computed: {
+    // 当前投稿人，普通用户和管理员都可复用投稿页。
     currentUsername() {
       return localStorage.getItem('loginUsername') || localStorage.getItem('adminUsername') || ''
     },
+    // 编辑模式下从路由 query 读取文章 id。
     editArticleId() {
       const queryId = this.$route.query.editId
       return Array.isArray(queryId) ? queryId[0] : queryId
     },
+    // 是否正在编辑已有文章。
     isEditMode() {
       return Boolean(this.editArticleId)
     },
+    // 正文实时字数统计。
     contentCharCount() {
       return String(this.form.content || '').length
     }
   },
   watch: {
+    // 切换编辑 id 时重新加载对应文章，清空 id 则恢复新建表单。
     editArticleId() {
       if (this.isEditMode) {
         this.loadEditArticle()
@@ -132,18 +141,22 @@ export default {
     }
   },
   created() {
+    // 编辑文章前需要先确认登录态。
     if (this.requireLogin() && this.isEditMode) {
       this.loadEditArticle()
     }
   },
   mounted() {
+    // 初始化标题输入高度并启动自动保存。
     this.autoResizeTitle()
     this.startAutoSave()
   },
   beforeUnmount() {
+    // 离开投稿页时停止自动保存计时器。
     this.stopAutoSave()
   },
   methods: {
+    // 检查登录状态，未登录则带回跳地址进入登录页。
     requireLogin() {
       if (this.currentUsername) {
         this.form.author = this.currentUsername
@@ -156,6 +169,7 @@ export default {
       })
       return false
     },
+    // 加载要编辑的文章，优先用会话缓存填充，再用接口数据覆盖。
     async loadEditArticle() {
       if (!this.editArticleId) return
       const cachedArticle = this.readCachedEditArticle()
@@ -175,6 +189,7 @@ export default {
         this.loading = false
       }
     },
+    // 将文章对象写入表单。
     fillArticleForm(article) {
       this.form = {
         title: article.title || '',
@@ -184,6 +199,7 @@ export default {
       }
       this.$nextTick(() => this.autoResizeTitle())
     },
+    // 读取个人中心跳转编辑时缓存的文章草稿。
     readCachedEditArticle() {
       try {
         const cached = JSON.parse(sessionStorage.getItem('articleEditDraft') || 'null')
@@ -195,6 +211,7 @@ export default {
         return null
       }
     },
+    // 通过详情接口或列表接口获取编辑目标文章。
     async fetchEditArticleById() {
       try {
         const { data } = await http.get(`/articles/${this.editArticleId}`)
@@ -206,6 +223,7 @@ export default {
       if (!article) throw new Error('Article not found')
       return article
     },
+    // 根据保存状态构造新建/编辑文章的请求体。
     buildArticlePayload(status) {
       const payload = {
         title: this.form.title,
@@ -223,14 +241,17 @@ export default {
         last_editor: this.currentUsername
       }
     },
+    // 以草稿状态提交当前文章。
     submitAsDraft() {
       if (!this.requireLogin()) return
       this.doSubmit('draft', 'draftLoading', '草稿保存成功', '草稿保存失败，请稍后再试')
     },
+    // 以发布状态提交当前文章。
     submitAsPublished() {
       if (!this.requireLogin()) return
       this.doSubmit('published', 'publishLoading', '投稿提交成功', '投稿提交失败，请稍后再试')
     },
+    // 执行文章保存请求，新建走 POST，编辑走 PUT。
     doSubmit(status, loadingRef, successMsg, failMsg) {
       if (!this.form.title || !this.form.title.trim()) {
         this.$message.warning({ message: '请输入标题', center: true })
@@ -260,6 +281,7 @@ export default {
         }
       })
     },
+    // 编辑文章后记录本地编辑人，详情页可用于兜底展示。
     rememberArticleEditor(articleId) {
       if (!articleId || !this.currentUsername) return
       try {
@@ -272,6 +294,7 @@ export default {
         localStorage.setItem(storageKey, JSON.stringify(meta))
       } catch (error) {}
     },
+    // 重置表单，新建时清空，编辑时重新加载原文章。
     resetForm() {
       if (this.isEditMode) {
         this.loadEditArticle()
@@ -280,17 +303,20 @@ export default {
       this.$refs.submitForm.resetFields()
       this.form.author = this.currentUsername
     },
+    // 开启固定间隔自动保存到 sessionStorage。
     startAutoSave() {
       this.autoSaveTimer = setInterval(() => {
         this.autoSaveDraft()
       }, 8000)
     },
+    // 停止自动保存计时器。
     stopAutoSave() {
       if (this.autoSaveTimer) {
         clearInterval(this.autoSaveTimer)
         this.autoSaveTimer = null
       }
     },
+    // 将当前草稿保存到 sessionStorage 并刷新保存时间。
     autoSaveDraft() {
       if (!this.form.title && !this.form.content) return
       try {
@@ -304,6 +330,7 @@ export default {
         this.lastSaveTime = formatSaveTime()
       } catch (error) {}
     },
+    // 根据标题内容自动调整标题输入框高度。
     autoResizeTitle() {
       this.$nextTick(() => {
         const el = this.$refs.titleInput

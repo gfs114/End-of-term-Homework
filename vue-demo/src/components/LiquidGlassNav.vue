@@ -53,19 +53,23 @@
 </template>
 
 <script>
+// 将数值限制在指定范围内，供玻璃滤镜计算使用。
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value))
 }
 
+// 平滑插值函数，用于生成更柔和的边缘形变。
 function smoothStep(a, b, t) {
   const x = clamp((t - a) / (b - a), 0, 1)
   return x * x * (3 - 2 * x)
 }
 
+// 计算二维向量长度，辅助 SDF 距离场公式。
 function vectorLength(x, y) {
   return Math.sqrt(x * x + y * y)
 }
 
+// 计算圆角矩形的有符号距离，用于模拟液态玻璃边缘。
 function roundedRectSDF(x, y, width, height, radius) {
   const qx = Math.abs(x) - width + radius
   const qy = Math.abs(y) - height + radius
@@ -89,6 +93,7 @@ export default {
     }
   },
   computed: {
+    // 把动态 SVG filter id 注入 CSS 变量，供 backdrop-filter 使用。
     navbarVars() {
       return {
         '--liquid-filter': `url(#${this.filterId})`
@@ -96,11 +101,13 @@ export default {
     }
   },
   watch: {
+    // 路由切换后重新读取登录态，确保导航栏用户名和后台入口及时更新。
     '$route.fullPath'() {
       this.loadLoginUsername()
     }
   },
   mounted() {
+    // 初始化登录信息、主题和滤镜尺寸，并监听窗口变化。
     this.loadLoginUsername()
     this.initTheme()
     this.updateFilterSize()
@@ -108,6 +115,7 @@ export default {
     window.addEventListener('resize', this.resizeHandler)
   },
   beforeUnmount() {
+    // 组件销毁时清理事件和动画帧，避免重复监听。
     if (this.resizeHandler) {
       window.removeEventListener('resize', this.resizeHandler)
     }
@@ -116,11 +124,13 @@ export default {
     }
   },
   methods: {
+    // 从本地存储同步用户/管理员登录名。
     loadLoginUsername() {
       this.loginUsername = localStorage.getItem('loginUsername') || ''
       this.adminUsername = localStorage.getItem('adminUsername') || ''
       this.$nextTick(() => this.scheduleFilterUpdate())
     },
+    // 清空前后台登录态并回到登录页。
     handleLogout() {
       localStorage.removeItem('loginUsername')
       localStorage.removeItem('loginEmail')
@@ -130,26 +140,31 @@ export default {
       this.adminUsername = ''
       this.$router.push('/login')
     },
+    // 读取保存的主题，默认使用深色模式。
     initTheme() {
       const saved = localStorage.getItem('theme')
       this.isDark = saved !== 'light'
       this.applyTheme()
     },
+    // 切换深色/浅色主题。
     toggleTheme() {
       this.isDark = !this.isDark
       this.applyTheme()
     },
+    // 将主题写入 localStorage 和 html 属性，让全局样式响应。
     applyTheme() {
       const theme = this.isDark ? 'dark' : 'light'
       localStorage.setItem('theme', theme)
       document.documentElement.setAttribute('data-theme', theme)
     },
+    // 将滤镜更新推迟到下一帧，避免 resize 中频繁重算。
     scheduleFilterUpdate() {
       if (this.resizeFrame) {
         cancelAnimationFrame(this.resizeFrame)
       }
       this.resizeFrame = requestAnimationFrame(() => this.updateFilterSize())
     },
+    // 根据导航栏实际尺寸更新 SVG 滤镜画布大小。
     updateFilterSize() {
       if (!this.$refs.navbar) {
         return
@@ -167,6 +182,7 @@ export default {
       this.filterHeight = nextHeight
       this.generateDisplacementMap()
     },
+    // 生成位移贴图，给导航栏创建液态玻璃的折射效果。
     generateDisplacementMap() {
       const mapWidth = clamp(Math.round(this.filterWidth / 2), 360, 1200)
       const mapHeight = this.filterHeight
@@ -209,6 +225,7 @@ export default {
       this.displacementMap = canvas.toDataURL('image/png')
       this.displacementScale = clamp(Math.round(maxOffset * 1.2), 18, 42)
     },
+    // 对单个 UV 坐标进行形变采样，决定玻璃滤镜的位移方向。
     fragment(uv) {
       const ix = uv.x - 0.5
       const iy = uv.y - 0.5

@@ -52,6 +52,7 @@ import http from '@/utils/http'
 export default {
   name: 'ForgetPassword',
   data() {
+    // 校验找回账号，允许用户输入用户名或邮箱。
     const validateAccount = (rule, value, callback) => {
       const usernameRegex = /^[a-zA-Z0-9_]{2,16}$/
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -65,6 +66,7 @@ export default {
       }
     }
 
+    // 校验新密码格式，保证重置后的密码符合登录规则。
     const validatePassword = (rule, value, callback) => {
       const passwordRegex = /^[a-zA-Z0-9_]{6,16}$/
 
@@ -99,6 +101,7 @@ export default {
     }
   },
   methods: {
+    // 确认两次新密码输入一致。
     validateConfirmPassword(rule, value, callback) {
       if (value !== this.form.password) {
         callback(new Error('两次输入的新密码不一致'))
@@ -107,6 +110,7 @@ export default {
 
       callback()
     },
+    // 查找账号并更新密码，成功后清空表单并返回登录页。
     handleResetPassword() {
       this.$refs.forgetForm.validate(async (valid) => {
         if (!valid || this.loading) {
@@ -141,6 +145,7 @@ export default {
         }
       })
     },
+    // 从用户列表中按用户名或邮箱查找当前要重置密码的用户。
     async findUserByAccount() {
       const response = await http.get('/users')
       const result = response.data || {}
@@ -154,6 +159,7 @@ export default {
         return username === account || email === account
       })
     },
+    // 重置忘记密码表单和校验状态。
     resetForm() {
       this.form = {
         account: '',

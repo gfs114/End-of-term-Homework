@@ -20,6 +20,7 @@ import Mine from "@/components/Mine.vue";
 import ArticleDetail from "@/components/articles/ArticleDetail.vue";
 import ArticleSubmit from "@/components/articles/ArticleSubmit.vue";
 
+// 全站路由表：前台页面、文章详情/投稿和后台管理子路由都在这里集中配置。
 const router = createRouter({
     history: createWebHashHistory(),
     routes: [

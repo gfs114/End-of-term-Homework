@@ -48,6 +48,7 @@
 import * as echarts from 'echarts'
 import http from '@/utils/http'
 
+// 兼容文章列表接口的多种返回结构。
 function pickList(payload) {
     if (Array.isArray(payload)) return payload
     if (Array.isArray(payload?.data)) return payload.data
@@ -56,11 +57,13 @@ function pickList(payload) {
     return []
 }
 
+// 把浏览量、收藏数等字段安全转换为数字。
 function toNumber(value) {
     const numberValue = Number(value || 0)
     return Number.isFinite(numberValue) ? numberValue : 0
 }
 
+// 从多个候选字段中取第一个可用数字。
 function pickNumber(item, keys) {
     for (let index = 0; index < keys.length; index += 1) {
         const key = keys[index]
@@ -87,6 +90,7 @@ export default {
         }
     },
     computed: {
+        // 根据当前主题生成 ECharts 需要的文字、轴线和背景颜色。
         chartColors() {
             const dark = this.chartTheme === 'dark'
             return {
@@ -97,12 +101,15 @@ export default {
                 titleColor: dark ? '#f0f0f0' : '#1f2937'
             }
         },
+        // 当前作者所有文章的总浏览量。
         creatorTotalViews() {
             return this.myArticles.reduce((total, article) => total + article.views, 0)
         },
+        // 当前作者所有文章的总收藏数。
         creatorTotalFavorites() {
             return this.myArticles.reduce((total, article) => total + article.favorites, 0)
         },
+        // 顶部数据卡片展示的统计指标。
         creatorMetrics() {
             return [
                 { label: '文章数量', value: this.myArticles.length },
@@ -110,9 +117,11 @@ export default {
                 { label: '收藏人数', value: this.creatorTotalFavorites }
             ]
         },
+        // 文章列表按浏览量排序，优先展示表现更好的文章。
         creatorArticleRows() {
             return [...this.myArticles].sort((prev, next) => next.views - prev.views)
         },
+        // 图表只展示前 8 篇文章的浏览和收藏趋势。
         creatorTrendData() {
             const articles = this.creatorArticleRows.slice(0, 8)
 
@@ -124,6 +133,7 @@ export default {
         }
     },
     mounted() {
+        // 初始化图表尺寸监听、文章数据和主题变化监听。
         this.creatorResizeHandler = () => this.resizeCreatorChart()
         window.addEventListener('resize', this.creatorResizeHandler)
         this.fetchCreatorArticles()
@@ -136,6 +146,7 @@ export default {
         })
     },
     beforeUnmount() {
+        // 销毁监听和图表实例，避免重复挂载造成内存占用。
         if (this.creatorResizeHandler) {
             window.removeEventListener('resize', this.creatorResizeHandler)
         }
@@ -148,6 +159,7 @@ export default {
         }
     },
     methods: {
+        // 标准化单篇文章，补齐统计字段。
         normalizeArticle(item) {
             const views = pickNumber(item, ['views', 'view_count', 'viewCount', 'clicks', 'click_count', 'clickCount', 'read_count', 'readCount'])
             const favorites = pickNumber(item, ['favorites', 'favorite_count', 'favoriteCount', 'collects', 'collect_count', 'collectCount'])
@@ -161,6 +173,7 @@ export default {
                 favorites
             }
         },
+        // 获取当前作者文章并刷新统计图表。
         async fetchCreatorArticles() {
             if (!this.username) {
                 this.myArticles = []
@@ -182,6 +195,7 @@ export default {
                 this.$nextTick(() => this.renderCreatorChart())
             }
         },
+        // 渲染或更新创作者浏览/收藏柱状图。
         renderCreatorChart() {
             if (!this.$refs.creatorChart || !this.myArticles.length) {
                 if (this.creatorChart) {
@@ -257,11 +271,13 @@ export default {
                 ]
             })
         },
+        // 窗口变化时让 ECharts 重新计算尺寸。
         resizeCreatorChart() {
             if (this.creatorChart) {
                 this.creatorChart.resize()
             }
         },
+        // 全局主题切换后重建图表，确保颜色和页面主题一致。
         syncChartTheme() {
             const theme = localStorage.getItem('theme') || 'dark'
             const isDark = theme !== 'light'

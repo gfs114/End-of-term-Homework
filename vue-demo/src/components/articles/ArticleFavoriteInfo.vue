@@ -55,6 +55,7 @@
 <script>
 import http from '@/utils/http'
 
+// 兼容文章列表接口的多种返回结构。
 function pickList(payload) {
   if (Array.isArray(payload)) return payload
   if (Array.isArray(payload?.data)) return payload.data
@@ -72,9 +73,11 @@ export default {
     }
   },
   created() {
+    // 进入后台收藏统计页后立即加载文章收藏数据。
     this.fetchFavoriteList()
   },
   methods: {
+    // 拉取文章列表并按收藏数从高到低排序。
     async fetchFavoriteList() {
       this.tableLoading = true
 
@@ -92,6 +95,7 @@ export default {
         this.tableLoading = false
       }
     },
+    // 格式化创建时间，空值显示占位符。
     formatDate(value) {
       if (!value) return '-'
 

@@ -17,11 +17,13 @@ export default {
     LiquidGlassNav
   },
   computed: {
+    // 判断当前是否进入后台页面，后台页面不显示前台导航并使用专用间距。
     isAdminPage() {
       return this.$route.path.startsWith('/alogin/admin')
     }
   },
   mounted() {
+    // 读取用户保存的主题，刷新页面后保持深色/浅色模式一致。
     const theme = localStorage.getItem('theme') || 'dark'
     document.documentElement.setAttribute('data-theme', theme)
   }

@@ -69,6 +69,7 @@ export default {
   },
   methods: {
 
+    // 确认两次密码输入一致。
     validateConfirmPassword(rule, value, callback) {
       if (value !== this.form.password) {
         callback(new Error('两次输入的密码不一致'))
@@ -76,6 +77,7 @@ export default {
       }
       callback()
     },
+    // 提交注册表单，注册成功后带着邮箱信息跳转到登录页。
     handleRegister() {
       this.$refs.registerForm.validate(async (valid) => {
         if (!valid || this.loading) {

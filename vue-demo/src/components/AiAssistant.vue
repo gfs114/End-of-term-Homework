@@ -90,6 +90,7 @@
 <script>
 import http from '@/utils/http'
 
+// 简单自增消息 id，保证聊天记录渲染时 key 稳定。
 let messageId = 0
 
 export default {
@@ -133,6 +134,7 @@ export default {
     }
   },
   methods: {
+    // 向对话列表追加一条用户或 AI 消息。
     addMessage(role, content) {
       this.messages.push({
         id: ++messageId,
@@ -140,10 +142,12 @@ export default {
         content
       })
     },
+    // 清空草稿和历史消息，恢复欢迎页。
     resetConversation() {
       this.draft = ''
       this.messages = []
     },
+    // 兼容不同 AI 接口返回字段，提取最终回复文本。
     pickReply(payload) {
       return payload?.reply ||
         payload?.answer ||
@@ -153,11 +157,13 @@ export default {
         payload?.data?.message ||
         ''
     },
+    // 点击快捷建议时复用正常发送流程。
     async sendSuggestion(suggestion) {
       if (this.loading) return
       this.draft = suggestion
       await this.sendMessage()
     },
+    // 发送用户输入到 AI 接口，并把回复或错误信息加入聊天记录。
     async sendMessage() {
       const content = this.draft
       if (!content || this.loading) return
