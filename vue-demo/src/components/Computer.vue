@@ -87,8 +87,8 @@
 
       <div class="model-grid">
         <article v-for="(computer, index) in paginatedComputers" :key="computer.model" class="model-card"
-          :style="modelCardAnimationStyle(index)" tabindex="0" role="button" @click="openComputerDetail(computer, $event)"
-          @keyup.enter="openComputerDetail(computer, $event)"
+          :style="modelCardAnimationStyle(index)" tabindex="0" role="button"
+          @click="openComputerDetail(computer, $event)" @keyup.enter="openComputerDetail(computer, $event)"
           @keyup.space.prevent="openComputerDetail(computer, $event)">
           <div v-if="hasComputerImage(computer)" class="computer-image">
             <img :src="computer.img" :alt="computer.model" @error="markComputerImageFailed(computer)" />
@@ -144,7 +144,8 @@
         </div>
 
         <div class="compare-actions">
-          <button type="button" class="compare-add-button" :disabled="!canAddCompareSlot" @click="addCompareComputerSlot">
+          <button type="button" class="compare-add-button" :disabled="!canAddCompareSlot"
+            @click="addCompareComputerSlot">
             +
           </button>
           <button type="button" :disabled="!hasCompareSelection" @click="clearCompareComputers">
@@ -244,12 +245,8 @@
             <p class="detail-brand">{{ selectedComputer.brand }} / {{ selectedComputer.type }}</p>
             <h2>{{ selectedComputer.model }}</h2>
 
-            <button
-              type="button"
-              :class="['device-favorite-button', { active: selectedComputerFavorite }]"
-              :disabled="favoriteDeviceLoading"
-              @click="toggleFavoriteComputer"
-            >
+            <button type="button" :class="['device-favorite-button', { active: selectedComputerFavorite }]"
+              :disabled="favoriteDeviceLoading" @click="toggleFavoriteComputer">
               {{ selectedComputerFavorite ? '已喜欢' : '喜欢设备' }}
             </button>
 
@@ -264,15 +261,8 @@
       </div>
     </transition>
 
-    <AiAssistant
-      page-type="computer"
-      title="电脑 AI 选购助手"
-      eyebrow="电脑推荐"
-      welcome="你好，我可以按预算、用途、处理器、显卡和便携需求帮你推荐电脑。"
-      placeholder="例如：预算 7000，想买游戏本"
-      :suggestions="computerAiSuggestions"
-      :context="computerAiContext"
-    />
+    <AiAssistant page-type="computer" title="电脑 AI 选购助手" eyebrow="电脑推荐" welcome="你好，我可以按预算、用途、处理器、显卡和便携需求帮你推荐电脑。"
+      placeholder="例如：预算 7000，想买游戏本" :suggestions="computerAiSuggestions" :context="computerAiContext" />
   </section>
 </template>
 
@@ -795,7 +785,7 @@ export default {
           price: "¥7999 起",
           priceValue: 7999,
           accent: "#ef4444",
-          img:require("@/assets/computer_image/拯救者 Y7000P 2025.jpg"),
+          img: require("@/assets/computer_image/拯救者 Y7000P 2025.jpg"),
         },
         {
           brand: "联想",
@@ -914,7 +904,7 @@ export default {
           price: "¥17999 起",
           priceValue: 17999,
           accent: "#0ea5e9",
-          img: require("@/assets/computer_image/Alienware m16 R2.jpg"), 
+          img: require("@/assets/computer_image/Alienware m16 R2.jpg"),
         },
         {
           brand: "戴尔",
@@ -980,7 +970,8 @@ export default {
           price: "¥5999 起",
           priceValue: 5999,
           accent: "#1d4ed8",
-          img: require("@/assets/computer_image/星 Book Pro 14.png"),},
+          img: require("@/assets/computer_image/星 Book Pro 14.png"),
+        },
         {
           brand: "惠普",
           model: "暗影精灵 10",
@@ -1036,7 +1027,7 @@ export default {
         },
         {
           brand: "华硕",
-          model: "ROG 魔霸新锐 2025", 
+          model: "ROG 魔霸新锐 2025",
           type: "游戏本",
           processor: "锐龙 9 8940HX",
           graphics: "RTX 5070",
@@ -1296,7 +1287,7 @@ export default {
           price: "价格面议",
           priceValue: null,
           accent: "#dc2626",
-          img: require("@/assets/computer_image/众颜U6 2024.jpg"),  
+          img: require("@/assets/computer_image/众颜U6 2024.jpg"),
         },
         {
           brand: "火影",
@@ -1364,11 +1355,11 @@ export default {
           accent: "#38bdf8",
           img: require("@/assets/computer_image/MagicBook Pro 16.png"),
         },
-        
-        
-        
-        
-        
+
+
+
+
+
       ],
     };
   },
@@ -1611,7 +1602,7 @@ export default {
       return (
         this.modelFilters.graphics === "全部" ||
         this.normalizeGraphicsFilter(computer.graphics) ===
-          this.modelFilters.graphics
+        this.modelFilters.graphics
       );
     },
     normalizeComputerStatus(status) {
@@ -2715,6 +2706,7 @@ export default {
 }
 
 @media (max-width: 980px) {
+
   .brand-hero,
   .section-head,
   .compare-head {

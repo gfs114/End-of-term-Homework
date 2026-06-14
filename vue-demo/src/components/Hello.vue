@@ -872,7 +872,7 @@ input {
 
 .ranking-title {
   margin: 0 0 16px;
-  color: #f5f5f7;
+  color: var(--hello-ranking-title, #f5f5f7);
   font-size: 18px;
   font-weight: 800;
   letter-spacing: 0.01em;
@@ -887,9 +887,9 @@ input {
   place-items: center;
   width: 24px;
   height: 24px;
-  color: #fff;
+  color: var(--hello-ranking-num-color, #fff);
   border-radius: 5px;
-  background: rgba(245, 245, 247, 0.28);
+  background: var(--hello-ranking-num-bg, rgba(245, 245, 247, 0.28));
   font-size: 13px;
   font-weight: 800;
 }
@@ -902,7 +902,7 @@ input {
 .ranking-list a {
   min-width: 0;
   overflow: hidden;
-  color: rgba(245, 245, 247, 0.68);
+  color: var(--hello-ranking-link, rgba(245, 245, 247, 0.68));
   font-size: 14px;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -910,7 +910,7 @@ input {
 }
 
 .ranking-list a:hover {
-  color: #f5f5f7;
+  color: var(--hello-ranking-link-hover, #f5f5f7);
 }
 
 /* ---- Resource panel (kept for future use) ---- */
