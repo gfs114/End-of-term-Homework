@@ -13,6 +13,12 @@ module.exports = defineConfig({
       }
     }
   },
+  chainWebpack: config => {
+    config.module
+      .rule('m4a')
+      .test(/\.m4a$/)
+      .type('asset/resource')
+  },
   devServer: {
     client: {
       overlay: false,

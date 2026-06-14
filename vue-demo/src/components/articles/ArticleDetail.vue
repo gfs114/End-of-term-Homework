@@ -228,7 +228,7 @@ export default {
         const article = pickArticle(data)
         if (article) return article
       } catch (error) {
-        // Some backends expose only /articles. Fall back to the list endpoint below.
+        
       }
 
       const { data } = await http.get('/articles')

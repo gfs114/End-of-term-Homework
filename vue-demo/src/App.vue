@@ -49,6 +49,11 @@ body {
   --input-title-placeholder: #6e7681;
   --input-content-placeholder: #8b949e;
   --input-selection-bg: rgba(88, 166, 255, 0.25);
+  --hello-ranking-title: #f0f0f0;
+  --hello-ranking-link: #8b949e;
+  --hello-ranking-link-hover: #58a6ff;
+  --hello-ranking-num-color: #fff;
+  --hello-ranking-num-bg: rgba(255, 255, 255, 0.15);
 }
 
 html[data-theme="light"] {
@@ -57,6 +62,11 @@ html[data-theme="light"] {
   --input-title-placeholder: #9ca3af;
   --input-content-placeholder: #6b7280;
   --input-selection-bg: rgba(37, 99, 235, 0.2);
+  --hello-ranking-title: #1a1a2e;
+  --hello-ranking-link: #374151;
+  --hello-ranking-link-hover: #2563eb;
+  --hello-ranking-num-color: #1a1a2e;
+  --hello-ranking-num-bg: rgba(0, 0, 0, 0.08);
 }
 
 [data-theme="light"] body {
@@ -264,6 +274,13 @@ html[data-theme="light"] {
 [data-theme="dark"] .computer-compare-section .compare-phone-titles,
 [data-theme="dark"] .phone-compare-section .compare-phone-titles {
   color: #e6edf3 !important;
+}
+
+/* ---- Hello.vue ranking panel (dark mode) ---- */
+[data-theme="dark"] .apple-news-page .ranking-panel {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28) !important;
 }
 
 /* ---- model-section / control-panel / filters ---- */
@@ -548,10 +565,6 @@ html[data-theme="light"] {
 
 [data-theme="light"] .apple-news-page .ranking-list a:hover {
   color: #2563eb !important;
-}
-
-[data-theme="light"] .apple-news-page .ranking-list span {
-  color: #fff !important;
 }
 
 [data-theme="light"] .apple-news-page .tabs button {
